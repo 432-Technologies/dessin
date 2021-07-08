@@ -1,5 +1,6 @@
 use crate::shapes::Shape;
 
+#[derive(Debug)]
 pub struct Drawing {
     shapes: Vec<Shape>,
 }
