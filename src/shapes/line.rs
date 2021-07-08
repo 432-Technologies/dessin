@@ -1,4 +1,4 @@
-use super::{Shape, Style};
+use super::Style;
 use algebra::Vec2;
 
 #[derive(Debug)]
@@ -7,4 +7,3 @@ pub struct Line {
     pub to: Vec2,
     pub style: Style,
 }
-impl Shape for Line {}
