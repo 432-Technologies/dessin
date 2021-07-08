@@ -18,3 +18,17 @@ pub struct Drawing {
     texts: Vec<Text>,
     shapes: Vec<Box<dyn Shape>>,
 }
+impl Drawing {
+    pub fn empty() -> Self {
+        Drawing {
+            texts: vec![],
+            shapes: vec![],
+        }
+    }
+    pub fn texts(&self) -> &Vec<Text> {
+        &self.texts
+    }
+    pub fn shapes(&self) -> &Vec<Box<dyn Shape>> {
+        &self.shapes
+    }
+}
