@@ -7,4 +7,4 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-algebra = { path = "algebra/" }
+algebra = { git = "https://github.com/daedalus-aero-space/algebra", branch = "main" }
