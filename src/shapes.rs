@@ -1,7 +1,8 @@
+pub mod circle;
 pub mod line;
 pub mod text;
 
-use self::{line::Line, text::Text};
+use self::{circle::Circle, line::Line, text::Text};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Color {
@@ -32,4 +33,5 @@ pub enum Stroke {
 pub enum Shape {
     Text(Text),
     Line(Line),
+    Circle(Circle),
 }
