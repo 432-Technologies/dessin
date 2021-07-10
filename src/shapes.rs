@@ -3,18 +3,18 @@ pub mod text;
 
 use self::{line::Line, text::Text};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Color {
     RGB { r: u8, g: u8, b: u8 },
     U32(u32),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Fill {
     Color(Color),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Stroke {
     Full {
         color: Color,
