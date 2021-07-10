@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Vec2 {
@@ -38,11 +38,60 @@ impl From<(f32, f32)> for Vec2 {
     }
 }
 
+impl Neg for Vec2 {
+    type Output = Vec2;
+    fn neg(self) -> Self::Output {
+        Vec2 {
+            x: -self.x,
+            y: -self.y,
+        }
+    }
+}
+
 impl Add for Vec2 {
     type Output = Self;
     fn add(mut self, rhs: Vec2) -> Self::Output {
         self.x += rhs.x;
         self.y += rhs.y;
         self
+    }
+}
+
+impl Add<f32> for Vec2 {
+    type Output = Self;
+    fn add(self, rhs: f32) -> Self::Output {
+        Vec2 {
+            x: self.x + rhs,
+            y: self.y + rhs,
+        }
+    }
+}
+
+impl Sub<f32> for Vec2 {
+    type Output = Vec2;
+    fn sub(self, rhs: f32) -> Self::Output {
+        Vec2 {
+            x: self.x - rhs,
+            y: self.y - rhs,
+        }
+    }
+}
+
+impl Mul for Vec2 {
+    type Output = Self;
+    fn mul(mut self, rhs: Self) -> Self::Output {
+        self.x *= rhs.x;
+        self.y *= rhs.y;
+        self
+    }
+}
+
+impl Div<f32> for Vec2 {
+    type Output = Vec2;
+    fn div(self, rhs: f32) -> Self::Output {
+        Vec2 {
+            x: self.x / rhs,
+            y: self.y / rhs,
+        }
     }
 }
