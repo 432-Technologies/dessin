@@ -6,6 +6,12 @@ pub struct Vec2 {
     pub y: f32,
 }
 impl Vec2 {
+    pub const fn from_cartesian_tuple((x, y): (f32, f32)) -> Self {
+        Self::from_cartesian(x, y)
+    }
+    pub const fn from_cartesian(x: f32, y: f32) -> Self {
+        Vec2 { x, y }
+    }
     pub fn from_polar_deg(mag: f32, angle_deg: f32) -> Self {
         Self::from_polar_rad(mag, angle_deg.to_radians())
     }
@@ -28,13 +34,7 @@ impl Vec2 {
 
 impl From<(f32, f32)> for Vec2 {
     fn from((x, y): (f32, f32)) -> Self {
-        Vec2 { x, y }
-    }
-}
-
-impl From<[f32; 2]> for Vec2 {
-    fn from([x, y]: [f32; 2]) -> Self {
-        Vec2 { x, y }
+        Self::from_cartesian_tuple((x, y))
     }
 }
 
