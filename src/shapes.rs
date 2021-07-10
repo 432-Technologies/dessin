@@ -1,8 +1,10 @@
+pub mod arc;
 pub mod circle;
 pub mod line;
 pub mod text;
 
-use self::{circle::Circle, line::Line, text::Text};
+use self::{arc::Arc, circle::Circle, line::Line, text::Text};
+use crate::drawing::Drawing;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Color {
@@ -31,7 +33,9 @@ pub enum Stroke {
 
 #[derive(Debug)]
 pub enum Shape {
+    Drawing(Drawing),
     Text(Text),
     Line(Line),
     Circle(Circle),
+    Arc(Arc),
 }
