@@ -4,14 +4,28 @@ pub mod text;
 use self::{line::Line, text::Text};
 
 #[derive(Debug)]
+pub enum Color {
+    RGB { r: u8, g: u8, b: u8 },
+    U32(u32),
+}
+
+#[derive(Debug)]
 pub enum Fill {
-    Color(u32),
+    Color(Color),
 }
 
 #[derive(Debug)]
 pub enum Stroke {
-    Full(u32, u32),
-    Dashed(u32, u32, u32),
+    Full {
+        color: Color,
+        width: f32,
+    },
+    Dashed {
+        color: Color,
+        width: f32,
+        on: f32,
+        off: f32,
+    },
 }
 
 #[derive(Debug)]
