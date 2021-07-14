@@ -1,6 +1,6 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct Vec2 {
     pub x: f32,
     pub y: f32,
@@ -83,6 +83,16 @@ impl Mul for Vec2 {
         self.x *= rhs.x;
         self.y *= rhs.y;
         self
+    }
+}
+
+impl Mul<f32> for Vec2 {
+    type Output = Self;
+    fn mul(self, rhs: f32) -> Self::Output {
+        Vec2 {
+            x: self.x * rhs,
+            y: self.y * rhs,
+        }
     }
 }
 
