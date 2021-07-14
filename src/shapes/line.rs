@@ -23,7 +23,7 @@ impl LineStyle {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Line {
     pub from: Vec2,
     pub to: Vec2,

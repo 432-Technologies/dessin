@@ -57,7 +57,7 @@ impl TextStyle {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Text {
     pub pos: Vec2,
     pub text: String,

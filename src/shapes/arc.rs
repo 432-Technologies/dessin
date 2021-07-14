@@ -23,7 +23,7 @@ impl ArcStyle {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Arc {
     pub pos: Vec2,
     pub inner_radius: f32,

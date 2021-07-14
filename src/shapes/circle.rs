@@ -23,7 +23,7 @@ impl CircleStyle {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Circle {
     pub pos: Vec2,
     pub radius: f32,
