@@ -1,5 +1,5 @@
 use crate::shapes::{
-    arc::Arc, circle::Circle, drawing::EmbeddedDrawing, line::Line, text::Text, Shape,
+    arc::Arc, circle::Circle, drawing::EmbeddedDrawing, image::Image, line::Line, text::Text, Shape,
 };
 use algebra::Vec2;
 
@@ -57,6 +57,11 @@ impl AddShape<Circle> for Drawing {
 impl AddShape<Arc> for Drawing {
     fn add(&mut self, shape: Arc) {
         self.shapes.push(Shape::Arc(shape));
+    }
+}
+impl AddShape<Image> for Drawing {
+    fn add(&mut self, shape: Image) {
+        self.shapes.push(Shape::Image(shape));
     }
 }
 impl AddShape<EmbeddedDrawing> for Drawing {

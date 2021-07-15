@@ -1,12 +1,13 @@
 pub mod arc;
 pub mod circle;
 pub mod drawing;
+pub mod image;
 pub mod line;
 pub mod text;
 
 use algebra::Vec2;
 
-use self::{arc::Arc, circle::Circle, line::Line, text::Text};
+use self::{arc::Arc, circle::Circle, image::Image, line::Line, text::Text};
 use crate::drawing::Drawing;
 
 #[derive(Debug, Clone, Copy)]
@@ -34,7 +35,7 @@ pub enum Stroke {
     },
 }
 impl Stroke {
-    pub(crate) fn apply_transform(&mut self, pos: Vec2, scale: f32) {
+    pub(crate) fn apply_transform(&mut self, _: Vec2, scale: f32) {
         match self {
             Stroke::Full { color: _, width } => *width *= scale,
             Stroke::Dashed {
@@ -58,6 +59,7 @@ pub enum Shape {
     Line(Line),
     Circle(Circle),
     Arc(Arc),
+    Image(Image),
 }
 impl Shape {
     pub(crate) fn apply_transform(&mut self, pos: Vec2, scale: f32) {
@@ -93,6 +95,10 @@ impl Shape {
                 if let Some(ref mut s) = v.style.stroke {
                     s.apply_transform(pos, scale);
                 }
+            }
+            Shape::Image(v) => {
+                v.pos = (v.pos * scale) + pos;
+                v.size *= scale;
             }
         }
     }
