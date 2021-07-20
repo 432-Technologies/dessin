@@ -1,3 +1,4 @@
+pub use crate::shapes::text::{FontWeight, TextAlign};
 use algebra::Vec2;
 
 #[derive(Debug, Clone, Copy)]
