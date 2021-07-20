@@ -10,8 +10,6 @@ use algebra::{Angle, Vec2};
 use crate::{position::Rect, style::Style};
 
 use self::{
-    arc::Arc,
-    circle::Circle,
     image::ImageFormat,
     text::{FontWeight, TextAlign},
 };
