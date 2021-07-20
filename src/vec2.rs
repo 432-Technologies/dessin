@@ -1,30 +1,27 @@
 use std::ops::{Add, Div, Mul, MulAssign, Neg, Sub};
 
-pub fn vec2(x: f32, y: f32) -> Vec2 {
-    Vec2 { x, y }
+pub const fn vec2(x: f32, y: f32) -> Vec2 {
+    Vec2::from_cartesian((x, y))
 }
 
+/// Struct representing a vector or a point in 2D space.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
 pub struct Vec2 {
     pub x: f32,
     pub y: f32,
 }
 impl Vec2 {
-    /// Vector of zero.
+    /// Vector of zeros.
     pub const fn zero() -> Self {
-        Vec2::from_cartesian(0., 0.)
+        Vec2::from_cartesian((0., 0.))
     }
 
-    /// Vector of one.
+    /// Vector of ones.
     pub const fn ones() -> Self {
-        Vec2::from_cartesian(1., 1.)
+        Vec2::from_cartesian((1., 1.))
     }
 
-    pub const fn from_cartesian_tuple((x, y): (f32, f32)) -> Self {
-        Self::from_cartesian(x, y)
-    }
-
-    pub const fn from_cartesian(x: f32, y: f32) -> Self {
+    pub const fn from_cartesian((x, y): (f32, f32)) -> Self {
         Vec2 { x, y }
     }
 
@@ -61,7 +58,7 @@ impl Vec2 {
 
 impl From<(f32, f32)> for Vec2 {
     fn from((x, y): (f32, f32)) -> Self {
-        Self::from_cartesian_tuple((x, y))
+        Self::from_cartesian((x, y))
     }
 }
 

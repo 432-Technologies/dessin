@@ -1,44 +1,46 @@
-use std::{f32::consts::PI, ops::Deref};
+use std::f32::consts::PI;
 
-/// Helper function to create Radians.
-pub fn radians(rad: f32) -> Radians {
-    Radians::new(rad)
+#[derive(Debug, PartialEq, PartialOrd, Clone, Copy)]
+pub enum Angle {
+    Radians(f32),
+    Degrees(f32),
 }
-
-/// Helper function to create Degrees.
-pub fn degrees(rad: f32) -> Degrees {
-    Degrees::new(rad)
-}
-
-/// Radians.
-pub struct Radians(f32);
-impl Radians {
-    pub fn new(rad: f32) -> Radians {
-        Radians (rad)
+impl Angle {
+    pub const fn rad(rad: f32) -> Angle {
+        Angle::Radians(rad)
     }
 
-    pub fn to_degrees(&self) -> Degrees {
-        Degrees(**self * 180. / PI)
+    pub const fn deg(deg: f32) -> Angle {
+        Angle::Degrees(deg)
     }
-}
-impl Deref for Radians {
-    type Target = f32;
-    fn deref(&self) -> &f32 {
-        &self.0
-    }
-}
 
-
-/// Degrees.
-pub struct Degrees(f32);
-impl Degrees {
-    pub fn new(deg: f32) -> Degrees {
-        Degrees(deg)
+    pub const fn radians(radians: f32) -> Angle {
+        Angle::Radians(radians)
     }
-}
-impl Deref for Degrees {
-    type Target = f32;
-    fn deref(&self) -> &f32 {
-        &self.0
+
+    pub const fn degrees(degrees: f32) -> Angle {
+        Angle::Degrees(degrees)
+    }
+
+    pub fn to_rad(&self) -> f32 {
+        self.to_radians()
+    }
+
+    pub fn to_deg(&self) -> f32 {
+        self.to_degrees()
+    }
+
+    pub fn to_radians(&self) -> f32 {
+        match self {
+            Angle::Radians(radians) => *radians,
+            Angle::Degrees(degrees) => PI * degrees / 180.0,
+        }
+    }
+
+    pub fn to_degrees(&self) -> f32 {
+        match self {
+            Angle::Radians(radians) => 180.0 * radians / PI,
+            Angle::Degrees(degrees) => *degrees,
+        }
     }
 }
