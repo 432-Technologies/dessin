@@ -37,9 +37,10 @@ pub trait AddShape<T> {
 ///     .add(
 ///         Line::from(vec2(0., 0.)).to(vec2(100., 100.))
 ///     )
-///     //.add(
-///     //    Circle::at(vec2(50., 50.)).with_radius(10.)
-///     //)
+///     .add(
+///         Circle::new()
+///             .at(vec2(50., 50.)).with_radius(10.)
+///     )
 ///     .add(
 ///         Arc::new()
 ///             .at(vec2(50., 50.))
@@ -150,12 +151,18 @@ impl AddShape<Line> for Drawing {
         self
     }
 }
-// impl AddShape<Circle> for Drawing {
-//     fn add(&mut self, shape: Circle) -> &mut Self{
-//         self.shapes.push(Shape::Circle(shape));
-//         self
-//     }
-// }
+impl AddShape<Circle> for Drawing {
+    fn add(&mut self, shape: Circle) -> &mut Self {
+        self.shapes.push(Shape {
+            pos: shape.pos,
+            style: shape.style,
+            shape_type: ShapeType::Circle {
+                radius: shape.radius,
+            },
+        });
+        self
+    }
+}
 impl AddShape<Arc> for Drawing {
     fn add(&mut self, shape: Arc) -> &mut Self {
         self.shapes.push(Shape {

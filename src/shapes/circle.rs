@@ -11,6 +11,15 @@ pub struct Circle {
 macros::impl_pos!(Circle);
 macros::impl_style!(Circle);
 impl Circle {
+    /// Default circle.
+    pub const fn new() -> Circle {
+        Circle {
+            pos: Rect::new(),
+            radius: 0.0,
+            style: None,
+        }
+    }
+
     /// Create circle with radius.
     pub const fn with_radius(mut self, radius: f32) -> Self {
         self.radius = radius;

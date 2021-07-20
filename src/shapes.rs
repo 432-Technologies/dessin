@@ -37,7 +37,9 @@ pub enum ShapeType {
         from: Vec2,
         to: Vec2,
     },
-    Circle(Circle),
+    Circle {
+        radius: f32,
+    },
     Arc {
         inner_radius: f32,
         outer_radius: f32,
