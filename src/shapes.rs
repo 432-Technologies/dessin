@@ -5,7 +5,7 @@ pub mod image;
 pub mod line;
 pub mod text;
 
-use algebra::Vec2;
+use algebra::{Angle, Vec2};
 
 use crate::{position::Rect, style::Style};
 
@@ -38,7 +38,12 @@ pub enum ShapeType {
         to: Vec2,
     },
     Circle(Circle),
-    Arc(Arc),
+    Arc {
+        inner_radius: f32,
+        outer_radius: f32,
+        start_angle: Angle,
+        end_angle: Angle,
+    },
     Image {
         data: ImageFormat,
     },

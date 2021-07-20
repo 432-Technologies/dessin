@@ -6,7 +6,7 @@ use crate::{
     },
     Size,
 };
-use algebra::Vec2;
+use algebra::{vec2, Vec2};
 
 pub trait AddShape<T> {
     fn add(&mut self, shape: T) -> &mut Self;
@@ -25,11 +25,12 @@ pub trait AddShape<T> {
 /// #         { Image, ImageFormat },
 /// #     },
 /// #     vec2,
+/// #     Angle,
 /// # };
 ///
-/// let drawing = Drawing::empty()
-///     .with_canvas_size((100., 100.))
-///     .add(
+/// let mut drawing = Drawing::empty().with_canvas_size(vec2(100., 100.));
+///
+/// drawing.add(
 ///         Text::new("Hello World".to_owned())
 ///             .at(vec2(50., 50.))
 ///     )
@@ -39,13 +40,14 @@ pub trait AddShape<T> {
 ///     //.add(
 ///     //    Circle::at(vec2(50., 50.)).with_radius(10.)
 ///     //)
-///     //.add(
-///     //    Arc::at(vec2(50., 50.))
-///     //        .with_inner_radius(10.)
-///     //        .with_outer_radius(20.)
-///     //        .with_start_angle(0.)
-///     //        .with_end_angle(180.)
-///     //)
+///     .add(
+///         Arc::new()
+///             .at(vec2(50., 50.))
+///             .with_inner_radius(10.)
+///             .with_outer_radius(20.)
+///             .with_start_angle(Angle::deg(0.))
+///             .with_end_angle(Angle::deg(180.))
+///     )
 ///     .add(
 ///         Image::new(ImageFormat::PNG(include_bytes!("../rustacean-flat-happy.png").to_vec()))
 ///             .at(vec2(50., 50.))
@@ -66,18 +68,47 @@ pub struct Drawing {
     pub(crate) shapes: Vec<Shape>,
 }
 impl Drawing {
+    /// Default constructor, creates an empty drawing.
     pub const fn empty() -> Self {
         Drawing {
-            canvas_size: Vec2::from_cartesian_tuple((0., 0.)),
+            canvas_size: vec2(0., 0.),
             shapes: vec![],
         }
     }
 
-    pub const fn with_canvas_size(mut self, canvas_size: (f32, f32)) -> Self {
-        self.canvas_size = Vec2::from_cartesian_tuple(canvas_size);
+    pub const fn with_canvas_size(mut self, canvas_size: Vec2) -> Self {
+        self.canvas_size = canvas_size;
         self
     }
 
+    /// Get access to this drawing's shapes.
+    /// ```
+    /// # use drawing::{
+    /// #     Drawing,
+    /// #     AddShape,
+    /// #     shape::{
+    /// #         Text,
+    /// #         Line,
+    /// #         Circle,
+    /// #         Arc,
+    /// #         { Image, ImageFormat },
+    /// #     },
+    /// #     vec2,
+    /// # };
+    ///
+    /// let mut drawing = Drawing::empty().with_canvas_size(vec2(100., 100.));
+    ///
+    /// drawing.add(
+    ///         Text::new("Hello World".to_owned())
+    ///             .at(vec2(50., 50.))
+    ///     )
+    ///     .add(
+    ///         Line::from(vec2(0., 0.)).to(vec2(100., 100.))
+    ///     );
+    ///
+    /// let shapes = drawing.shapes();
+    /// dbg!("{:?}", shapes);
+    /// ```
     pub fn shapes(&self) -> &Vec<Shape> {
         &self.shapes
     }
@@ -102,8 +133,8 @@ impl AddShape<Text> for Drawing {
         self
     }
 }
-impl AddShape<Line<true>> for Drawing {
-    fn add(&mut self, shape: Line<true>) -> &mut Self {
+impl AddShape<Line> for Drawing {
+    fn add(&mut self, shape: Line) -> &mut Self {
         let pos = Rect::new()
             .at((shape.from + shape.to) / 2.)
             .with_size((shape.from - shape.to).abs());
@@ -125,12 +156,21 @@ impl AddShape<Line<true>> for Drawing {
 //         self
 //     }
 // }
-// impl AddShape<Arc> for Drawing {
-//     fn add(&mut self, shape: Arc) -> &mut Self{
-//         self.shapes.push(Shape::Arc(shape));
-//         self
-//     }
-// }
+impl AddShape<Arc> for Drawing {
+    fn add(&mut self, shape: Arc) -> &mut Self {
+        self.shapes.push(Shape {
+            pos: shape.pos,
+            style: shape.style,
+            shape_type: ShapeType::Arc {
+                inner_radius: shape.inner_radius,
+                outer_radius: shape.outer_radius,
+                start_angle: shape.start_angle,
+                end_angle: shape.end_angle,
+            },
+        });
+        self
+    }
+}
 impl AddShape<Image> for Drawing {
     fn add(&mut self, shape: Image) -> &mut Self {
         self.shapes.push(Shape {
