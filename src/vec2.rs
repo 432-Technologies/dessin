@@ -1,4 +1,4 @@
-use std::ops::{Add, Div, Mul, MulAssign, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 pub const fn vec2(x: f32, y: f32) -> Vec2 {
     Vec2::from_cartesian((x, y))
@@ -53,6 +53,11 @@ impl Vec2 {
             x: self.x.abs(),
             y: self.y.abs(),
         }
+    }
+
+    /// Dot product.
+    pub fn dot(a: &Self, b: &Self) -> f32 {
+        a.x * b.x + a.y * b.y
     }
 }
 
@@ -130,6 +135,40 @@ impl Mul<f32> for Vec2 {
     }
 }
 
+impl Div<f32> for Vec2 {
+    type Output = Vec2;
+    fn div(self, rhs: f32) -> Self::Output {
+        Vec2 {
+            x: self.x / rhs,
+            y: self.y / rhs,
+        }
+    }
+}
+
+impl AddAssign for Vec2 {
+    fn add_assign(&mut self, rhs: Self) {
+        *self = *self + rhs;
+    }
+}
+
+impl AddAssign<f32> for Vec2 {
+    fn add_assign(&mut self, rhs: f32) {
+        *self = *self + rhs;
+    }
+}
+
+impl SubAssign for Vec2 {
+    fn sub_assign(&mut self, rhs: Self) {
+        *self = *self - rhs;
+    }
+}
+
+impl SubAssign<f32> for Vec2 {
+    fn sub_assign(&mut self, rhs: f32) {
+        *self = *self - rhs;
+    }
+}
+
 impl MulAssign for Vec2 {
     fn mul_assign(&mut self, rhs: Self) {
         *self = *self * rhs;
@@ -142,12 +181,8 @@ impl MulAssign<f32> for Vec2 {
     }
 }
 
-impl Div<f32> for Vec2 {
-    type Output = Vec2;
-    fn div(self, rhs: f32) -> Self::Output {
-        Vec2 {
-            x: self.x / rhs,
-            y: self.y / rhs,
-        }
+impl DivAssign<f32> for Vec2 {
+    fn div_assign(&mut self, rhs: f32) {
+        *self = *self / rhs;
     }
 }
