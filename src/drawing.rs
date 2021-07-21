@@ -11,7 +11,7 @@ pub trait AddShape<T> {
 
 /// Drawing is a collection of shapes.
 /// ```
-/// # use drawing::{
+/// # use dessin::{
 /// #     Drawing,
 /// #     AddShape,
 /// #     shape::{
@@ -81,7 +81,7 @@ impl Drawing {
 
     /// Get access to this drawing's shapes.
     /// ```
-    /// # use drawing::{
+    /// # use dessin::{
     /// #     Drawing,
     /// #     AddShape,
     /// #     shape::{
