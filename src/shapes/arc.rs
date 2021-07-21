@@ -4,12 +4,12 @@ use crate::{position::Rect, style::Style};
 
 #[derive(Debug, Clone)]
 pub struct Arc {
-    pub pos: Rect,
-    pub inner_radius: f32,
-    pub outer_radius: f32,
-    pub start_angle: Angle,
-    pub end_angle: Angle,
-    pub style: Option<Style>,
+    pub(crate) pos: Rect,
+    pub(crate) inner_radius: f32,
+    pub(crate) outer_radius: f32,
+    pub(crate) start_angle: Angle,
+    pub(crate) end_angle: Angle,
+    pub(crate) style: Option<Style>,
 }
 crate::impl_pos!(Arc);
 crate::impl_style!(Arc);

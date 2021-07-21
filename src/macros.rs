@@ -1,3 +1,4 @@
+#[doc(hidden)]
 #[macro_export]
 macro_rules! impl_pos_at {
     ($t:ty) => {
@@ -15,6 +16,7 @@ macro_rules! impl_pos_at {
     };
 }
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! impl_pos_anchor {
     ($t:ty) => {
@@ -27,6 +29,7 @@ macro_rules! impl_pos_anchor {
     };
 }
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! impl_pos_size {
     ($t:ty) => {
@@ -39,6 +42,7 @@ macro_rules! impl_pos_size {
     };
 }
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! impl_pos {
     ($t:ty) => {
@@ -48,6 +52,7 @@ macro_rules! impl_pos {
     };
 }
 
+#[doc(hidden)]
 #[macro_export]
 macro_rules! impl_style {
     ($t:ty) => {

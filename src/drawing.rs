@@ -1,6 +1,9 @@
 use crate::{
     position::Rect,
-    shapes::{arc::Arc, circle::Circle, image::Image, line::Line, text::Text, Shape, ShapeType},
+    shapes::{
+        arc::Arc, circle::Circle, embedded::EmbeddedDrawing, image::Image, line::Line, text::Text,
+        Shape, ShapeType,
+    },
     Size,
 };
 use algebr::{vec2, Vec2};
@@ -20,6 +23,7 @@ pub trait AddShape<T> {
 /// #         Circle,
 /// #         Arc,
 /// #         { Image, ImageFormat },
+/// #         EmbeddedDrawing,
 /// #     },
 /// #     vec2,
 /// #     Angle,
@@ -52,17 +56,17 @@ pub trait AddShape<T> {
 ///             .with_size(vec2(10., 10.))
 ///     );
 ///     
-///     //let other_drawing = Drawing::empty()
-///     //    .with_canvas_size((210., 297.))
-///     //    .add(
-///     //        EmbeddedDrawing::from(drawing)
-///     //            .at(vec2(100., 100.))
-///     //            .with_size(vec2(10., 10.))
-///     //    );
+/// let other_drawing = Drawing::empty()
+///     .with_canvas_size(vec2(210., 297.))
+///     .add(
+///         EmbeddedDrawing::new(drawing)
+///             .at(vec2(100., 100.))
+///             .with_size(vec2(10., 10.))
+///     );
 /// ```
 #[derive(Debug, Clone)]
 pub struct Drawing {
-    pub canvas_size: Size,
+    pub(crate) canvas_size: Size,
     pub(crate) shapes: Vec<Shape>,
 }
 impl Drawing {
@@ -185,23 +189,13 @@ impl AddShape<Image> for Drawing {
         self
     }
 }
-// impl AddShape<EmbeddedDrawing> for Drawing {
-//     fn add(
-//         &mut self,
-//         EmbeddedDrawing {
-//             mut shapes,
-//             pos,
-//             canvas_anchor,
-//             scale,
-//         }: EmbeddedDrawing,
-//     ) {
-//         if canvas_anchor != Vec2::from_cartesian(0., 0.) {
-//             unimplemented!()
-//         }
-
-//         shapes
-//             .iter_mut()
-//             .for_each(|s| s.apply_transform(pos, scale));
-//         self.shapes.push(Shape::Drawing(shapes));
-//     }
-// }
+impl AddShape<EmbeddedDrawing> for Drawing {
+    fn add(&mut self, shape: EmbeddedDrawing) -> &mut Self {
+        self.shapes.push(Shape {
+            pos: shape.pos,
+            style: shape.style,
+            shape_type: ShapeType::Drawing(shape.shapes),
+        });
+        self
+    }
+}

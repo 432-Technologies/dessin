@@ -2,9 +2,9 @@ use crate::{position::Rect, style::Style};
 
 #[derive(Debug, Clone)]
 pub struct Circle {
-    pub pos: Rect,
-    pub radius: f32,
-    pub style: Option<Style>,
+    pub(crate) pos: Rect,
+    pub(crate) radius: f32,
+    pub(crate) style: Option<Style>,
 }
 crate::impl_pos!(Circle);
 crate::impl_style!(Circle);
