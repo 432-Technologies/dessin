@@ -1,5 +1,5 @@
 [package]
-name = "drawing"
+name = "dessin"
 version = "0.2.0"
 authors = ["Olivier Lemoine <olivier@le-moine.fr>"]
 edition = "2018"
@@ -9,4 +9,3 @@ description = "Build complex drawing for PDF, SVG, ..."
 
 [dependencies]
 algebr = "0.1.0"
-# macros = { path = "./macros", version = "0.1.0" }
