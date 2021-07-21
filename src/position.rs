@@ -38,4 +38,8 @@ impl Rect {
         self.size
             .map(|size| self.pos + (new_anchor - self.anchor) * size / 2.)
     }
+
+    pub const fn size(&self) -> Option<Vec2> {
+        self.size
+    }
 }

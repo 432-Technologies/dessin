@@ -122,7 +122,7 @@ impl Drawing {
 impl AddShape<Text> for Drawing {
     fn add(&mut self, shape: Text) -> &mut Self {
         self.shapes.push(Shape {
-            pos: shape.pos,
+            pos: shape.pos.with_size(Vec2::ones()),
             style: shape.style,
             shape_type: ShapeType::Text {
                 text: shape.text,
@@ -153,8 +153,10 @@ impl AddShape<Line> for Drawing {
 }
 impl AddShape<Circle> for Drawing {
     fn add(&mut self, shape: Circle) -> &mut Self {
+        let size = Vec2::ones() * shape.radius * 2.;
+
         self.shapes.push(Shape {
-            pos: shape.pos,
+            pos: shape.pos.with_size(size),
             style: shape.style,
             shape_type: ShapeType::Circle {
                 radius: shape.radius,
@@ -165,8 +167,10 @@ impl AddShape<Circle> for Drawing {
 }
 impl AddShape<Arc> for Drawing {
     fn add(&mut self, shape: Arc) -> &mut Self {
+        let size = Vec2::ones() * shape.outer_radius * 2.;
+
         self.shapes.push(Shape {
-            pos: shape.pos,
+            pos: shape.pos.with_size(size),
             style: shape.style,
             shape_type: ShapeType::Arc {
                 inner_radius: shape.inner_radius,
