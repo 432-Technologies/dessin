@@ -65,10 +65,10 @@ impl Shape {
         match &mut self.shape_type {
             ShapeType::Drawing(s) => s.iter_mut().for_each(|v| v.update_scale(scale)),
             ShapeType::Text {
-                text,
-                align,
+                text: _,
+                align: _,
                 font_size,
-                font_weight,
+                font_weight: _,
             } => {
                 *font_size *= scale;
             }
