@@ -2,9 +2,9 @@ use algebr::Vec2;
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Rect {
-    pos: Vec2,
-    anchor: Vec2,
-    size: Option<Vec2>,
+    pub(crate) pos: Vec2,
+    pub(crate) anchor: Vec2,
+    pub(crate) size: Option<Vec2>,
 }
 impl Rect {
     pub const fn new() -> Self {

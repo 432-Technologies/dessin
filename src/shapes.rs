@@ -1,5 +1,6 @@
 pub mod arc;
 pub mod circle;
+pub mod embedded;
 pub mod image;
 pub mod line;
 pub mod text;
@@ -14,6 +15,8 @@ use self::{
 };
 
 /// Base shape.
+///
+/// The [`Shape::pos`][Shape::pos] member must *at any time* reflect the bounding box of the shape.
 #[derive(Debug, Clone)]
 pub struct Shape {
     pub pos: Rect,
@@ -46,4 +49,48 @@ pub enum ShapeType {
     Image {
         data: ImageFormat,
     },
+}
+impl Shape {
+    /// Update the position of the shape.
+    pub(crate) fn update_pos(&mut self, pos: Vec2) {
+        self.pos.pos = pos;
+        match &mut self.shape_type {
+            ShapeType::Drawing(s) => s.iter_mut().for_each(|v| v.update_pos(pos)),
+            _ => {}
+        }
+    }
+
+    /// Update the scale of the shape.
+    pub(crate) fn update_scale(&mut self, scale: f32) {
+        match &mut self.shape_type {
+            ShapeType::Drawing(s) => s.iter_mut().for_each(|v| v.update_scale(scale)),
+            ShapeType::Text {
+                text,
+                align,
+                font_size,
+                font_weight,
+            } => {
+                *font_size *= scale;
+            }
+            ShapeType::Line { from, to } => {
+                *from *= scale;
+                *to *= scale;
+            }
+            ShapeType::Circle { radius } => {
+                *radius *= scale;
+            }
+            ShapeType::Arc {
+                inner_radius,
+                outer_radius,
+                start_angle: _,
+                end_angle: _,
+            } => {
+                *inner_radius *= scale;
+                *outer_radius *= scale;
+            }
+            ShapeType::Image { data: _ } => {}
+        }
+
+        self.pos.size = self.pos.size.map(|v| v * scale);
+    }
 }

@@ -17,12 +17,12 @@ pub enum TextAlign {
 
 #[derive(Debug, Clone)]
 pub struct Text {
-    pub pos: Rect,
-    pub text: String,
-    pub style: Option<Style>,
-    pub align: TextAlign,
-    pub font_size: f32,
-    pub font_weight: FontWeight,
+    pub(crate) pos: Rect,
+    pub(crate) text: String,
+    pub(crate) style: Option<Style>,
+    pub(crate) align: TextAlign,
+    pub(crate) font_size: f32,
+    pub(crate) font_weight: FontWeight,
 }
 crate::impl_pos!(Text);
 crate::impl_style!(Text);

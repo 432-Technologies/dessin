@@ -6,9 +6,9 @@ pub type Line = LineBuilder<true>;
 
 #[derive(Debug, Clone)]
 pub struct LineBuilder<const IS_INIT: bool> {
-    pub from: Vec2,
-    pub to: Vec2,
-    pub style: Option<Style>,
+    pub(crate) from: Vec2,
+    pub(crate) to: Vec2,
+    pub(crate) style: Option<Style>,
 }
 crate::impl_style!(LineBuilder<true>);
 impl<const IS_INIT: bool> LineBuilder<IS_INIT> {

@@ -8,9 +8,9 @@ pub enum ImageFormat {
 
 #[derive(Debug, Clone)]
 pub struct Image {
-    pub pos: Rect,
-    pub style: Option<Style>,
-    pub data: ImageFormat,
+    pub(crate) pos: Rect,
+    pub(crate) style: Option<Style>,
+    pub(crate) data: ImageFormat,
 }
 crate::impl_pos!(Image);
 crate::impl_style!(Image);
