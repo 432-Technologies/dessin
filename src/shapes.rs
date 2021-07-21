@@ -1,6 +1,5 @@
 pub mod arc;
 pub mod circle;
-pub mod drawing;
 pub mod image;
 pub mod line;
 pub mod text;

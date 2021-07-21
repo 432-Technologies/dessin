@@ -11,8 +11,8 @@ pub struct Arc {
     pub end_angle: Angle,
     pub style: Option<Style>,
 }
-macros::impl_pos!(Arc);
-macros::impl_style!(Arc);
+crate::impl_pos!(Arc);
+crate::impl_style!(Arc);
 impl Arc {
     pub const fn new() -> Arc {
         Arc {

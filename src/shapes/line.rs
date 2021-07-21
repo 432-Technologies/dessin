@@ -10,7 +10,7 @@ pub struct LineBuilder<const IS_INIT: bool> {
     pub to: Vec2,
     pub style: Option<Style>,
 }
-macros::impl_style!(LineBuilder<true>);
+crate::impl_style!(LineBuilder<true>);
 impl<const IS_INIT: bool> LineBuilder<IS_INIT> {
     pub const fn from(from: Vec2) -> LineBuilder<false> {
         LineBuilder {

@@ -1,5 +1,4 @@
 pub use crate::shapes::text::{FontWeight, TextAlign};
-use algebr::Vec2;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Color {
@@ -25,23 +24,23 @@ pub enum Stroke {
         off: f32,
     },
 }
-impl Stroke {
-    pub(crate) fn apply_transform(&mut self, _: Vec2, scale: f32) {
-        match self {
-            Stroke::Full { color: _, width } => *width *= scale,
-            Stroke::Dashed {
-                color: _,
-                width,
-                on,
-                off,
-            } => {
-                *width *= scale;
-                *on *= scale;
-                *off *= scale;
-            }
-        }
-    }
-}
+// impl Stroke {
+//     pub(crate) fn apply_transform(&mut self, _: Vec2, scale: f32) {
+//         match self {
+//             Stroke::Full { color: _, width } => *width *= scale,
+//             Stroke::Dashed {
+//                 color: _,
+//                 width,
+//                 on,
+//                 off,
+//             } => {
+//                 *width *= scale;
+//                 *on *= scale;
+//                 *off *= scale;
+//             }
+//         }
+//     }
+// }
 
 /// A style is a set of attributes that can be applied to a shape.
 #[derive(Debug, Clone, Default)]

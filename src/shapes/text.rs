@@ -24,8 +24,8 @@ pub struct Text {
     pub font_size: f32,
     pub font_weight: FontWeight,
 }
-macros::impl_pos!(Text);
-macros::impl_style!(Text);
+crate::impl_pos!(Text);
+crate::impl_style!(Text);
 impl Text {
     pub const fn new(text: String) -> Self {
         Text {

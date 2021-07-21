@@ -1,9 +1,6 @@
 use crate::{
     position::Rect,
-    shapes::{
-        arc::Arc, circle::Circle, drawing::EmbeddedDrawing, image::Image, line::Line, text::Text,
-        Shape, ShapeType,
-    },
+    shapes::{arc::Arc, circle::Circle, image::Image, line::Line, text::Text, Shape, ShapeType},
     Size,
 };
 use algebr::{vec2, Vec2};
@@ -112,10 +109,6 @@ impl Drawing {
     /// ```
     pub fn shapes(&self) -> &Vec<Shape> {
         &self.shapes
-    }
-
-    pub fn into_embedded(self) -> EmbeddedDrawing {
-        EmbeddedDrawing::from_drawing(self)
     }
 }
 

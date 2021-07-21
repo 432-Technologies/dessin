@@ -12,8 +12,8 @@ pub struct Image {
     pub style: Option<Style>,
     pub data: ImageFormat,
 }
-macros::impl_pos!(Image);
-macros::impl_style!(Image);
+crate::impl_pos!(Image);
+crate::impl_style!(Image);
 impl Image {
     /// Create a new image from a raw data.
     pub fn new(data: ImageFormat) -> Image {
