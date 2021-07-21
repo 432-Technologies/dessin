@@ -3,9 +3,13 @@ name = "drawing"
 version = "0.2.0"
 authors = ["Olivier Lemoine <olivier@le-moine.fr>"]
 edition = "2018"
+license = "MIT"
+license-file = "LICENSE"
+repository = "https://github.com/daedalus-aero-space/drawing"
+description = "Build complex drawing for PDF, SVG, ..."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-algebra = { git = "https://github.com/daedalus-aero-space/algebra", branch = "main" }
-macros = { path = "macros" }
+algebr = "0.1.0"
+macros = { path = "macros", version = "0.1.0" }

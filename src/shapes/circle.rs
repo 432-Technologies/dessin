@@ -1,4 +1,4 @@
-use algebra::Vec2;
+use algebr::Vec2;
 
 use crate::{position::Rect, style::Style};
 

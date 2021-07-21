@@ -1,4 +1,4 @@
-use algebra::Angle;
+use algebr::Angle;
 
 use crate::{position::Rect, style::Style};
 

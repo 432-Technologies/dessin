@@ -6,7 +6,7 @@ use crate::{
     },
     Size,
 };
-use algebra::{vec2, Vec2};
+use algebr::{vec2, Vec2};
 
 pub trait AddShape<T> {
     fn add(&mut self, shape: T) -> &mut Self;

@@ -7,17 +7,17 @@ macro_rules! impl_pos {
                 self
             }
 
-            pub const fn at(mut self, pos: ::algebra::Vec2) -> Self {
+            pub const fn at(mut self, pos: ::algebr::Vec2) -> Self {
                 self.pos = self.pos.at(pos);
                 self
             }
 
-            pub const fn with_anchor(mut self, anchor: ::algebra::Vec2) -> Self {
+            pub const fn with_anchor(mut self, anchor: ::algebr::Vec2) -> Self {
                 self.pos = self.pos.with_anchor(anchor);
                 self
             }
 
-            pub const fn with_size(mut self, size: ::algebra::Vec2) -> Self {
+            pub const fn with_size(mut self, size: ::algebr::Vec2) -> Self {
                 self.pos = self.pos.with_size(size);
                 self
             }

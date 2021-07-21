@@ -5,7 +5,7 @@ pub mod image;
 pub mod line;
 pub mod text;
 
-use algebra::{Angle, Vec2};
+use algebr::{Angle, Vec2};
 
 use crate::{position::Rect, style::Style};
 

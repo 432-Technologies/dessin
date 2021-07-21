@@ -1,4 +1,4 @@
-use algebra::Vec2;
+use algebr::Vec2;
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Rect {

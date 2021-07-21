@@ -8,7 +8,7 @@ pub type Size = Vec2;
 pub use crate::drawing::{AddShape, Drawing};
 pub use crate::position::Rect;
 pub use crate::shapes::{Shape, ShapeType};
-pub use algebra::{vec2, Angle, Vec2};
+pub use algebr::{vec2, Angle, Vec2};
 
 pub mod shape {
     pub use crate::shapes::arc::Arc;
