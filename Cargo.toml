@@ -3,6 +3,9 @@ name = "algebra"
 version = "0.1.0"
 authors = ["Olivier Lemoine <olivier@le-moine.fr>"]
 edition = "2018"
+license-file = "LICENSE"
+description = "Basic algebra"
+homepage = "https://github.com/daedalus-aero-space/algebra"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
