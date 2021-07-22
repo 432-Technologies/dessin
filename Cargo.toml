@@ -1,10 +1,10 @@
 [package]
 name = "algebr"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Olivier Lemoine <olivier@le-moine.fr>"]
 edition = "2018"
 license-file = "LICENSE"
 description = "Basic algebra"
-homepage = "https://github.com/daedalus-aero-space/algebra"
+homepage = "https://github.com/daedalus-aero-space/algebr"
 
 [dependencies]
