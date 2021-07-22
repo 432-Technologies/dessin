@@ -58,6 +58,10 @@ impl Shape {
         self.pos.pos = pos;
         match &mut self.shape_type {
             ShapeType::Drawing(s) => s.iter_mut().for_each(|v| v.update_pos(pos)),
+            ShapeType::Line { from, to } => {
+                *from += pos;
+                *to += pos;
+            }
             _ => {}
         }
     }

@@ -46,6 +46,7 @@ mod tests {
     use crate::{
         shape::{Color, Stroke},
         shapes::{
+            circle::Circle,
             image::{Image, ImageFormat},
             line::Line,
             ShapeType,
@@ -54,7 +55,7 @@ mod tests {
     };
 
     #[test]
-    fn test_embedded_drawing() {
+    fn test_embedded_drawing_image() {
         let mut drawing = Drawing::empty().with_canvas_size(vec2(100., 100.));
         drawing.add(
             Image::new(ImageFormat::PNG(vec![]))
@@ -87,17 +88,85 @@ mod tests {
                     size: Some(vec2(10., 5.)),
                 }
             );
+            if let ShapeType::Image { data: _ } = &shapes[0].shape_type {
+            } else {
+                panic!("Wrong shape type");
+            }
         } else {
             panic!("Wrong shape type");
         }
     }
 
     #[test]
-    fn test_embedded_drawing_with_style() {
+    fn test_embedded_drawing_line_with_style() {
         let mut drawing = Drawing::empty().with_canvas_size(vec2(100., 100.));
         drawing.add(
             Line::from(vec2(0., 0.))
                 .to(vec2(100., 100.))
+                .with_stroke(Stroke::Dashed {
+                    color: Color::U32(0xFF0000FF),
+                    width: 4.,
+                    on: 2.,
+                    off: 6.,
+                }),
+        );
+
+        let mut parent = Drawing::empty().with_canvas_size(vec2(100., 100.));
+        parent.add(
+            EmbeddedDrawing::new(drawing)
+                .at(vec2(50., 50.))
+                .with_size(vec2(50., 50.)),
+        );
+
+        assert_eq!(
+            parent.shapes()[0].pos,
+            Rect {
+                pos: vec2(50., 50.),
+                size: Some(vec2(50., 50.)),
+                anchor: Vec2::zero(),
+            }
+        );
+
+        if let ShapeType::Drawing(shapes) = &parent.shapes()[0].shape_type {
+            assert_eq!(
+                shapes[0].pos,
+                Rect {
+                    pos: vec2(50., 50.),
+                    anchor: Vec2::zero(),
+                    size: Some(vec2(50., 50.)),
+                }
+            );
+            assert_eq!(
+                shapes[0].style,
+                Some(Style {
+                    stroke: Some(Stroke::Dashed {
+                        color: Color::U32(0xFF0000FF),
+                        width: 2.,
+                        on: 1.,
+                        off: 3.,
+                    }),
+                    ..Default::default()
+                })
+            );
+
+            if let ShapeType::Line { from, to } = &shapes[0].shape_type {
+                assert_eq!(*from, vec2(25., 25.));
+                assert_eq!(*to, vec2(75., 75.));
+            } else {
+                panic!("Wrong shape type");
+            }
+        } else {
+            panic!("Wrong shape type");
+        }
+    }
+
+    #[test]
+    fn test_embedded_drawing_circle_with_style() {
+        let mut drawing = Drawing::empty().with_canvas_size(vec2(100., 100.));
+        drawing.add(
+            Circle::new()
+                .at(vec2(50., 50.))
+                .with_radius(10.)
                 .with_stroke(Stroke::Dashed {
                     color: Color::U32(0xFF0000FF),
                     width: 4.,
@@ -128,7 +197,7 @@ mod tests {
                 Rect {
                     pos: vec2(75., 75.),
                     anchor: Vec2::zero(),
-                    size: Some(vec2(50., 50.)),
+                    size: Some(vec2(10., 10.)),
                 }
             );
             assert_eq!(
@@ -143,6 +212,12 @@ mod tests {
                     ..Default::default()
                 })
             );
+
+            if let ShapeType::Circle { radius } = &shapes[0].shape_type {
+                assert_eq!(*radius, 5.);
+            } else {
+                panic!("Wrong shape type");
+            }
         } else {
             panic!("Wrong shape type");
         }
