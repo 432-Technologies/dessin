@@ -83,6 +83,10 @@ impl Drawing {
         self
     }
 
+    pub const fn canvas_size(&self) -> Vec2 {
+        self.canvas_size
+    }
+
     /// Get access to this drawing's shapes.
     /// ```
     /// # use dessin::{
