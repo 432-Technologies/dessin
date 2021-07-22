@@ -14,6 +14,8 @@ use self::{
     text::{FontWeight, TextAlign},
 };
 
+use crate::style::Stroke;
+
 /// Base shape.
 ///
 /// The [`Shape::pos`][Shape::pos] member must *at any time* reflect the bounding box of the shape.
@@ -92,5 +94,21 @@ impl Shape {
         }
 
         self.pos.size = self.pos.size.map(|v| v * scale);
+        match self.style.as_mut().map(|v| &mut v.stroke) {
+            Some(Some(Stroke::Full { color: _, width })) => {
+                *width *= scale;
+            }
+            Some(Some(Stroke::Dashed {
+                color: _,
+                width,
+                on,
+                off,
+            })) => {
+                *width *= scale;
+                *on *= scale;
+                *off *= scale;
+            }
+            _ => {}
+        }
     }
 }
