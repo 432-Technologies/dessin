@@ -1,17 +1,17 @@
 pub use crate::shapes::text::{FontWeight, TextAlign};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Color {
     RGB { r: u8, g: u8, b: u8 },
     U32(u32),
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Fill {
     Color(Color),
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Stroke {
     Full {
         color: Color,
@@ -43,7 +43,7 @@ pub enum Stroke {
 // }
 
 /// A style is a set of attributes that can be applied to a shape.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Style {
     pub fill: Option<Fill>,
     pub stroke: Option<Stroke>,
