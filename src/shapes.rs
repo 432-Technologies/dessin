@@ -55,6 +55,7 @@ pub enum ShapeType {
 impl Shape {
     /// Update the position of the shape.
     pub(crate) fn update_pos(&mut self, pos: Vec2) {
+        let prev_pos = self.pos.pos;
         self.pos.pos = pos;
         match &mut self.shape_type {
             ShapeType::Drawing(s) => {
@@ -64,8 +65,9 @@ impl Shape {
                 });
             }
             ShapeType::Line { from, to } => {
-                *from += pos;
-                *to += pos;
+                let delta = pos - prev_pos;
+                *from += delta;
+                *to += delta;
             }
             _ => {}
         }
