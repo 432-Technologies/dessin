@@ -106,6 +106,84 @@ mod tests_embedded {
     }
 
     #[test]
+    fn scale_line() {
+        let mut drawing = Drawing::empty().with_canvas_size(vec2(100., 100.));
+        drawing.add(Line::from(vec2(10., 10.)).to(vec2(10., -10.)));
+
+        let mut parent = Drawing::empty().with_canvas_size(vec2(100., 100.));
+        parent.add(EmbeddedDrawing::new(drawing).with_size(vec2(50., 50.)));
+
+        let drawing = &parent.shapes()[0];
+        if let ShapeType::Drawing(shapes) = &drawing.shape_type {
+            assert_eq!(
+                parent.shapes()[0].pos,
+                Rect {
+                    pos: vec2(0., 0.),
+                    size: Some(vec2(50., 50.)),
+                    anchor: Vec2::zero(),
+                }
+            );
+
+            let image = &shapes[0];
+            if let ShapeType::Line { from, to } = image.shape_type {
+                assert_eq!(
+                    image.pos,
+                    Rect {
+                        pos: vec2(5., 0.),
+                        anchor: Vec2::zero(),
+                        size: Some(vec2(0., 10.)),
+                    }
+                );
+                assert_eq!(from, vec2(5., 5.));
+                assert_eq!(to, vec2(5., -5.));
+            } else {
+                panic!("Wrong shape type");
+            }
+        } else {
+            panic!("Wrong shape type");
+        }
+    }
+
+    #[test]
+    fn pos_line() {
+        let mut drawing = Drawing::empty().with_canvas_size(vec2(100., 100.));
+        drawing.add(Line::from(vec2(10., 10.)).to(vec2(10., -10.)));
+
+        let mut parent = Drawing::empty().with_canvas_size(vec2(100., 100.));
+        parent.add(EmbeddedDrawing::new(drawing).at(vec2(50., 50.)));
+
+        let drawing = &parent.shapes()[0];
+        if let ShapeType::Drawing(shapes) = &drawing.shape_type {
+            assert_eq!(
+                parent.shapes()[0].pos,
+                Rect {
+                    pos: vec2(50., 50.),
+                    size: Some(vec2(100., 100.)),
+                    anchor: Vec2::zero(),
+                }
+            );
+
+            let image = &shapes[0];
+            if let ShapeType::Line { from, to } = image.shape_type {
+                assert_eq!(
+                    image.pos,
+                    Rect {
+                        pos: vec2(60., 50.),
+                        anchor: Vec2::zero(),
+                        size: Some(vec2(0., 20.)),
+                    }
+                );
+                assert_eq!(from, vec2(10., 10.) + 50.);
+                assert_eq!(to, vec2(10., -10.) + 50.);
+            } else {
+                panic!("Wrong shape type");
+            }
+        } else {
+            panic!("Wrong shape type");
+        }
+    }
+
+    #[test]
     fn pos() {
         let mut drawing = Drawing::empty().with_canvas_size(vec2(100., 100.));
         drawing.add(
@@ -329,8 +407,8 @@ mod tests_embedded {
             );
 
             if let ShapeType::Line { from, to } = &shapes[0].shape_type {
-                assert_eq!(*from, vec2(125., 125.));
-                assert_eq!(*to, vec2(175., 175.));
+                assert_eq!(*from, vec2(50., 50.));
+                assert_eq!(*to, vec2(100., 100.));
             } else {
                 panic!("Wrong shape type");
             }
@@ -385,8 +463,8 @@ mod tests_embedded {
             );
 
             if let ShapeType::Line { from, to } = &shapes[0].shape_type {
-                assert_eq!(*from, vec2(78., 73.));
-                assert_eq!(*to, vec2(82., 79.));
+                assert_eq!(*from, vec2(30., 20.) / 5. + 40.);
+                assert_eq!(*to, vec2(50., 50.) / 5. + 40.);
             } else {
                 panic!("Wrong shape type");
             }
