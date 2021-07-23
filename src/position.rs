@@ -30,16 +30,15 @@ impl Rect {
         self
     }
 
-    pub fn position_from_center(&self) -> Option<Vec2> {
+    pub fn position_from_center(&self) -> Vec2 {
         self.position_from_anchor(Vec2::zero())
     }
 
-    pub fn position_from_anchor(&self, new_anchor: Vec2) -> Option<Vec2> {
-        self.size
-            .map(|size| self.pos + (new_anchor - self.anchor) * size / 2.)
+    pub fn position_from_anchor(&self, new_anchor: Vec2) -> Vec2 {
+        self.pos + (new_anchor - self.anchor) * self.size() / 2.
     }
 
-    pub const fn size(&self) -> Option<Vec2> {
-        self.size
+    pub fn size(&self) -> Vec2 {
+        self.size.unwrap_or(Vec2::ones())
     }
 }
