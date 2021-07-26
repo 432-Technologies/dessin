@@ -3,12 +3,12 @@
 macro_rules! impl_pos_at {
     ($t:ty) => {
         impl $t {
-            pub const fn with_pos(mut self, pos: $crate::position::Rect) -> Self {
+            pub const fn with_pos(mut self, pos: $crate::Rect) -> Self {
                 self.pos = pos;
                 self
             }
 
-            pub const fn at(mut self, pos: ::algebr::Vec2) -> Self {
+            pub const fn at(mut self, pos: $crate::Vec2) -> Self {
                 self.pos = self.pos.at(pos);
                 self
             }
@@ -21,7 +21,7 @@ macro_rules! impl_pos_at {
 macro_rules! impl_pos_anchor {
     ($t:ty) => {
         impl $t {
-            pub const fn with_anchor(mut self, anchor: ::algebr::Vec2) -> Self {
+            pub const fn with_anchor(mut self, anchor: $crate::Vec2) -> Self {
                 self.pos = self.pos.with_anchor(anchor);
                 self
             }
@@ -34,7 +34,7 @@ macro_rules! impl_pos_anchor {
 macro_rules! impl_pos_size {
     ($t:ty) => {
         impl $t {
-            pub const fn with_size(mut self, size: ::algebr::Vec2) -> Self {
+            pub const fn with_size(mut self, size: $crate::Vec2) -> Self {
                 self.pos = self.pos.with_size(size);
                 self
             }
