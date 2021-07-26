@@ -1,4 +1,6 @@
-use crate::{position::Rect, style::Style};
+use algebr::Vec2;
+
+use crate::{position::Rect, style::Style, Shape, ShapeType};
 
 #[derive(Debug, Clone, Copy)]
 pub enum FontWeight {
@@ -56,5 +58,20 @@ impl Text {
     pub const fn with_font_weight(mut self, font_weight: FontWeight) -> Self {
         self.font_weight = font_weight;
         self
+    }
+}
+
+impl Into<Shape> for Text {
+    fn into(self) -> Shape {
+        Shape {
+            pos: self.pos.with_size(Vec2::ones()),
+            style: self.style,
+            shape_type: ShapeType::Text {
+                text: self.text,
+                align: self.align,
+                font_size: self.font_size,
+                font_weight: self.font_weight,
+            },
+        }
     }
 }

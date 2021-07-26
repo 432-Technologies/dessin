@@ -1,6 +1,6 @@
-use algebr::Angle;
+use algebr::{Angle, Vec2};
 
-use crate::{position::Rect, style::Style};
+use crate::{position::Rect, style::Style, Shape, ShapeType};
 
 #[derive(Debug, Clone)]
 pub struct Arc {
@@ -43,5 +43,22 @@ impl Arc {
     pub const fn with_end_angle(mut self, end_angle: Angle) -> Arc {
         self.end_angle = end_angle;
         self
+    }
+}
+
+impl Into<Shape> for Arc {
+    fn into(self) -> Shape {
+        let size = Vec2::ones() * self.outer_radius * 2.;
+
+        Shape {
+            pos: self.pos.with_size(size),
+            style: self.style,
+            shape_type: ShapeType::Arc {
+                inner_radius: self.inner_radius,
+                outer_radius: self.outer_radius,
+                start_angle: self.start_angle,
+                end_angle: self.end_angle,
+            },
+        }
     }
 }
