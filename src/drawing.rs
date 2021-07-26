@@ -1,11 +1,4 @@
-use crate::{
-    position::Rect,
-    shapes::{
-        arc::Arc, circle::Circle, embedded::EmbeddedDrawing, image::Image, line::Line, text::Text,
-        Shape, ShapeType,
-    },
-    Size,
-};
+use crate::{shapes::Shape, Size};
 use algebr::{vec2, Vec2};
 
 /// Drawing is a collection of shapes.
