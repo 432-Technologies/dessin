@@ -1,4 +1,4 @@
-use crate::{position::Rect, style::Style};
+use crate::{position::Rect, style::Style, Shape, ShapeType};
 
 #[derive(Debug, Clone)]
 pub enum ImageFormat {
@@ -21,6 +21,16 @@ impl Image {
             pos: Rect::new(),
             style: None,
             data,
+        }
+    }
+}
+
+impl Into<Shape> for Image {
+    fn into(self) -> Shape {
+        Shape {
+            pos: self.pos,
+            style: self.style,
+            shape_type: ShapeType::Image { data: self.data },
         }
     }
 }

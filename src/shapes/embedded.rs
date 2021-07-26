@@ -1,4 +1,4 @@
-use crate::{position::Rect, style::Style, Drawing, Shape};
+use crate::{position::Rect, style::Style, Drawing, Shape, ShapeType};
 use algebr::Vec2;
 
 #[derive(Debug, Clone)]
@@ -48,6 +48,16 @@ impl EmbeddedDrawing {
     }
 }
 
+impl Into<Shape> for EmbeddedDrawing {
+    fn into(self) -> Shape {
+        Shape {
+            pos: self.pos,
+            style: self.style,
+            shape_type: ShapeType::Drawing(self.shapes),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests_embedded {
     use algebr::vec2;
@@ -61,7 +71,7 @@ mod tests_embedded {
             line::Line,
             ShapeType,
         },
-        AddShape, Drawing,
+        Drawing,
     };
 
     #[test]

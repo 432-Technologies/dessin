@@ -1,6 +1,6 @@
 use algebr::Vec2;
 
-use crate::style::Style;
+use crate::{style::Style, Rect, Shape, ShapeType};
 
 pub type Line = LineBuilder<true>;
 
@@ -27,6 +27,23 @@ impl LineBuilder<false> {
             from: self.from,
             to,
             style: self.style,
+        }
+    }
+}
+
+impl Into<Shape> for LineBuilder<true> {
+    fn into(self) -> Shape {
+        let pos = Rect::new()
+            .at((self.from + self.to) / 2.)
+            .with_size((self.from - self.to).abs());
+
+        Shape {
+            pos,
+            style: self.style,
+            shape_type: ShapeType::Line {
+                from: self.from,
+                to: self.to,
+            },
         }
     }
 }

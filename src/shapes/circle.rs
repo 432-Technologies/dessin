@@ -1,4 +1,6 @@
-use crate::{position::Rect, style::Style};
+use algebr::Vec2;
+
+use crate::{position::Rect, style::Style, Shape, ShapeType};
 
 #[derive(Debug, Clone)]
 pub struct Circle {
@@ -22,5 +24,19 @@ impl Circle {
     pub const fn with_radius(mut self, radius: f32) -> Self {
         self.radius = radius;
         self
+    }
+}
+
+impl Into<Shape> for Circle {
+    fn into(self) -> Shape {
+        let size = Vec2::ones() * self.radius * 2.;
+
+        Shape {
+            pos: self.pos.with_size(size),
+            style: self.style,
+            shape_type: ShapeType::Circle {
+                radius: self.radius,
+            },
+        }
     }
 }
