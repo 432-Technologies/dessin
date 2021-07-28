@@ -3,6 +3,11 @@
 macro_rules! impl_pos_at {
     ($t:ty) => {
         impl $t {
+            #[deprecated(
+                since = "0.4.3",
+                note = "Please use `at`, `with_size` and `with_anchor` instead."
+            )]
+            /// This method is deprecated because it breaks the bounding box rule when using `EmbeddedDrawing`.
             pub const fn with_pos(mut self, pos: $crate::Rect) -> Self {
                 self.pos = pos;
                 self
