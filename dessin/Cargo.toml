@@ -1,0 +1,10 @@
+[package]
+name = "dessin"
+version = "0.4.6"
+edition = "2018"
+license = "MIT"
+repository = "https://github.com/daedalus-aero-space/dessin"
+description = "Build complex drawing for PDF, SVG, ..."
+
+[dependencies]
+algebr = "0.1"
