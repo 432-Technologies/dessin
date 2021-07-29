@@ -1,6 +1,6 @@
 [package]
 name = "dessin"
-version = "0.4.4"
+version = "0.4.5"
 authors = ["Olivier Lemoine <olivier@le-moine.fr>"]
 edition = "2018"
 license = "MIT"
