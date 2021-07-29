@@ -1,11 +1,3 @@
-[package]
-name = "dessin"
-version = "0.4.6"
-authors = ["Olivier Lemoine <olivier@le-moine.fr>"]
-edition = "2018"
-license = "MIT"
-repository = "https://github.com/daedalus-aero-space/dessin"
-description = "Build complex drawing for PDF, SVG, ..."
+[workspace]
 
-[dependencies]
-algebr = "0.1"
+members = ["dessin"]
