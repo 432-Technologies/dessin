@@ -254,7 +254,7 @@ mod tests {
                 .with_align(TextAlign::Center),
         );
 
-        let text_svg = r#"<text x="10" y="10" text-anchor="middle" font-size="10" font-weight="bold" fill='#FF0000FF' >hello world</text>"#;
+        let text_svg = r#"<text x="10" y="10" text-anchor="middle" font-size="10" font-weight="bold" fill='rgba(255,0,0,255)' >hello world</text>"#;
         let drawing_svg = format!(
             r#"<svg width="0px" height="0px" viewBox="-0 -0 0 0">{}</svg>"#,
             text_svg
@@ -272,7 +272,7 @@ mod tests {
                 .to(vec2(20., 20.))
                 .with_fill(Fill::Color(Color::U32(0xFF0000))),
         );
-        let line_svg = r#"<line x1="10" y1="10" x2="20" y2="20" fill='#FF0000' />"#;
+        let line_svg = r#"<line x1="10" y1="10" x2="20" y2="20" fill='rgba(255,0,0,255)' />"#;
         let drawing_svg = format!(
             r#"<svg width="0px" height="0px" viewBox="-0 -0 0 0">{}</svg>"#,
             line_svg
@@ -305,15 +305,15 @@ mod tests {
             g: 0x34,
             b: 0x56,
         };
-        assert_eq!(rgb.to_svg().unwrap(), "#123456");
+        assert_eq!(rgb.to_svg().unwrap(), "rgba(18,52,86,255)");
 
         let u = Color::U32(0x12345678);
-        assert_eq!(u.to_svg().unwrap(), "#12345678");
+        assert_eq!(u.to_svg().unwrap(), "rgba(52,86,120,255)");
 
         let red = Color::U32(0xFF0000);
-        assert_eq!(red.to_svg().unwrap(), "#FF0000");
+        assert_eq!(red.to_svg().unwrap(), "rgba(255,0,0,255)");
 
         let blue = Color::U32(0x0000FF);
-        assert_eq!(blue.to_svg().unwrap(), "#0000FF");
+        assert_eq!(blue.to_svg().unwrap(), "rgba(0,0,255,255)");
     }
 }
