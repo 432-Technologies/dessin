@@ -2,6 +2,9 @@
 name = "dessin-pdf"
 version = "0.4.0"
 edition = "2018"
+repository = "https://github.com/daedalus-aero-space/dessin"
+license = "MIT"
+description = "Dessin to PDF"
 
 [dependencies]
 dessin = "0.4.6"
