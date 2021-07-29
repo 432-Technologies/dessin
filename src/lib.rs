@@ -1,3 +1,4 @@
+pub mod contrib;
 mod drawing;
 mod macros;
 mod position;
