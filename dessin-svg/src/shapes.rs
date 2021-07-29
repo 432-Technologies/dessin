@@ -109,6 +109,40 @@ impl ToSVG for Shape {
                 }
             )),
             ShapeType::Drawing(shapes) => shapes.to_svg(),
+            ShapeType::Path { keypoints, closed } => {
+                let start = keypoints.first().ok_or("No start")?;
+                let rest = &keypoints[1..];
+
+                Ok(format!(
+                    r#"<path d="{start} {rest} {close}" {style}/>"#,
+                    style = self.style.to_svg()?,
+                    start = if let Keypoint::Point(start) = start {
+                        format!("M {} {} ", start.x, start.y)
+                    } else {
+                        unreachable!();
+                    },
+                    rest = rest
+                        .iter()
+                        .map(|v| match v {
+                            Keypoint::Point(p) => format!("L {} {} ", p.x, p.y),
+                            Keypoint::Bezier {
+                                destination,
+                                start_prop,
+                                dest_prop,
+                            } => format!(
+                                "C {} {} {} {} {} {} ",
+                                start_prop.x,
+                                start_prop.y,
+                                dest_prop.x,
+                                dest_prop.y,
+                                destination.x,
+                                destination.y,
+                            ),
+                        })
+                        .collect::<String>(),
+                    close = if *closed { "Z" } else { "" }
+                ))
+            }
         }
     }
 }
