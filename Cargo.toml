@@ -1,3 +1,3 @@
 [workspace]
 
-members = ["dessin"]
+members = ["dessin", "dessin-svg"]
