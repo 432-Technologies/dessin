@@ -221,11 +221,11 @@ impl ToSVG for FontWeight {
 
 impl ToSVG for Color {
     fn to_svg(&self) -> Result<String, Box<dyn Error>> {
-        match self {
-            Color::RGB { r, g, b } => {
-                Color::U32((*r as u32) << 16 | (*g as u32) << 8 | *b as u32).to_svg()
-            }
-            Color::U32(c) => Ok(format!("#{}", format!("{:#010X?}", c).split_at(2).1)),
+        let c = self.rgba();
+        if let Color::RGBA { r, g, b, a } = c {
+            Ok(format!("rgba({},{},{},{})", r, g, b, a))
+        } else {
+            unreachable!()
         }
     }
 }
@@ -254,7 +254,7 @@ mod tests {
                 .with_align(TextAlign::Center),
         );
 
-        let text_svg = r#"<text x="10" y="10" text-anchor="middle" font-size="10" font-weight="bold" fill='#FF0000' >hello world</text>"#;
+        let text_svg = r#"<text x="10" y="10" text-anchor="middle" font-size="10" font-weight="bold" fill='#FF0000FF' >hello world</text>"#;
         let drawing_svg = format!(
             r#"<svg width="0px" height="0px" viewBox="-0 -0 0 0">{}</svg>"#,
             text_svg

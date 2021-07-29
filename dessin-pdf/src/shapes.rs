@@ -5,8 +5,9 @@ use dessin::{
     vec2, Shape, ShapeType, Vec2,
 };
 use printpdf::{
-    image::EncodableLayout, Color, Image, IndirectFontRef, Line, LineCapStyle, LineDashPattern, Mm,
-    PdfLayerReference, Point, Rgb,
+    image::{EncodableLayout, Rgba},
+    Color, Image, IndirectFontRef, Line, LineCapStyle, LineDashPattern, Mm, PdfLayerReference,
+    Point, Rgb,
 };
 use rusttype::{Font, Scale};
 
@@ -17,19 +18,16 @@ fn point(v: Vec2) -> Point {
 }
 
 fn color(c: dessin::style::Color) -> Color {
-    match c {
-        dessin::style::Color::RGB { r, g, b } => Color::Rgb(Rgb {
-            r: (r as f64) / 255.,
-            g: (g as f64) / 255.,
-            b: (b as f64) / 255.,
+    let c = c.rgba();
+    if let dessin::style::Color::RGBA { r, g, b, a: _ } = c {
+        Color::Rgb(Rgb {
+            r: r as f64 / 255.,
+            g: g as f64 / 255.,
+            b: b as f64 / 255.,
             icc_profile: None,
-        }),
-        dessin::style::Color::U32(c) => Color::Rgb(Rgb {
-            r: ((c >> 16) & 0xFF) as f64 / 255.,
-            g: ((c >> 8) & 0xFF) as f64 / 255.,
-            b: (c & 0xFF) as f64 / 255.,
-            icc_profile: None,
-        }),
+        })
+    } else {
+        unreachable!()
     }
 }
 
