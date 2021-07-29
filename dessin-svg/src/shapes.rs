@@ -225,7 +225,7 @@ impl ToSVG for Color {
             Color::RGB { r, g, b } => {
                 Color::U32((*r as u32) << 16 | (*g as u32) << 8 | *b as u32).to_svg()
             }
-            Color::U32(c) => Ok(format!("#{}", format!("{:#08X?}", c).split_at(2).1)),
+            Color::U32(c) => Ok(format!("#{}", format!("{:#010X?}", c).split_at(2).1)),
         }
     }
 }
