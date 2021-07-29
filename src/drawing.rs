@@ -1,4 +1,7 @@
-use crate::{shapes::Shape, Size};
+use crate::{
+    shapes::{embedded::EmbeddedDrawing, Shape},
+    Size,
+};
 use algebr::{vec2, Vec2};
 
 /// Drawing is a collection of shapes.
@@ -66,6 +69,17 @@ impl Drawing {
         }
     }
 
+    /// Construct a drawing with a shape.
+    pub fn new<T>(shape: T) -> Self
+    where
+        T: Into<Shape>,
+    {
+        let s: Shape = shape.into();
+        let mut d = Drawing::empty().with_canvas_size(s.pos.size());
+        d.add(s);
+        d
+    }
+
     pub const fn with_canvas_size(mut self, canvas_size: Vec2) -> Self {
         self.canvas_size = canvas_size;
         self
@@ -112,5 +126,11 @@ impl Drawing {
     /// ```
     pub fn shapes(&self) -> &Vec<Shape> {
         &self.shapes
+    }
+}
+
+impl Into<Shape> for Drawing {
+    fn into(self) -> Shape {
+        EmbeddedDrawing::new(self).into()
     }
 }

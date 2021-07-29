@@ -1,6 +1,6 @@
-use algebr::Vec2;
+use algebr::{vec2, Vec2};
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct Rect {
     pub(crate) pos: Vec2,
     pub(crate) anchor: Vec2,
@@ -40,5 +40,22 @@ impl Rect {
 
     pub fn size(&self) -> Vec2 {
         self.size.unwrap_or(Vec2::ones())
+    }
+
+    pub fn union(&self, other: Rect) -> Rect {
+        let mins_self = self.position_from_anchor(vec2(-1., -1.));
+        let mins_other = other.position_from_anchor(vec2(-1., -1.));
+
+        let maxs_self = self.position_from_anchor(vec2(1., 1.));
+        let maxs_other = other.position_from_anchor(vec2(1., 1.));
+
+        let mins = vec2(mins_self.x.min(mins_other.x), mins_self.y.min(mins_other.y));
+        let maxs = vec2(maxs_self.x.max(maxs_other.x), maxs_self.y.max(maxs_other.y));
+
+        Rect {
+            size: Some(maxs - mins),
+            pos: (maxs + mins) / 2.,
+            anchor: Vec2::zero(),
+        }
     }
 }
