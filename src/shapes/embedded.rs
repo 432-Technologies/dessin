@@ -59,7 +59,7 @@ impl Into<Shape> for EmbeddedDrawing {
 }
 
 #[cfg(test)]
-mod tests_embedded {
+mod tests {
     use algebr::vec2;
 
     use super::*;
