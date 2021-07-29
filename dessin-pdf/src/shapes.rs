@@ -255,6 +255,7 @@ impl ToPDFPart for Shape {
                     .map(|v| v.to_pdf_part(dpi, offset, font, layer))
                     .collect::<Result<(), Box<dyn std::error::Error>>>()?;
             }
+            ShapeType::Path { keypoints, closed } => {}
         }
 
         Ok(())

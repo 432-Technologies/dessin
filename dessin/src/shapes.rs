@@ -3,6 +3,7 @@ pub mod circle;
 pub mod embedded;
 pub mod image;
 pub mod line;
+pub mod path;
 pub mod text;
 
 use algebr::{Angle, Vec2};
@@ -11,6 +12,7 @@ use crate::{position::Rect, style::Style};
 
 use self::{
     image::ImageFormat,
+    path::Keypoint,
     text::{FontWeight, TextAlign},
 };
 
@@ -51,6 +53,10 @@ pub enum ShapeType {
     Image {
         data: ImageFormat,
     },
+    Path {
+        keypoints: Vec<Keypoint>,
+        closed: bool,
+    },
 }
 impl Shape {
     /// Update the position of the shape.
@@ -69,7 +75,27 @@ impl Shape {
                 *from += delta;
                 *to += delta;
             }
-            _ => {}
+            ShapeType::Path {
+                keypoints,
+                closed: _,
+            } => {
+                keypoints.iter_mut().for_each(|v| match v {
+                    Keypoint::Point(p) => *p += pos,
+                    Keypoint::Bezier {
+                        destination,
+                        start_prop,
+                        dest_prop,
+                    } => {
+                        *destination += pos;
+                        *start_prop += pos;
+                        *dest_prop += pos;
+                    }
+                });
+            }
+            ShapeType::Circle { .. } => {}
+            ShapeType::Arc { .. } => {}
+            ShapeType::Image { .. } => {}
+            ShapeType::Text { .. } => {}
         }
     }
 
@@ -108,6 +134,23 @@ impl Shape {
                 *outer_radius *= scale;
             }
             ShapeType::Image { data: _ } => {}
+            ShapeType::Path {
+                keypoints,
+                closed: _,
+            } => {
+                keypoints.iter_mut().for_each(|v| match v {
+                    Keypoint::Point(p) => *p *= scale,
+                    Keypoint::Bezier {
+                        destination,
+                        start_prop,
+                        dest_prop,
+                    } => {
+                        *destination *= scale;
+                        *start_prop *= scale;
+                        *dest_prop *= scale;
+                    }
+                });
+            }
         }
 
         self.pos.pos = self.pos.position_from_center() * scale;
