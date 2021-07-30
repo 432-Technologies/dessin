@@ -1,11 +1,12 @@
 use dessin::{
-    shape::ImageFormat,
     shape::{Fill, Stroke, Style},
+    shape::{ImageFormat, Keypoint},
     style::{FontWeight, TextAlign},
     vec2, Shape, ShapeType, Vec2,
 };
 use printpdf::{
     image::{EncodableLayout, Rgba},
+    types::graphics::point,
     Color, Image, IndirectFontRef, Line, LineCapStyle, LineDashPattern, Mm, PdfLayerReference,
     Point, Rgb,
 };
@@ -253,7 +254,57 @@ impl ToPDFPart for Shape {
                     .map(|v| v.to_pdf_part(dpi, offset, font, layer))
                     .collect::<Result<(), Box<dyn std::error::Error>>>()?;
             }
-            ShapeType::Path { keypoints, closed } => {}
+            ShapeType::Path { keypoints, closed } => {
+                setup_style(&self.style, font, layer);
+
+                let mut points = Vec::with_capacity(keypoints.len());
+                for idx in 0..keypoints.len() {
+                    let curr = &keypoints[idx];
+                    let next = keypoints
+                        .get(idx + 1)
+                        .map(|v| {
+                            if let Keypoint::Bezier { .. } = v {
+                                true
+                            } else {
+                                false
+                            }
+                        })
+                        .unwrap_or(false);
+
+                    match curr {
+                        Keypoint::Point(p) => {
+                            points.push((point(*p), next));
+                        }
+                        Keypoint::Bezier {
+                            destination,
+                            start_prop,
+                            dest_prop,
+                        } => {
+                            points.push((point(*start_prop), true));
+                            points.push((point(*dest_prop), true));
+                            points.push((point(*destination), next));
+                        }
+                    }
+                }
+
+                let line = Line {
+                    points,
+                    is_closed: *closed,
+                    has_fill: self
+                        .style
+                        .as_ref()
+                        .map(|v| v.fill.is_some())
+                        .unwrap_or(false),
+                    has_stroke: self
+                        .style
+                        .as_ref()
+                        .map(|v| v.stroke.is_some())
+                        .unwrap_or(false),
+                    is_clipping_path: false,
+                };
+
+                layer.add_shape(line);
+            }
         }
 
         Ok(())
