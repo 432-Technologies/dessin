@@ -45,8 +45,7 @@ pub enum ShapeType {
         radius: f32,
     },
     Arc {
-        inner_radius: f32,
-        outer_radius: f32,
+        radius: f32,
         start_angle: Angle,
         end_angle: Angle,
     },
@@ -125,13 +124,11 @@ impl Shape {
                 *radius *= scale;
             }
             ShapeType::Arc {
-                inner_radius,
-                outer_radius,
+                radius,
                 start_angle: _,
                 end_angle: _,
             } => {
-                *inner_radius *= scale;
-                *outer_radius *= scale;
+                *radius *= scale;
             }
             ShapeType::Image { data: _ } => {}
             ShapeType::Path {
