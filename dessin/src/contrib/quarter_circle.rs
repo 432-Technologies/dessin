@@ -6,7 +6,7 @@ use crate::{
     Rect, Shape,
 };
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Quarter {
     TopLeft,
     TopRight,
