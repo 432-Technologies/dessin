@@ -2,7 +2,7 @@ use algebr::{Angle, Vec2};
 
 use crate::{position::Rect, style::Style, Shape, ShapeType};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Arc {
     pub(crate) pos: Rect,
     pub(crate) radius: f32,

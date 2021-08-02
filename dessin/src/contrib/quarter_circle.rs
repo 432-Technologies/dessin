@@ -6,6 +6,7 @@ use crate::{
     Rect, Shape,
 };
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum Quarter {
     TopLeft,
     TopRight,
@@ -13,6 +14,7 @@ pub enum Quarter {
     BottomRight,
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct QuarterCircle {
     pub(crate) pos: Rect,
     pub(crate) radius: f32,
