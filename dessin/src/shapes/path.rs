@@ -2,31 +2,27 @@ use algebr::Vec2;
 
 use crate::{position::Rect, style::Style, Shape, ShapeType};
 
+pub struct Bezier(Vec2);
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Keypoint {
     Point(Vec2),
-    Bezier {
-        destination: Vec2,
-        start_prop: Vec2,
-        dest_prop: Vec2,
-    },
+    Bezier(Vec2),
 }
 
-impl Into<Keypoint> for Vec2 {
-    fn into(self) -> Keypoint {
-        Keypoint::Point(self)
+impl Into<Keypoints> for Vec2 {
+    fn into(self) -> Keypoints {
+        Keypoints(vec![Keypoint::Point(self)])
     }
 }
 
-impl Into<Keypoint> for (Vec2, Vec2, Vec2) {
-    fn into(self) -> Keypoint {
-        Keypoint::Bezier {
-            destination: self.0,
-            start_prop: self.1,
-            dest_prop: self.2,
-        }
+impl Into<Keypoints> for Bezier {
+    fn into(self) -> Keypoints {
+        Keypoints(vec![Keypoint::Bezier(self.0)])
     }
 }
+
+pub struct Keypoints(pub Vec<Keypoint>);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Path {
@@ -36,6 +32,15 @@ pub struct Path {
     pub(crate) closed: bool,
 }
 impl Path {
+    pub fn new() -> Path {
+        Path {
+            pos: Rect::new(),
+            style: None,
+            path: vec![],
+            closed: false,
+        }
+    }
+
     pub fn from(start: Vec2) -> Path {
         Path {
             pos: Rect::new().at(start),
@@ -45,11 +50,18 @@ impl Path {
         }
     }
 
-    pub fn then<T>(mut self, keypoint: T) -> Self
+    pub fn then<T>(mut self, keypoints: T) -> Self
     where
-        T: Into<Keypoint>,
+        T: Into<Keypoints>,
     {
-        self.path.push(keypoint.into());
+        self.path.extend(keypoints.into().0);
+        self.pos = self
+            .path
+            .iter()
+            .map(|v| match v {
+                Keypoint::Point(p) | Keypoint::Bezier(p) => p,
+            })
+            .fold(Rect::new(), |acc, &curr| acc.union(Rect::new().at(curr)));
         self
     }
 

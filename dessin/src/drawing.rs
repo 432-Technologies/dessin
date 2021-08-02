@@ -12,7 +12,6 @@ use algebr::{vec2, Vec2};
 /// #         Text,
 /// #         Line,
 /// #         Circle,
-/// #         Arc,
 /// #         { Image, ImageFormat },
 /// #         EmbeddedDrawing,
 /// #     },
@@ -32,14 +31,6 @@ use algebr::{vec2, Vec2};
 ///     .add(
 ///         Circle::new()
 ///             .at(vec2(50., 50.)).with_radius(10.)
-///     )
-///     .add(
-///         Arc::new()
-///             .at(vec2(50., 50.))
-///             .with_inner_radius(10.)
-///             .with_outer_radius(20.)
-///             .with_start_angle(Angle::deg(0.))
-///             .with_end_angle(Angle::deg(180.))
 ///     )
 ///     .add(
 ///         Image::new(ImageFormat::PNG(include_bytes!("../rustacean-flat-happy.png").to_vec()))
@@ -105,7 +96,6 @@ impl Drawing {
     /// #         Text,
     /// #         Line,
     /// #         Circle,
-    /// #         Arc,
     /// #         { Image, ImageFormat },
     /// #     },
     /// #     vec2,

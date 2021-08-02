@@ -1,4 +1,3 @@
-pub mod arc;
 pub mod circle;
 pub mod embedded;
 pub mod image;
@@ -79,16 +78,7 @@ impl Shape {
                 closed: _,
             } => {
                 keypoints.iter_mut().for_each(|v| match v {
-                    Keypoint::Point(p) => *p += pos,
-                    Keypoint::Bezier {
-                        destination,
-                        start_prop,
-                        dest_prop,
-                    } => {
-                        *destination += pos;
-                        *start_prop += pos;
-                        *dest_prop += pos;
-                    }
+                    Keypoint::Point(p) | Keypoint::Bezier(p) => *p += pos,
                 });
             }
             ShapeType::Circle { .. } => {}
@@ -136,16 +126,7 @@ impl Shape {
                 closed: _,
             } => {
                 keypoints.iter_mut().for_each(|v| match v {
-                    Keypoint::Point(p) => *p *= scale,
-                    Keypoint::Bezier {
-                        destination,
-                        start_prop,
-                        dest_prop,
-                    } => {
-                        *destination *= scale;
-                        *start_prop *= scale;
-                        *dest_prop *= scale;
-                    }
+                    Keypoint::Point(p) | Keypoint::Bezier(p) => *p *= scale,
                 });
             }
         }

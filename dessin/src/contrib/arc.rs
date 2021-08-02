@@ -10,7 +10,8 @@ pub struct Arc {
     pub(crate) end_angle: Angle,
     pub(crate) style: Option<Style>,
 }
-crate::impl_pos!(Arc);
+crate::impl_pos_at!(Arc);
+crate::impl_pos_anchor!(Arc);
 crate::impl_style!(Arc);
 impl Arc {
     pub const fn new() -> Arc {

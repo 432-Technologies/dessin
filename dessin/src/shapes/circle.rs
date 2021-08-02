@@ -8,7 +8,8 @@ pub struct Circle {
     pub(crate) radius: f32,
     pub(crate) style: Option<Style>,
 }
-crate::impl_pos!(Circle);
+crate::impl_pos_at!(Circle);
+crate::impl_pos_anchor!(Circle);
 crate::impl_style!(Circle);
 impl Circle {
     /// Default circle.
