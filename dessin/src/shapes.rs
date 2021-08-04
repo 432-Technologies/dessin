@@ -5,7 +5,7 @@ pub mod line;
 pub mod path;
 pub mod text;
 
-use algebr::{Angle, Vec2};
+use algebr::Vec2;
 
 use crate::{position::Rect, style::Style};
 
@@ -43,11 +43,6 @@ pub enum ShapeType {
     Circle {
         radius: f32,
     },
-    Arc {
-        radius: f32,
-        start_angle: Angle,
-        end_angle: Angle,
-    },
     Image {
         data: ImageFormat,
     },
@@ -82,7 +77,6 @@ impl Shape {
                 });
             }
             ShapeType::Circle { .. } => {}
-            ShapeType::Arc { .. } => {}
             ShapeType::Image { .. } => {}
             ShapeType::Text { .. } => {}
         }
@@ -111,13 +105,6 @@ impl Shape {
                 *to *= scale;
             }
             ShapeType::Circle { radius } => {
-                *radius *= scale;
-            }
-            ShapeType::Arc {
-                radius,
-                start_angle: _,
-                end_angle: _,
-            } => {
                 *radius *= scale;
             }
             ShapeType::Image { data: _ } => {}

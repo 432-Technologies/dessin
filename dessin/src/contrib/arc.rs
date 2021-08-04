@@ -1,6 +1,14 @@
-use algebr::{Angle, Vec2};
+use std::f32::consts::{FRAC_PI_2, PI};
 
-use crate::{position::Rect, style::Style, Shape, ShapeType};
+use algebr::{vec2, Angle};
+
+use crate::{
+    contrib::{Quarter, QuarterCircle},
+    position::Rect,
+    shapes::path::{Keypoint, Keypoints, Path},
+    style::Style,
+    Shape,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Arc {
@@ -40,18 +48,100 @@ impl Arc {
     }
 }
 
+impl Into<Keypoints> for Arc {
+    fn into(self) -> Keypoints {
+        fn normalize_rad(mut r: f32) -> f32 {
+            while r > PI {
+                r -= 2. * PI
+            }
+            while r <= -PI {
+                r += 2. * PI
+            }
+            r
+        }
+
+        let start = normalize_rad(self.start_angle.to_rad());
+        let end = normalize_rad(self.end_angle.to_rad());
+
+        let mut tmp_end = normalize_rad(end - start);
+        let mut tmp_angle_acc = 0.;
+
+        let start_quarter = Quarter::TopRight;
+        let end_quarter = match tmp_end {
+            x if x <= -FRAC_PI_2 => Quarter::BottomLeft,
+            x if x <= 0. => Quarter::BottomRight,
+            x if x <= FRAC_PI_2 => Quarter::TopRight,
+            _ => Quarter::TopLeft,
+        };
+        let mut move_quarter = start_quarter;
+
+        let mut ks = vec![];
+
+        loop {
+            if move_quarter == end_quarter {
+                let theta = tmp_end / 2.;
+
+                let x0 = theta.cos();
+                let y0 = theta.sin();
+
+                let x1 = (4. - x0) / 3.;
+                let y1 = (1. - x0) * (3. - x0) / (3. * y0);
+
+                let x2 = x1;
+                let y2 = -y1;
+
+                let x3 = x0;
+                let y3 = -y0;
+
+                ks.extend(
+                    IntoIterator::into_iter([
+                        vec2(x0, y0),
+                        vec2(x1, y1),
+                        vec2(x2, y2),
+                        vec2(x3, y3),
+                    ])
+                    .map(|v| {
+                        Keypoint::Bezier(
+                            v.rot_rad(theta + tmp_angle_acc) * self.radius + self.pos.pos,
+                        )
+                    }),
+                );
+                break;
+            }
+
+            ks.extend(
+                Into::<Keypoints>::into(
+                    QuarterCircle::new(move_quarter)
+                        .at(self.pos.pos)
+                        .with_anchor(self.pos.anchor)
+                        .with_radius(self.radius),
+                )
+                .0,
+            );
+
+            move_quarter = match move_quarter {
+                Quarter::TopLeft => Quarter::BottomLeft,
+                Quarter::BottomLeft => Quarter::BottomRight,
+                Quarter::BottomRight => Quarter::TopRight,
+                Quarter::TopRight => Quarter::TopLeft,
+            };
+
+            tmp_end = normalize_rad(tmp_end - FRAC_PI_2);
+            tmp_angle_acc = normalize_rad(tmp_angle_acc + FRAC_PI_2);
+        }
+
+        ks.iter_mut().for_each(|v| match v {
+            Keypoint::Point(p) | Keypoint::Bezier(p) => {
+                *p = p.rot_rad(-start);
+            }
+        });
+
+        Keypoints(ks)
+    }
+}
+
 impl Into<Shape> for Arc {
     fn into(self) -> Shape {
-        let size = Vec2::ones() * self.radius * 2.;
-
-        Shape {
-            pos: self.pos.with_size(size),
-            style: self.style,
-            shape_type: ShapeType::Arc {
-                radius: self.radius,
-                start_angle: self.start_angle,
-                end_angle: self.end_angle,
-            },
-        }
+        Path::new().then(Into::<Keypoints>::into(self)).into()
     }
 }
