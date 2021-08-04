@@ -10,6 +10,14 @@ pub enum Keypoint {
     Bezier(Vec2),
 }
 
+impl Keypoint {
+    pub fn pos(&self) -> Vec2 {
+        match self {
+            Keypoint::Point(p) | Keypoint::Bezier(p) => *p,
+        }
+    }
+}
+
 impl Into<Keypoints> for Vec2 {
     fn into(self) -> Keypoints {
         Keypoints(vec![Keypoint::Point(self)])
