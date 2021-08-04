@@ -1,6 +1,8 @@
 use algebr::Vec2;
 
-use crate::{style::Style, Rect, Shape, ShapeType};
+use crate::{shapes::path::Keypoint, style::Style, Rect, Shape, ShapeType};
+
+use super::path::Keypoints;
 
 pub type Line = LineBuilder<true>;
 
@@ -45,5 +47,11 @@ impl Into<Shape> for LineBuilder<true> {
                 to: self.to,
             },
         }
+    }
+}
+
+impl Into<Keypoints> for LineBuilder<true> {
+    fn into(self) -> Keypoints {
+        Keypoints(vec![Keypoint::Point(self.from), Keypoint::Point(self.to)])
     }
 }

@@ -1,4 +1,3 @@
-pub mod arc;
 pub mod circle;
 pub mod embedded;
 pub mod image;
@@ -6,7 +5,7 @@ pub mod line;
 pub mod path;
 pub mod text;
 
-use algebr::{Angle, Vec2};
+use algebr::Vec2;
 
 use crate::{position::Rect, style::Style};
 
@@ -44,12 +43,6 @@ pub enum ShapeType {
     Circle {
         radius: f32,
     },
-    Arc {
-        inner_radius: f32,
-        outer_radius: f32,
-        start_angle: Angle,
-        end_angle: Angle,
-    },
     Image {
         data: ImageFormat,
     },
@@ -80,20 +73,10 @@ impl Shape {
                 closed: _,
             } => {
                 keypoints.iter_mut().for_each(|v| match v {
-                    Keypoint::Point(p) => *p += pos,
-                    Keypoint::Bezier {
-                        destination,
-                        start_prop,
-                        dest_prop,
-                    } => {
-                        *destination += pos;
-                        *start_prop += pos;
-                        *dest_prop += pos;
-                    }
+                    Keypoint::Point(p) | Keypoint::Bezier(p) => *p += pos,
                 });
             }
             ShapeType::Circle { .. } => {}
-            ShapeType::Arc { .. } => {}
             ShapeType::Image { .. } => {}
             ShapeType::Text { .. } => {}
         }
@@ -124,31 +107,13 @@ impl Shape {
             ShapeType::Circle { radius } => {
                 *radius *= scale;
             }
-            ShapeType::Arc {
-                inner_radius,
-                outer_radius,
-                start_angle: _,
-                end_angle: _,
-            } => {
-                *inner_radius *= scale;
-                *outer_radius *= scale;
-            }
             ShapeType::Image { data: _ } => {}
             ShapeType::Path {
                 keypoints,
                 closed: _,
             } => {
                 keypoints.iter_mut().for_each(|v| match v {
-                    Keypoint::Point(p) => *p *= scale,
-                    Keypoint::Bezier {
-                        destination,
-                        start_prop,
-                        dest_prop,
-                    } => {
-                        *destination *= scale;
-                        *start_prop *= scale;
-                        *dest_prop *= scale;
-                    }
+                    Keypoint::Point(p) | Keypoint::Bezier(p) => *p *= scale,
                 });
             }
         }
