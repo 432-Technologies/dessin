@@ -1,6 +1,6 @@
 [package]
 name = "dessin-pdf"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2018"
 repository = "https://github.com/daedalus-aero-space/dessin"
 license = "MIT"

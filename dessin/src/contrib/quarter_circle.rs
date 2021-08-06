@@ -47,7 +47,7 @@ impl Into<Keypoints> for QuarterCircle {
         Keypoints(
             IntoIterator::into_iter(match self.quarter {
                 Quarter::TopRight => [
-                    Keypoint::Point(vec2(1., 0.) * self.radius + self.pos.pos),
+                    Keypoint::Point(vec2(1., 0.)),
                     Keypoint::BezierCubic {
                         to: vec2(0., 1.),
                         control_from: vec2(1., A),
@@ -55,7 +55,7 @@ impl Into<Keypoints> for QuarterCircle {
                     },
                 ],
                 Quarter::TopLeft => [
-                    Keypoint::Point(vec2(0., 1.) * self.radius + self.pos.pos),
+                    Keypoint::Point(vec2(0., 1.)),
                     Keypoint::BezierCubic {
                         to: vec2(-1., 0.),
                         control_from: vec2(-A, 1.),
@@ -63,7 +63,7 @@ impl Into<Keypoints> for QuarterCircle {
                     },
                 ],
                 Quarter::BottomLeft => [
-                    Keypoint::Point(vec2(-1., 0.) * self.radius + self.pos.pos),
+                    Keypoint::Point(vec2(-1., 0.)),
                     Keypoint::BezierCubic {
                         to: vec2(0., -1.),
                         control_from: vec2(-1., -A),
@@ -71,7 +71,7 @@ impl Into<Keypoints> for QuarterCircle {
                     },
                 ],
                 Quarter::BottomRight => [
-                    Keypoint::Point(vec2(0., -1.) * self.radius + self.pos.pos),
+                    Keypoint::Point(vec2(0., -1.)),
                     Keypoint::BezierCubic {
                         to: vec2(1., 0.),
                         control_from: vec2(A, -1.),

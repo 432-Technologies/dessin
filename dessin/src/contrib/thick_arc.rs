@@ -71,7 +71,7 @@ impl Into<Shape> for ThickArc {
             .with_end_angle(self.end_angle)
             .into();
 
-        let inner = Keypoints(inner.0.into_iter().rev().collect());
+        let inner = inner.reversed();
 
         let p = if let Keypoint::Point(p) = inner.0.first().unwrap() {
             *p

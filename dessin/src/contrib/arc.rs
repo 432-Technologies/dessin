@@ -75,7 +75,7 @@ impl Into<Keypoints> for Arc {
         };
         let mut move_quarter = start_quarter;
 
-        let mut ks = vec![Keypoint::Point(vec2(1., 0.))];
+        let mut ks = vec![Keypoint::Point(vec2(1., 0.) * self.radius + self.pos.pos)];
 
         loop {
             if move_quarter == end_quarter {
