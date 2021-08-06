@@ -215,7 +215,59 @@ impl Into<Keypoint> for Vec2 {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Keypoints(pub Vec<Keypoint>);
+impl Keypoints {
+    pub fn reversed(self) -> Keypoints {
+        Keypoints(
+            self.0
+                .into_iter()
+                .rev()
+                .scan(None, |state, k| {
+                    let res = match (&state, &k) {
+                        (
+                            None | Some(Keypoint::Point(..)),
+                            Keypoint::Point(to)
+                            | Keypoint::BezierQuad { to, .. }
+                            | Keypoint::BezierCubic { to, .. },
+                        ) => Keypoint::Point(*to),
+                        (
+                            Some(Keypoint::BezierQuad { to: _, control }),
+                            Keypoint::Point(to)
+                            | Keypoint::BezierCubic { to, .. }
+                            | Keypoint::BezierQuad { to, .. },
+                        ) => Keypoint::BezierQuad {
+                            to: *to,
+                            control: *control,
+                        },
+                        (
+                            Some(Keypoint::BezierCubic {
+                                to: _,
+                                control_from,
+                                control_to,
+                            }),
+                            Keypoint::Point(to)
+                            | Keypoint::BezierCubic { to, .. }
+                            | Keypoint::BezierQuad { to, .. },
+                        ) => Keypoint::BezierCubic {
+                            to: *to,
+                            control_from: *control_from,
+                            control_to: *control_to,
+                        },
+                    };
+
+                    *state = Some(k);
+
+                    Some(res)
+                })
+                .collect(),
+        )
+    }
+
+    pub fn reverse(&mut self) {
+        *self = self.clone().reversed();
+    }
+}
 
 impl Into<Keypoints> for Keypoint {
     fn into(self) -> Keypoints {
