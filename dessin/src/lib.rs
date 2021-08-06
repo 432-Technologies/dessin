@@ -17,7 +17,7 @@ pub mod shape {
     pub use crate::shapes::embedded::EmbeddedDrawing;
     pub use crate::shapes::image::{Image, ImageFormat};
     pub use crate::shapes::line::{Line, LineBuilder};
-    pub use crate::shapes::path::{Bezier, Keypoint, Keypoints, Path};
+    pub use crate::shapes::path::{Keypoint, Keypoints, Path};
     pub use crate::shapes::text::Text;
     pub use crate::style::{Color, Fill, Stroke, Style};
 }

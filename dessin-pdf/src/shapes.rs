@@ -216,12 +216,6 @@ impl ToPDFPart for Shape {
 
                 layer.add_shape(line);
             }
-            ShapeType::Arc {
-                inner_radius,
-                outer_radius,
-                start_angle,
-                end_angle,
-            } => {}
             ShapeType::Image { data } => {
                 let image = match data {
                     ImageFormat::PNG(data) => Image::try_from(
@@ -243,8 +237,8 @@ impl ToPDFPart for Shape {
                     Some(Mm(10.)),
                     Some(Mm(10.)),
                     None,
-                    None, //Some(scale_x as f64),
-                    None, //Some(scale_y as f64),
+                    Some(scale_x as f64),
+                    Some(scale_y as f64),
                     Some(300.),
                 );
             }
@@ -259,32 +253,33 @@ impl ToPDFPart for Shape {
 
                 let mut points = Vec::with_capacity(keypoints.len());
                 for idx in 0..keypoints.len() {
-                    let curr = &keypoints[idx];
-                    let next = keypoints
-                        .get(idx + 1)
-                        .map(|v| {
-                            if let Keypoint::Bezier { .. } = v {
-                                true
-                            } else {
-                                false
-                            }
-                        })
-                        .unwrap_or(false);
+                    todo!()
+                    // let curr = &keypoints[idx];
+                    // let next = keypoints
+                    //     .get(idx + 1)
+                    //     .map(|v| {
+                    //         if let Keypoint::Bezier { .. } = v {
+                    //             true
+                    //         } else {
+                    //             false
+                    //         }
+                    //     })
+                    //     .unwrap_or(false);
 
-                    match curr {
-                        Keypoint::Point(p) => {
-                            points.push((point(*p), next));
-                        }
-                        Keypoint::Bezier {
-                            destination,
-                            start_prop,
-                            dest_prop,
-                        } => {
-                            points.push((point(*start_prop), true));
-                            points.push((point(*dest_prop), true));
-                            points.push((point(*destination), next));
-                        }
-                    }
+                    // match curr {
+                    //     Keypoint::Point(p) => {
+                    //         points.push((point(*p), next));
+                    //     }
+                    //     Keypoint::Bezier {
+                    //         destination,
+                    //         start_prop,
+                    //         dest_prop,
+                    //     } => {
+                    //         points.push((point(*start_prop), true));
+                    //         points.push((point(*dest_prop), true));
+                    //         points.push((point(*destination), next));
+                    //     }
+                    // }
                 }
 
                 let line = Line {

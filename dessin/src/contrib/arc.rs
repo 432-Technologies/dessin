@@ -75,7 +75,7 @@ impl Into<Keypoints> for Arc {
         };
         let mut move_quarter = start_quarter;
 
-        let mut ks = vec![];
+        let mut ks = vec![Keypoint::Point(vec2(1., 0.))];
 
         loop {
             if move_quarter == end_quarter {
@@ -93,19 +93,15 @@ impl Into<Keypoints> for Arc {
                 let x3 = x0;
                 let y3 = -y0;
 
-                ks.extend(
-                    IntoIterator::into_iter([
-                        vec2(x0, y0),
-                        vec2(x1, y1),
-                        vec2(x2, y2),
-                        vec2(x3, y3),
-                    ])
-                    .map(|v| {
-                        Keypoint::Bezier(
-                            v.rot_rad(theta + tmp_angle_acc) * self.radius + self.pos.pos,
-                        )
-                    }),
+                ks.push(
+                    Keypoint::BezierCubic {
+                        to: vec2(x3, y3).rot_rad(theta + tmp_angle_acc),
+                        control_to: vec2(x2, y2).rot_rad(theta + tmp_angle_acc),
+                        control_from: vec2(x1, y1).rot_rad(theta + tmp_angle_acc),
+                    } * self.radius
+                        + self.pos.pos,
                 );
+
                 break;
             }
 
@@ -130,10 +126,8 @@ impl Into<Keypoints> for Arc {
             tmp_angle_acc = normalize_rad(tmp_angle_acc + FRAC_PI_2);
         }
 
-        ks.iter_mut().for_each(|v| match v {
-            Keypoint::Point(p) | Keypoint::Bezier(p) => {
-                *p = p.rot_rad(-start);
-            }
+        ks.iter_mut().for_each(|v| {
+            *v = v.rot_rad(-start);
         });
 
         Keypoints(ks)
@@ -142,6 +136,6 @@ impl Into<Keypoints> for Arc {
 
 impl Into<Shape> for Arc {
     fn into(self) -> Shape {
-        Path::new().then(Into::<Keypoints>::into(self)).into()
+        Path::new().then_do(Into::<Keypoints>::into(self)).into()
     }
 }

@@ -1,5 +1,5 @@
 use algebr::Angle;
-use shape::{Keypoints, Path};
+use shape::{Keypoint, Keypoints, Path};
 
 use crate::{
     shape::{self, Style},
@@ -73,8 +73,17 @@ impl Into<Shape> for ThickArc {
 
         let inner = Keypoints(inner.0.into_iter().rev().collect());
 
-        let p = inner.0.first().unwrap().pos();
+        let p = if let Keypoint::Point(p) = inner.0.first().unwrap() {
+            *p
+        } else {
+            unreachable!()
+        };
 
-        Path::new().then(outer).then(p).then(inner).close().into()
+        Path::new()
+            .then_do(outer)
+            .then(p)
+            .then_do(inner)
+            .close()
+            .into()
     }
 }

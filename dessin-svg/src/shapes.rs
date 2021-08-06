@@ -1,5 +1,5 @@
 use crate::ToSVG;
-use dessin::{shape::*, style::*, Shape, ShapeType, Vec2};
+use dessin::{shape::*, style::*, Shape, ShapeType};
 use std::error::Error;
 
 impl ToSVG for Shape {
@@ -37,62 +37,6 @@ impl ToSVG for Shape {
                 r = radius,
                 style = self.style.to_svg()?,
             )),
-            ShapeType::Arc {
-                inner_radius,
-                outer_radius,
-                start_angle,
-                end_angle,
-            } => {
-                let pos = self.pos.position_from_center();
-
-                let start = if start_angle.to_deg() >= 0. {
-                    start_angle.to_deg()
-                } else {
-                    start_angle.to_deg() + 360.
-                } % 360.;
-
-                let end = if end_angle.to_deg() >= 0. {
-                    end_angle.to_deg()
-                } else {
-                    end_angle.to_deg() + 360.
-                } % 360.;
-
-                let lower_left = Vec2::from_polar_deg(*inner_radius, start) + pos;
-                let upper_left = Vec2::from_polar_deg(*outer_radius, start) + pos;
-                let lower_right = Vec2::from_polar_deg(*inner_radius, end) + pos;
-                let upper_right = Vec2::from_polar_deg(*outer_radius, end) + pos;
-
-                let mut span = end - start;
-                span = if span >= 0. { span } else { span + 360. } % 360.;
-                let large_arc_flag = if span >= 180. { 1 } else { 0 };
-
-                let res = format!(r#"<path d="M {x} {y} "#, x = lower_left.x, y = lower_left.y);
-                let res = format!("{}L {x}, {y} ", res, x = upper_left.x, y = upper_left.y);
-
-                let res = format!(
-                    "{}A {r} {r} {s} {f} 1 {x}, {y} ",
-                    res,
-                    r = outer_radius,
-                    s = span,
-                    f = large_arc_flag,
-                    x = upper_right.x,
-                    y = upper_right.y
-                );
-
-                let res = format!("{}L {x}, {y} ", res, x = lower_right.x, y = lower_right.y);
-                let res = format!(
-                    "{}A {r} {r} {s} {f} 0 {x}, {y} ",
-                    res,
-                    r = inner_radius,
-                    s = span,
-                    f = large_arc_flag,
-                    x = lower_left.x,
-                    y = lower_left.y
-                );
-
-                let res = format!(r#"{}Z" {style}></path>"#, res, style = self.style.to_svg()?,);
-                Ok(res)
-            }
             ShapeType::Image { data } => Ok(format!(
                 r#"<image x="{x}" y="{y}" width="{width}" height="{height}" xlink:href="{href}"/>"#,
                 x = pos.x,
@@ -125,18 +69,20 @@ impl ToSVG for Shape {
                         .iter()
                         .map(|v| match v {
                             Keypoint::Point(p) => format!("L {} {} ", p.x, p.y),
-                            Keypoint::Bezier {
-                                destination,
-                                start_prop,
-                                dest_prop,
+                            Keypoint::BezierQuad { to, control } =>
+                                format!("Q {} {} {} {} ", control.x, control.y, to.x, to.y,),
+                            Keypoint::BezierCubic {
+                                to,
+                                control_from,
+                                control_to,
                             } => format!(
                                 "C {} {} {} {} {} {} ",
-                                start_prop.x,
-                                start_prop.y,
-                                dest_prop.x,
-                                dest_prop.y,
-                                destination.x,
-                                destination.y,
+                                control_from.x,
+                                control_from.y,
+                                control_to.x,
+                                control_to.y,
+                                to.x,
+                                to.y,
                             ),
                         })
                         .collect::<String>(),

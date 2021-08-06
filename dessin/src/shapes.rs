@@ -72,8 +72,8 @@ impl Shape {
                 keypoints,
                 closed: _,
             } => {
-                keypoints.iter_mut().for_each(|v| match v {
-                    Keypoint::Point(p) | Keypoint::Bezier(p) => *p += pos,
+                keypoints.iter_mut().for_each(|v| {
+                    *v += pos;
                 });
             }
             ShapeType::Circle { .. } => {}
@@ -112,8 +112,8 @@ impl Shape {
                 keypoints,
                 closed: _,
             } => {
-                keypoints.iter_mut().for_each(|v| match v {
-                    Keypoint::Point(p) | Keypoint::Bezier(p) => *p *= scale,
+                keypoints.iter_mut().for_each(|v| {
+                    *v *= scale;
                 });
             }
         }

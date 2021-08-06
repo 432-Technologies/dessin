@@ -44,37 +44,49 @@ impl QuarterCircle {
 impl Into<Keypoints> for QuarterCircle {
     fn into(self) -> Keypoints {
         const A: f32 = 0.551915024494;
-        match self.quarter {
-            Quarter::TopRight => Keypoints(vec![
-                Keypoint::Bezier(vec2(1., 0.) * self.radius + self.pos.pos),
-                Keypoint::Bezier(vec2(1., A) * self.radius + self.pos.pos),
-                Keypoint::Bezier(vec2(A, 1.) * self.radius + self.pos.pos),
-                Keypoint::Bezier(vec2(0., 1.) * self.radius + self.pos.pos),
-            ]),
-            Quarter::TopLeft => Keypoints(vec![
-                Keypoint::Bezier(vec2(0., 1.) * self.radius + self.pos.pos),
-                Keypoint::Bezier(vec2(-A, 1.) * self.radius + self.pos.pos),
-                Keypoint::Bezier(vec2(-1., A) * self.radius + self.pos.pos),
-                Keypoint::Bezier(vec2(-1., 0.) * self.radius + self.pos.pos),
-            ]),
-            Quarter::BottomLeft => Keypoints(vec![
-                Keypoint::Bezier(vec2(-1., 0.) * self.radius + self.pos.pos),
-                Keypoint::Bezier(vec2(-1., -A) * self.radius + self.pos.pos),
-                Keypoint::Bezier(vec2(-A, -1.) * self.radius + self.pos.pos),
-                Keypoint::Bezier(vec2(0., -1.) * self.radius + self.pos.pos),
-            ]),
-            Quarter::BottomRight => Keypoints(vec![
-                Keypoint::Bezier(vec2(0., -1.) * self.radius + self.pos.pos),
-                Keypoint::Bezier(vec2(A, -1.) * self.radius + self.pos.pos),
-                Keypoint::Bezier(vec2(1., -A) * self.radius + self.pos.pos),
-                Keypoint::Bezier(vec2(1., 0.) * self.radius + self.pos.pos),
-            ]),
-        }
+        Keypoints(
+            IntoIterator::into_iter(match self.quarter {
+                Quarter::TopRight => [
+                    Keypoint::Point(vec2(1., 0.) * self.radius + self.pos.pos),
+                    Keypoint::BezierCubic {
+                        to: vec2(0., 1.),
+                        control_from: vec2(1., A),
+                        control_to: vec2(A, 1.),
+                    },
+                ],
+                Quarter::TopLeft => [
+                    Keypoint::Point(vec2(0., 1.) * self.radius + self.pos.pos),
+                    Keypoint::BezierCubic {
+                        to: vec2(-1., 0.),
+                        control_from: vec2(-A, 1.),
+                        control_to: vec2(-1., A),
+                    },
+                ],
+                Quarter::BottomLeft => [
+                    Keypoint::Point(vec2(-1., 0.) * self.radius + self.pos.pos),
+                    Keypoint::BezierCubic {
+                        to: vec2(0., -1.),
+                        control_from: vec2(-1., -A),
+                        control_to: vec2(-A, -1.),
+                    },
+                ],
+                Quarter::BottomRight => [
+                    Keypoint::Point(vec2(0., -1.) * self.radius + self.pos.pos),
+                    Keypoint::BezierCubic {
+                        to: vec2(1., 0.),
+                        control_from: vec2(A, -1.),
+                        control_to: vec2(1., -A),
+                    },
+                ],
+            })
+            .map(|v| v * self.radius + self.pos.pos)
+            .collect(),
+        )
     }
 }
 
 impl Into<Shape> for QuarterCircle {
     fn into(self) -> Shape {
-        Path::new().then(Into::<Keypoints>::into(self)).into()
+        Path::new().then_do(Into::<Keypoints>::into(self)).into()
     }
 }
