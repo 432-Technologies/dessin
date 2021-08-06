@@ -5,10 +5,8 @@ use dessin::{
     vec2, Shape, ShapeType, Vec2,
 };
 use printpdf::{
-    image::{EncodableLayout, Rgba},
-    types::graphics::point,
-    Color, Image, IndirectFontRef, Line, LineCapStyle, LineDashPattern, Mm, PdfLayerReference,
-    Point, Rgb,
+    image::EncodableLayout, Color, Image, IndirectFontRef, Line, LineCapStyle, LineDashPattern, Mm,
+    PdfLayerReference, Point, Rgb,
 };
 use rusttype::{Font, Scale};
 
@@ -253,33 +251,36 @@ impl ToPDFPart for Shape {
 
                 let mut points = Vec::with_capacity(keypoints.len());
                 for idx in 0..keypoints.len() {
-                    todo!()
-                    // let curr = &keypoints[idx];
-                    // let next = keypoints
-                    //     .get(idx + 1)
-                    //     .map(|v| {
-                    //         if let Keypoint::Bezier { .. } = v {
-                    //             true
-                    //         } else {
-                    //             false
-                    //         }
-                    //     })
-                    //     .unwrap_or(false);
+                    let curr = &keypoints[idx];
+                    let next = keypoints
+                        .get(idx + 1)
+                        .map(|v| {
+                            if let Keypoint::Point(..) = v {
+                                false
+                            } else {
+                                true
+                            }
+                        })
+                        .unwrap_or(false);
 
-                    // match curr {
-                    //     Keypoint::Point(p) => {
-                    //         points.push((point(*p), next));
-                    //     }
-                    //     Keypoint::Bezier {
-                    //         destination,
-                    //         start_prop,
-                    //         dest_prop,
-                    //     } => {
-                    //         points.push((point(*start_prop), true));
-                    //         points.push((point(*dest_prop), true));
-                    //         points.push((point(*destination), next));
-                    //     }
-                    // }
+                    match curr {
+                        Keypoint::Point(p) => {
+                            points.push((point(*p), next));
+                        }
+                        Keypoint::BezierQuad { to, control } => {
+                            points.push((point(*control), true));
+                            points.push((point(*to), next));
+                        }
+                        Keypoint::BezierCubic {
+                            to,
+                            control_from,
+                            control_to,
+                        } => {
+                            points.push((point(*control_from), true));
+                            points.push((point(*control_to), true));
+                            points.push((point(*to), next));
+                        }
+                    }
                 }
 
                 let line = Line {
