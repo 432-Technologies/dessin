@@ -4,7 +4,7 @@ use std::error::Error;
 
 impl ToSVG for Shape {
     fn to_svg(&self) -> Result<String, Box<dyn std::error::Error>> {
-        let pos = -self.pos.position_from_center();
+        let pos = self.pos.position_from_center();
         let size = self.pos.size();
         match &self.shape_type {
             ShapeType::Text {
@@ -14,8 +14,8 @@ impl ToSVG for Shape {
                 font_weight,
             } => Ok(format!(
                 r#"<text x="{x}" y="{y}" {anchor} font-size="{size}" {weight} {style}>{text}</text>"#,
-                x = pos.x,
-                y = pos.y,
+                x = -pos.x,
+                y = -pos.y,
                 anchor = align.to_svg()?,
                 size = font_size,
                 weight = font_weight.to_svg()?,
@@ -32,15 +32,15 @@ impl ToSVG for Shape {
             )),
             ShapeType::Circle { radius } => Ok(format!(
                 r#"<circle cx="{x}" cy="{y}" r="{r}" {style}/>"#,
-                x = pos.x,
-                y = pos.y,
+                x = -pos.x,
+                y = -pos.y,
                 r = radius,
                 style = self.style.to_svg()?,
             )),
             ShapeType::Image { data } => Ok(format!(
                 r#"<image x="{x}" y="{y}" width="{width}" height="{height}" xlink:href="{href}"/>"#,
-                x = pos.x - size.x / 2.,
-                y = pos.y - size.y / 2.,
+                x = -pos.x - size.x / 2.,
+                y = -pos.y - size.y / 2.,
                 width = size.x,
                 height = size.y,
                 href = match data {
@@ -61,7 +61,7 @@ impl ToSVG for Shape {
                     r#"<path d="{start} {rest} {close}" {style}/>"#,
                     style = self.style.to_svg()?,
                     start = if let Keypoint::Point(start) = start {
-                        format!("M {} {} ", start.x, start.y)
+                        format!("M {} {} ", -start.x, -start.y)
                     } else {
                         unreachable!();
                     },
