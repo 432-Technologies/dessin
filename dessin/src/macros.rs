@@ -62,6 +62,11 @@ macro_rules! impl_pos {
 macro_rules! impl_style {
     ($t:ty) => {
         impl $t {
+            pub const fn with_maybe_style(mut self, style: Option<$crate::style::Style>) -> Self {
+                self.style = style;
+                self
+            }
+
             pub const fn with_style(mut self, style: $crate::style::Style) -> Self {
                 self.style = Some(style);
                 self
