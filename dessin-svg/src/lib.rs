@@ -23,7 +23,7 @@
 //!
 //! let svg = drawing.to_svg().unwrap();
 //!
-//! assert_eq!(svg, r#"<svg width="50px" height="50px" viewBox="-25 -25 50 50"><text x="10" y="10" text-anchor="left" font-size="16" font-weight="bold" fill='rgba(255,0,0,1)' >Hello, world!</text></svg>"#);
+//! assert_eq!(svg, r#"<svg viewBox="-25 -25 50 50"><text x="10" y="10" text-anchor="left" font-size="16" font-weight="bold" fill='rgba(255,0,0,1)' >Hello, world!</text></svg>"#);
 //! ```
 
 mod shapes;
@@ -51,13 +51,13 @@ pub trait ToSVG {
 ///
 /// let svg = drawing.to_svg().unwrap();
 ///
-/// assert_eq!(svg, r#"<svg width="50px" height="50px" viewBox="-25 -25 50 50"><text x="10" y="10" text-anchor="left" font-size="16" font-weight="bold" fill='rgba(255,0,0,1)' >Hello, world!</text></svg>"#);
+/// assert_eq!(svg, r#"<svg viewBox="-25 -25 50 50"><text x="10" y="10" text-anchor="left" font-size="16" font-weight="bold" fill='rgba(255,0,0,1)' >Hello, world!</text></svg>"#);
 /// ```
 impl ToSVG for Drawing {
     fn to_svg(&self) -> Result<String, Box<dyn Error>> {
         let offset = -self.canvas_size() / 2.;
         Ok(format!(
-            r#"<svg width="{max_x}px" height="{max_y}px" viewBox="{offset_x} {offset_y} {max_x} {max_y}">{}</svg>"#,
+            r#"<svg viewBox="{offset_x} {offset_y} {max_x} {max_y}">{}</svg>"#,
             self.shapes().to_svg()?,
             // self.shapes()[0],
             offset_x = offset.x,

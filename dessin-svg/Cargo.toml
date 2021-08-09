@@ -8,8 +8,8 @@ edition = "2018"
 license = "MIT"
 name = "dessin-svg"
 repository = "https://github.com/daedalus-aero-space/dessin"
-version = "0.6.4"
+version = "0.6.5"
 
 [dependencies]
 base64 = "0.13.0"
-dessin = { version = "0.6.4", path = "../dessin" }
+dessin = { version = "0.6.5", path = "../dessin" }
