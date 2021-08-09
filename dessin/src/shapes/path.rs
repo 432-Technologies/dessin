@@ -251,8 +251,8 @@ impl Keypoints {
                             | Keypoint::BezierQuad { to, .. },
                         ) => Keypoint::BezierCubic {
                             to: *to,
-                            control_from: *control_from,
-                            control_to: *control_to,
+                            control_from: *control_to,
+                            control_to: *control_from,
                         },
                     };
 
