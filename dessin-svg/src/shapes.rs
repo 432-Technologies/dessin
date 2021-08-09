@@ -14,7 +14,7 @@ impl ToSVG for Shape {
                 font_weight,
             } => Ok(format!(
                 r#"<text x="{x}" y="{y}" {anchor} font-size="{size}" {weight} {style}>{text}</text>"#,
-                x = -pos.x,
+                x = pos.x,
                 y = -pos.y,
                 anchor = align.to_svg()?,
                 size = font_size,
@@ -24,22 +24,22 @@ impl ToSVG for Shape {
             )),
             ShapeType::Line { from, to } => Ok(format!(
                 r#"<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" {style}/>"#,
-                x1 = -from.x,
+                x1 = from.x,
                 y1 = -from.y,
-                x2 = -to.x,
+                x2 = to.x,
                 y2 = -to.y,
                 style = self.style.to_svg()?,
             )),
             ShapeType::Circle { radius } => Ok(format!(
                 r#"<circle cx="{x}" cy="{y}" r="{r}" {style}/>"#,
-                x = -pos.x,
+                x = pos.x,
                 y = -pos.y,
                 r = radius,
                 style = self.style.to_svg()?,
             )),
             ShapeType::Image { data } => Ok(format!(
                 r#"<image x="{x}" y="{y}" width="{width}" height="{height}" xlink:href="{href}"/>"#,
-                x = -pos.x - size.x / 2.,
+                x = pos.x - size.x / 2.,
                 y = -pos.y - size.y / 2.,
                 width = size.x,
                 height = size.y,
@@ -61,27 +61,27 @@ impl ToSVG for Shape {
                     r#"<path d="{start} {rest} {close}" {style}/>"#,
                     style = self.style.to_svg()?,
                     start = if let Keypoint::Point(start) = start {
-                        format!("M {} {} ", -start.x, -start.y)
+                        format!("M {} {} ", start.x, -start.y)
                     } else {
                         unreachable!();
                     },
                     rest = rest
                         .iter()
                         .map(|v| match v {
-                            Keypoint::Point(p) => format!("L {} {} ", -p.x, -p.y),
+                            Keypoint::Point(p) => format!("L {} {} ", p.x, -p.y),
                             Keypoint::BezierQuad { to, control } =>
-                                format!("Q {} {} {} {} ", -control.x, -control.y, -to.x, -to.y,),
+                                format!("Q {} {} {} {} ", control.x, -control.y, to.x, -to.y,),
                             Keypoint::BezierCubic {
                                 to,
                                 control_from,
                                 control_to,
                             } => format!(
                                 "C {} {} {} {} {} {} ",
-                                -control_from.x,
+                                control_from.x,
                                 -control_from.y,
-                                -control_to.x,
+                                control_to.x,
                                 -control_to.y,
-                                -to.x,
+                                to.x,
                                 -to.y,
                             ),
                         })
