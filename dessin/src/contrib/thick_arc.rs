@@ -84,6 +84,7 @@ impl Into<Shape> for ThickArc {
             .then(p)
             .then_do(inner)
             .close()
+            .with_maybe_style(self.style)
             .into()
     }
 }

@@ -282,6 +282,7 @@ pub struct Path {
     pub(crate) path: Vec<Keypoint>,
     pub(crate) closed: bool,
 }
+crate::impl_style!(Path);
 impl Path {
     pub fn new() -> Path {
         Path {
