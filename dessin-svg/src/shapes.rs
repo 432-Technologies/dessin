@@ -4,7 +4,7 @@ use std::error::Error;
 
 impl ToSVG for Shape {
     fn to_svg(&self) -> Result<String, Box<dyn std::error::Error>> {
-        let pos = self.pos.position_from_center();
+        let pos = -self.pos.position_from_center();
         let size = self.pos.size();
         match &self.shape_type {
             ShapeType::Text {
@@ -39,8 +39,8 @@ impl ToSVG for Shape {
             )),
             ShapeType::Image { data } => Ok(format!(
                 r#"<image x="{x}" y="{y}" width="{width}" height="{height}" xlink:href="{href}"/>"#,
-                x = pos.x,
-                y = pos.y,
+                x = pos.x - size.x / 2.,
+                y = pos.y - size.y / 2.,
                 width = size.x,
                 height = size.y,
                 href = match data {
@@ -200,7 +200,7 @@ mod tests {
                 .with_align(TextAlign::Center),
         );
 
-        let text_svg = r#"<text x="10" y="10" text-anchor="middle" font-size="10" font-weight="bold" fill='rgba(255,0,0,1)' >hello world</text>"#;
+        let text_svg = r#"<text x="-10" y="-10" text-anchor="middle" font-size="10" font-weight="bold" fill='rgba(255,0,0,1)' >hello world</text>"#;
         let drawing_svg = format!(r#"<svg viewBox="-0 -0 0 0">{}</svg>"#, text_svg);
 
         assert_eq!(drawing.shapes()[0].to_svg().unwrap(), text_svg);
