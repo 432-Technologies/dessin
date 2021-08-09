@@ -73,7 +73,8 @@ impl Shape {
                 closed: _,
             } => {
                 keypoints.iter_mut().for_each(|v| {
-                    *v += pos;
+                    let delta = pos - prev_pos;
+                    *v += delta;
                 });
             }
             ShapeType::Circle { .. } => {}
