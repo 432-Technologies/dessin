@@ -24,10 +24,10 @@ impl ToSVG for Shape {
             )),
             ShapeType::Line { from, to } => Ok(format!(
                 r#"<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" {style}/>"#,
-                x1 = from.x,
-                y1 = from.y,
-                x2 = to.x,
-                y2 = to.y,
+                x1 = -from.x,
+                y1 = -from.y,
+                x2 = -to.x,
+                y2 = -to.y,
                 style = self.style.to_svg()?,
             )),
             ShapeType::Circle { radius } => Ok(format!(
@@ -68,21 +68,21 @@ impl ToSVG for Shape {
                     rest = rest
                         .iter()
                         .map(|v| match v {
-                            Keypoint::Point(p) => format!("L {} {} ", p.x, p.y),
+                            Keypoint::Point(p) => format!("L {} {} ", -p.x, -p.y),
                             Keypoint::BezierQuad { to, control } =>
-                                format!("Q {} {} {} {} ", control.x, control.y, to.x, to.y,),
+                                format!("Q {} {} {} {} ", -control.x, -control.y, -to.x, -to.y,),
                             Keypoint::BezierCubic {
                                 to,
                                 control_from,
                                 control_to,
                             } => format!(
                                 "C {} {} {} {} {} {} ",
-                                control_from.x,
-                                control_from.y,
-                                control_to.x,
-                                control_to.y,
-                                to.x,
-                                to.y,
+                                -control_from.x,
+                                -control_from.y,
+                                -control_to.x,
+                                -control_to.y,
+                                -to.x,
+                                -to.y,
                             ),
                         })
                         .collect::<String>(),
