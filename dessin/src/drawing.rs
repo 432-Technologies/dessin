@@ -48,6 +48,7 @@ use algebr::{vec2, Vec2};
 /// ```
 #[derive(Debug, Clone)]
 pub struct Drawing {
+    pub(crate) position: Vec2,
     pub(crate) canvas_size: Size,
     pub(crate) shapes: Vec<Shape>,
 }
@@ -55,7 +56,8 @@ impl Drawing {
     /// Default constructor, creates an empty drawing.
     pub const fn empty() -> Self {
         Drawing {
-            canvas_size: vec2(0., 0.),
+            position: Vec2::zero(),
+            canvas_size: Vec2::zero(),
             shapes: vec![],
         }
     }
@@ -66,7 +68,9 @@ impl Drawing {
         T: Into<Shape>,
     {
         let s: Shape = shape.into();
-        let mut d = Drawing::empty().with_canvas_size(s.pos.size());
+        let pos = s.pos;
+        let mut d = Drawing::empty().with_canvas_size(pos.size());
+        d.position = pos.pos;
         d.add(s);
         d
     }

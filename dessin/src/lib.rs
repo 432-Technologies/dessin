@@ -22,6 +22,120 @@ pub mod shape {
     pub use crate::style::{Color, Fill, Stroke, Style};
 }
 
+pub trait ShapeGrouping {
+    fn group(self) -> Drawing;
+}
+
+impl<T> ShapeGrouping for T
+where
+    T: Into<Shape>,
+{
+    fn group(self) -> Drawing {
+        Drawing::new(self)
+    }
+}
+
+impl<T, U> ShapeGrouping for (T, U)
+where
+    T: Into<Shape>,
+    U: Into<Shape>,
+{
+    fn group(self) -> Drawing {
+        Drawing::new(vec![self.0.into(), self.1.into()])
+    }
+}
+
+impl<T, U, V> ShapeGrouping for (T, U, V)
+where
+    T: Into<Shape>,
+    U: Into<Shape>,
+    V: Into<Shape>,
+{
+    fn group(self) -> Drawing {
+        Drawing::new(vec![self.0.into(), self.1.into(), self.2.into()])
+    }
+}
+
+impl<T, U, V, W> ShapeGrouping for (T, U, V, W)
+where
+    T: Into<Shape>,
+    U: Into<Shape>,
+    V: Into<Shape>,
+    W: Into<Shape>,
+{
+    fn group(self) -> Drawing {
+        Drawing::new(vec![
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+        ])
+    }
+}
+
+impl<T, U, V, W, X> ShapeGrouping for (T, U, V, W, X)
+where
+    T: Into<Shape>,
+    U: Into<Shape>,
+    V: Into<Shape>,
+    W: Into<Shape>,
+    X: Into<Shape>,
+{
+    fn group(self) -> Drawing {
+        Drawing::new(vec![
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+        ])
+    }
+}
+
+impl<T, U, V, W, X, Y> ShapeGrouping for (T, U, V, W, X, Y)
+where
+    T: Into<Shape>,
+    U: Into<Shape>,
+    V: Into<Shape>,
+    W: Into<Shape>,
+    X: Into<Shape>,
+    Y: Into<Shape>,
+{
+    fn group(self) -> Drawing {
+        Drawing::new(vec![
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+        ])
+    }
+}
+
+impl<T, U, V, W, X, Y, Z> ShapeGrouping for (T, U, V, W, X, Y, Z)
+where
+    T: Into<Shape>,
+    U: Into<Shape>,
+    V: Into<Shape>,
+    W: Into<Shape>,
+    X: Into<Shape>,
+    Y: Into<Shape>,
+    Z: Into<Shape>,
+{
+    fn group(self) -> Drawing {
+        Drawing::new(vec![
+            self.0.into(),
+            self.1.into(),
+            self.2.into(),
+            self.3.into(),
+            self.4.into(),
+            self.5.into(),
+            self.6.into(),
+        ])
+    }
+}
+
 pub trait ShapeInteraction<T> {
     fn children_of(self, parent: T) -> Drawing;
     fn parent_of(self, children: T) -> Drawing;

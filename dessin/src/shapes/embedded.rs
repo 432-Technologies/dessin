@@ -12,7 +12,9 @@ impl EmbeddedDrawing {
     /// Creates a new [`EmbeddedDrawing`][EmbeddedDrawing] based on the given [`Drawing`][Drawing].
     pub fn new(drawing: Drawing) -> Self {
         EmbeddedDrawing {
-            pos: Rect::new().with_size(drawing.canvas_size),
+            pos: Rect::new()
+                .with_size(drawing.canvas_size)
+                .at(drawing.position),
             style: None,
             shapes: drawing.shapes,
         }
