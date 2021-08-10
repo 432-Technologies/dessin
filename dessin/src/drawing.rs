@@ -92,6 +92,10 @@ impl Drawing {
         self
     }
 
+    pub fn into_embedded(self) -> EmbeddedDrawing {
+        EmbeddedDrawing::new(self)
+    }
+
     /// Get access to this drawing's shapes.
     /// ```
     /// # use dessin::{
