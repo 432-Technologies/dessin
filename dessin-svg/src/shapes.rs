@@ -50,6 +50,9 @@ impl ToSVG for Shape {
                     ImageFormat::JPEG(ref d) => {
                         format!("data:image/jpeg;base64,{}", base64::encode(d))
                     }
+                    ImageFormat::Webp(ref d) => {
+                        format!("data:image/webp;base64,{}", base64::encode(d))
+                    }
                 }
             )),
             ShapeType::Drawing(shapes) => shapes.to_svg(),

@@ -4,6 +4,7 @@ use crate::{position::Rect, style::Style, Shape, ShapeType};
 pub enum ImageFormat {
     PNG(Vec<u8>),
     JPEG(Vec<u8>),
+    Webp(Vec<u8>),
 }
 
 #[derive(Debug, Clone)]
