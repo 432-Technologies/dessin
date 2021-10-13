@@ -20,14 +20,6 @@ drawing.add(
             .at(vec2(50., 50.)).with_radius(10.)
     )
     .add(
-        Arc::new()
-            .at(vec2(50., 50.))
-            .with_inner_radius(10.)
-            .with_outer_radius(20.)
-            .with_start_angle(Angle::deg(0.))
-            .with_end_angle(Angle::deg(180.))
-    )
-    .add(
         Image::new(ImageFormat::PNG(include_bytes!("../rustacean-flat-happy.png").to_vec()))
             .at(vec2(50., 50.))
             .with_size(vec2(10., 10.))
@@ -44,7 +36,7 @@ let other_drawing = Drawing::empty()
     );
 ```
 
-Then, we export our drawing to PDF, [SVG](https://github.com/daedalus-aero-space/dessin-svg), PNG, etc.
+Then, we export our drawing to [PDF](https://docs.rs/dessin-pdf/), [SVG](https://docs.rs/dessin-svg/), PNG, etc.
 ``` rust
 use dessin_svg::ToSVG;
 

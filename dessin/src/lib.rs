@@ -1,3 +1,32 @@
+//! Dessin (french for drawing) is aimed at creating complexe [`Drawing`][Drawing] and export them in [`SVG`]
+//! or [`PDF`].
+//!
+//! [`SVG`]: https://docs.rs/dessin-svg/
+//! [`PDF`]: https://docs.rs/dessin-pdf/
+//!
+//! ```
+//! use dessin::{shape::{Text, Image, ImageFormat, Line, Circle}, style::{FontWeight, Fill, Color}, vec2, Drawing};
+//!
+//! let mut drawing = Drawing::empty().with_canvas_size(vec2(100., 100.));
+//!
+//! drawing.add(
+//!         Text::new("Hello World".to_owned())
+//!             .at(vec2(50., 50.))
+//!     )
+//!     .add(
+//!         Line::from(vec2(0., 0.)).to(vec2(100., 100.))
+//!     )
+//!     .add(
+//!         Circle::new()
+//!             .at(vec2(50., 50.)).with_radius(10.)
+//!     )
+//!     .add(
+//!         Image::new(ImageFormat::PNG(include_bytes!("../rustacean-flat-happy.png").to_vec()))
+//!             .at(vec2(50., 50.))
+//!             .with_size(vec2(10., 10.))
+//!     );
+//! ```
+
 pub mod contrib;
 mod drawing;
 mod macros;
