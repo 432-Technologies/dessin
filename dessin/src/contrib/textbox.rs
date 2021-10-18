@@ -117,45 +117,58 @@ impl From<TextLayout> for Shape {
         let mut acc = String::new();
         let mut canvas = Rect::new();
         let mut drawing = Drawing::empty();
-        for word in text.split(" ") {
-            if let Some(b) = boxes.get(box_idx) {
-                let font = match b.font_weight {
-                    FontWeight::Regular => Font::try_from_bytes(ARIAL_REGULAR),
-                    FontWeight::Bold => Font::try_from_bytes(ARIAL_BOLD),
-                    FontWeight::Italic => Font::try_from_bytes(ARIAL_ITALIC),
-                    FontWeight::BoldItalic => Font::try_from_bytes(ARIAL_BOLD_ITALIC),
-                }
-                .unwrap();
 
-                let len = length_of(word, font, b.font_size);
-                pos.x += len;
-                if acc.len() > 0 {
-                    acc.push(' ')
-                }
-                acc.push_str(word);
-                if pos.x > b.pos.size().x {
-                    let text = std::mem::take(&mut acc);
-                    let res = Text::new(text)
-                        .at(global_pos.pos + b.pos.pos - vec2(0., pos.y))
-                        .with_anchor(b.pos.anchor)
-                        .with_size(global_pos.size() * b.pos.size())
-                        .with_align(b.align)
-                        .with_font_size(global_pos.size().x * b.font_size) // TODO: Non-uniform size
-                        .with_font_weight(b.font_weight)
-                        .with_style(b.style.clone().unwrap_or_default());
-                    canvas = canvas.union(res.pos);
-                    drawing.add(res);
-
-                    pos.y += (b.font_size + b.spacing) * global_pos.size().x; // TODO: Non-uniform size
-                    pos.x = 0.;
-
-                    if pos.y >= b.pos.size().y {
-                        box_idx += 1;
-                        pos.y = 0.;
+        for line in text.split("\n") {
+            for word in line.split(" ").chain(Some("\n")) {
+                if let Some(b) = boxes.get(box_idx) {
+                    let font = match b.font_weight {
+                        FontWeight::Regular => Font::try_from_bytes(ARIAL_REGULAR),
+                        FontWeight::Bold => Font::try_from_bytes(ARIAL_BOLD),
+                        FontWeight::Italic => Font::try_from_bytes(ARIAL_ITALIC),
+                        FontWeight::BoldItalic => Font::try_from_bytes(ARIAL_BOLD_ITALIC),
                     }
+                    .unwrap();
+
+                    let hard_new_line = if word == "\n" {
+                        true
+                    } else {
+                        let len = length_of(word, font, b.font_size);
+                        pos.x += len;
+
+                        if acc.len() > 0 {
+                            acc.push(' ');
+                        }
+                        acc.push_str(word);
+
+                        false
+                    };
+
+                    if hard_new_line || pos.x > b.pos.size().x {
+                        let text = std::mem::take(&mut acc);
+                        let res = Text::new(text)
+                            .at(global_pos.pos + b.pos.pos - vec2(0., pos.y))
+                            .with_anchor(b.pos.anchor)
+                            .with_size(global_pos.size() * b.pos.size())
+                            .with_align(b.align)
+                            .with_font_size(global_pos.size().x * b.font_size) // TODO: Non-uniform size
+                            .with_font_weight(b.font_weight)
+                            .with_style(b.style.clone().unwrap_or_default());
+
+                        canvas = canvas.union(res.pos);
+
+                        drawing.add(res);
+
+                        pos.y += (b.font_size + b.spacing) * global_pos.size().x; // TODO: Non-uniform size
+                        pos.x = 0.;
+
+                        if pos.y >= b.pos.size().y {
+                            box_idx += 1;
+                            pos.y = 0.;
+                        }
+                    }
+                } else {
+                    break;
                 }
-            } else {
-                break;
             }
         }
 

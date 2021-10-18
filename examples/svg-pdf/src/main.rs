@@ -11,7 +11,9 @@ use std::{error::Error, fs::write};
 pub fn dessin() -> Drawing {
     let mut drawing = Drawing::empty().with_canvas_size(vec2(300., 300.));
 
-    const TEXT_BOX_CONTENT: &str = "This is a long long test to see if the textbox works as intended. On top of that, the output should be the same on PDF and SVG";
+    const TEXT_BOX_CONTENT: &str =
+        "This is a long long test to see if the textbox works as intended.
+On top of that, the output should be the same on PDF and SVG!";
 
     drawing
         .add(
