@@ -85,7 +85,7 @@ impl TextBox {
 impl From<TextLayout> for Shape {
     fn from(
         TextLayout {
-            text,
+            mut text,
             pos: global_pos,
             boxes,
         }: TextLayout,
@@ -109,6 +109,8 @@ impl From<TextLayout> for Shape {
                 })
                 .sum()
         }
+
+        text.push(' ');
 
         let mut pos = Vec2::zero();
         let mut box_idx = 0;
