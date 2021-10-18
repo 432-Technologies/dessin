@@ -149,9 +149,9 @@ impl ToSVG for TextAlign {
         Ok(format!(
             r#"text-anchor="{}""#,
             match self {
-                TextAlign::Left => "left",
+                TextAlign::Left => "start",
                 TextAlign::Center => "middle",
-                TextAlign::Right => "right",
+                TextAlign::Right => "end",
             }
         ))
     }
