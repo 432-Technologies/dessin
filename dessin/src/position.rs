@@ -59,3 +59,12 @@ impl Rect {
         }
     }
 }
+
+pub trait RectOp {
+    fn union(&self) -> Rect;
+}
+impl RectOp for &[Rect] {
+    fn union(&self) -> Rect {
+        self.iter().fold(Rect::new(), |acc, curr| acc.union(*curr))
+    }
+}

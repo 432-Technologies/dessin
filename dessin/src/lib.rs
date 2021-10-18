@@ -37,7 +37,7 @@ pub mod style;
 pub type Size = Vec2;
 
 pub use crate::drawing::Drawing;
-pub use crate::position::Rect;
+pub use crate::position::{Rect, RectOp};
 pub use crate::shapes::{Shape, ShapeType};
 pub use algebr::{vec2, Angle, Vec2};
 

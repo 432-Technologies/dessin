@@ -2,7 +2,7 @@ use crate::{
     shapes::{embedded::EmbeddedDrawing, Shape},
     Size,
 };
-use algebr::{vec2, Vec2};
+use algebr::Vec2;
 
 /// Drawing is a collection of shapes.
 /// ```

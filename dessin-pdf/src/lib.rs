@@ -4,10 +4,10 @@ use dessin::{vec2, Drawing, Vec2};
 use printpdf::{IndirectFontRef, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference};
 use std::{error::Error, io::BufWriter};
 
-const ARIAL_REGULAR: &[u8] = include_bytes!("../../resources/Arial.ttf");
-const ARIAL_BOLD: &[u8] = include_bytes!("../../resources/Arial Bold.ttf");
-const ARIAL_ITALIC: &[u8] = include_bytes!("../../resources/Arial Italic.ttf");
-const ARIAL_BOLD_ITALIC: &[u8] = include_bytes!("../../resources/Arial Bold Italic.ttf");
+const ARIAL_REGULAR: &[u8] = include_bytes!("Arial.ttf");
+const ARIAL_BOLD: &[u8] = include_bytes!("Arial Bold.ttf");
+const ARIAL_ITALIC: &[u8] = include_bytes!("Arial Italic.ttf");
+const ARIAL_BOLD_ITALIC: &[u8] = include_bytes!("Arial Bold Italic.ttf");
 
 const DPI: f64 = 96.;
 

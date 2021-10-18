@@ -2,7 +2,7 @@ use algebr::Vec2;
 
 use crate::{position::Rect, style::Style, Shape, ShapeType};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FontWeight {
     Regular,
     Bold,
@@ -10,14 +10,14 @@ pub enum FontWeight {
     BoldItalic,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum TextAlign {
     Left,
     Center,
     Right,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Text {
     pub(crate) pos: Rect,
     pub(crate) text: String,

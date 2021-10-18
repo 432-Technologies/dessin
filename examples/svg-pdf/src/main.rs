@@ -1,4 +1,5 @@
 use dessin::{
+    contrib::{TextBox, TextLayout},
     shape::{Circle, Color, EmbeddedDrawing, Fill, Image, ImageFormat, Line, Stroke, Text},
     style::TextAlign,
     vec2, Drawing,
@@ -9,7 +10,30 @@ use std::{error::Error, fs::write};
 
 pub fn dessin() -> Drawing {
     let mut drawing = Drawing::empty().with_canvas_size(vec2(300., 300.));
+
+    const TEXT_BOX_CONTENT: &str = "This is a long long test to see if the textbox works as intended. On top of that, the output should be the same on PDF and SVG";
+
     drawing
+        .add(
+            TextLayout::new(TEXT_BOX_CONTENT.to_owned())
+                .add_box(
+                    TextBox::new()
+                        .at(vec2(-120., 120.))
+                        .with_size(vec2(30., 30.))
+                        .with_font_size(4.)
+                        .with_spacing(4.)
+                        .with_fill(Fill::Color(Color::RED))
+                        .with_align(TextAlign::Center),
+                )
+                .add_box(
+                    TextBox::new()
+                        .at(vec2(120., 120.))
+                        .with_size(vec2(30., 60.))
+                        .with_font_size(5.)
+                        .with_fill(Fill::Color(Color::BLACK))
+                        .with_align(TextAlign::Right),
+                ),
+        )
         .add(
             Text::new("Hello World".to_owned())
                 .at(vec2(0., -10.))

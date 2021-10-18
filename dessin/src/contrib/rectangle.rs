@@ -1,5 +1,5 @@
 use crate::{
-    shape::{EmbeddedDrawing, Line, Style},
+    shape::{Line, Style},
     vec2, Drawing, Rect, Shape,
 };
 
@@ -19,35 +19,35 @@ impl Rectangle {
     }
 }
 
-impl Into<Shape> for Rectangle {
-    fn into(self) -> Shape {
-        let min = self.pos.position_from_anchor(vec2(-1., -1.));
-        let max = self.pos.position_from_anchor(vec2(1., 1.));
+impl From<Rectangle> for Shape {
+    fn from(value: Rectangle) -> Self {
+        let min = value.pos.position_from_anchor(vec2(-1., -1.));
+        let max = value.pos.position_from_anchor(vec2(1., 1.));
 
-        let mut rect = Drawing::empty().with_canvas_size(self.pos.size());
+        let mut rect = Drawing::empty().with_canvas_size(value.pos.size());
 
         rect.add(
             Line::from(vec2(min.x, min.y))
                 .to(vec2(min.x, max.y))
-                .with_style(self.style.as_ref().map(|v| v.clone()).unwrap_or_default()),
+                .with_style(value.style.as_ref().map(|v| v.clone()).unwrap_or_default()),
         )
         .add(
             Line::from(vec2(min.x, min.y))
                 .to(vec2(max.x, min.y))
-                .with_style(self.style.as_ref().map(|v| v.clone()).unwrap_or_default()),
+                .with_style(value.style.as_ref().map(|v| v.clone()).unwrap_or_default()),
         )
         .add(
             Line::from(vec2(max.x, max.y))
                 .to(vec2(min.x, max.y))
-                .with_style(self.style.as_ref().map(|v| v.clone()).unwrap_or_default()),
+                .with_style(value.style.as_ref().map(|v| v.clone()).unwrap_or_default()),
         )
         .add(
             Line::from(vec2(max.x, max.y))
                 .to(vec2(max.x, min.y))
-                .with_style(self.style.as_ref().map(|v| v.clone()).unwrap_or_default()),
+                .with_style(value.style.as_ref().map(|v| v.clone()).unwrap_or_default()),
         );
 
-        EmbeddedDrawing::new(rect).into()
+        rect.into()
     }
 }
 
@@ -55,6 +55,16 @@ impl Into<Shape> for Rectangle {
 mod test {
     use super::*;
     use crate::ShapeType;
+
+    #[test]
+    fn instantiate() {
+        let mut drawing = Drawing::empty().with_canvas_size(vec2(300., 300.));
+        drawing.add(
+            Rectangle::new()
+                .at(vec2(20., 20.))
+                .with_size(vec2(20., 40.)),
+        );
+    }
 
     #[test]
     fn rect() {
