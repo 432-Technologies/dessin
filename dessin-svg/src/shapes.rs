@@ -13,7 +13,7 @@ impl ToSVG for Shape {
                 font_size,
                 font_weight,
             } => Ok(format!(
-                r#"<text x="{x}" y="{y}" {anchor} font-size="{size}" {weight} {style}>{text}</text>"#,
+                r#"<text x="{x}" y="{y}" {anchor} font-family="Arial" font-size="{size}" {weight} {style}>{text}</text>"#,
                 x = pos.x,
                 y = -pos.y,
                 anchor = align.to_svg()?,
@@ -203,7 +203,7 @@ mod tests {
                 .with_align(TextAlign::Center),
         );
 
-        let text_svg = r#"<text x="10" y="-10" text-anchor="middle" font-size="10" font-weight="bold" fill='rgba(255,0,0,1)' >hello world</text>"#;
+        let text_svg = r#"<text x="10" y="-10" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill='rgba(255,0,0,1)' >hello world</text>"#;
         let drawing_svg = format!(r#"<svg viewBox="-0 -0 0 0">{}</svg>"#, text_svg);
 
         assert_eq!(drawing.shapes()[0].to_svg().unwrap(), text_svg);
