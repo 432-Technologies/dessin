@@ -204,7 +204,10 @@ mod tests {
         );
 
         let text_svg = r#"<text x="10" y="-10" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill='rgba(255,0,0,1)' >hello world</text>"#;
-        let drawing_svg = format!(r#"<svg viewBox="-0 -0 0 0">{}</svg>"#, text_svg);
+        let drawing_svg = format!(
+            r#"<svg viewBox="-0 -0 0 0" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">{}</svg>"#,
+            text_svg
+        );
 
         assert_eq!(drawing.shapes()[0].to_svg().unwrap(), text_svg);
         assert_eq!(drawing.to_svg().unwrap(), drawing_svg);
@@ -219,7 +222,10 @@ mod tests {
                 .with_fill(Fill::Color(Color::U32(0xFF0000))),
         );
         let line_svg = r#"<line x1="10" y1="-10" x2="20" y2="-20" fill='rgba(255,0,0,1)' />"#;
-        let drawing_svg = format!(r#"<svg viewBox="-0 -0 0 0">{}</svg>"#, line_svg);
+        let drawing_svg = format!(
+            r#"<svg viewBox="-0 -0 0 0" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">{}</svg>"#,
+            line_svg
+        );
         assert_eq!(drawing.shapes()[0].to_svg().unwrap(), line_svg);
         assert_eq!(drawing.to_svg().unwrap(), drawing_svg);
     }
