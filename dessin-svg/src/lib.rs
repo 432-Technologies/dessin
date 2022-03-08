@@ -23,7 +23,7 @@
 //!
 //! let svg = drawing.to_svg().unwrap();
 //!
-//! assert_eq!(svg, r#"<svg viewBox="-25 -25 50 50"><text x="10" y="-10" text-anchor="start" font-family="Arial" font-size="16" font-weight="bold" fill='rgba(255,0,0,1)' >Hello, world!</text></svg>"#);
+//! assert_eq!(svg, r#"<svg viewBox="-25 -25 50 50" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><text x="10" y="-10" text-anchor="start" font-family="Arial" font-size="16" font-weight="bold" fill='rgba(255,0,0,1)' >Hello, world!</text></svg>"#);
 //! ```
 
 mod shapes;
@@ -51,13 +51,13 @@ pub trait ToSVG {
 ///
 /// let svg = drawing.to_svg().unwrap();
 ///
-/// assert_eq!(svg, r#"<svg viewBox="-25 -25 50 50"><text x="10" y="-10" text-anchor="start" font-family="Arial" font-size="16" font-weight="bold" fill='rgba(255,0,0,1)' >Hello, world!</text></svg>"#);
+/// assert_eq!(svg, r#"<svg viewBox="-25 -25 50 50" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><text x="10" y="-10" text-anchor="start" font-family="Arial" font-size="16" font-weight="bold" fill='rgba(255,0,0,1)' >Hello, world!</text></svg>"#);
 /// ```
 impl ToSVG for Drawing {
     fn to_svg(&self) -> Result<String, Box<dyn Error>> {
         let offset = -self.canvas_size() / 2.;
         Ok(format!(
-            r#"<svg viewBox="{offset_x} {offset_y} {max_x} {max_y}">{}</svg>"#,
+            r#"<svg viewBox="{offset_x} {offset_y} {max_x} {max_y}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">{}</svg>"#,
             self.shapes().to_svg()?,
             // self.shapes()[0],
             offset_x = offset.x,

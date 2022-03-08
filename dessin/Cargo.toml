@@ -1,7 +1,7 @@
 [package]
 name = "dessin"
-version = "0.6.16"
-edition = "2018"
+version = "0.7.0"
+edition = "2021"
 license = "MIT"
 repository = "https://github.com/daedalus-aero-space/dessin"
 description = "Build complex drawing for PDF, SVG, ..."

@@ -4,12 +4,12 @@ authors = [
     "Francois Morillon <francois.morillon@yahoo.fr>",
 ]
 description = "Drawing SVG"
-edition = "2018"
+edition = "2021"
 license = "MIT"
 name = "dessin-svg"
 repository = "https://github.com/daedalus-aero-space/dessin"
-version = "0.6.16"
+version = "0.7.0"
 
 [dependencies]
 base64 = "0.13.0"
-dessin = { version = "0.6.16", path = "../dessin" }
+dessin = { version = "0.7.0", path = "../dessin" }
