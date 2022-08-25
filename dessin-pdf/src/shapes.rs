@@ -217,14 +217,18 @@ impl ToPDFPart for Shape {
             ShapeType::Image { data } => {
                 let image = match data {
                     ImageFormat::PNG(data) => Image::try_from(
-                        printpdf::image_crate::png::PngDecoder::new(&mut data.as_bytes())?,
+                        printpdf::image_crate::codecs::png::PngDecoder::new(&mut data.as_bytes())?,
                     ),
-                    ImageFormat::JPEG(data) => Image::try_from(
-                        printpdf::image_crate::jpeg::JpegDecoder::new(&mut data.as_bytes())?,
-                    ),
-                    ImageFormat::Webp(data) => Image::try_from(
-                        printpdf::image_crate::webp::WebPDecoder::new(&mut data.as_bytes())?,
-                    ),
+                    ImageFormat::JPEG(data) => {
+                        Image::try_from(printpdf::image_crate::codecs::jpeg::JpegDecoder::new(
+                            &mut data.as_bytes(),
+                        )?)
+                    }
+                    ImageFormat::Webp(data) => {
+                        Image::try_from(printpdf::image_crate::codecs::webp::WebPDecoder::new(
+                            &mut data.as_bytes(),
+                        )?)
+                    }
                 }?;
 
                 let width = Mm::from(image.image.width.into_pt(dpi)).0 as f32;

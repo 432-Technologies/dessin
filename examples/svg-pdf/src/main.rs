@@ -157,7 +157,6 @@ pub fn main() -> Result<(), Box<dyn Error>> {
             ),
         )?;
     }
-
     // PDF
     {
         let dessin = dessin();
