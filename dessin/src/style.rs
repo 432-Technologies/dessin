@@ -41,6 +41,34 @@ impl Color {
             },
         }
     }
+
+    /// hue ∈ [0°, 360°], saturation ∈ [0, 1], lightness ∈ [0, 1] and alpha ∈ [0, 1]
+    pub fn hsla(hue: f32, saturation: f32, lightness: f32, alpha: f32) -> Color {
+        let chroma = 1. - (2. * lightness - 1.).abs() * saturation;
+        let hue_prime = hue / 60.;
+        let x = chroma * (1. - (hue_prime % 2. - 1.).abs());
+        let a = (alpha * 255.) as u8;
+        let (r, g, b) = if hue_prime < 1. {
+            (chroma, x, 0.)
+        } else if hue_prime < 2. {
+            (x, chroma, 0.)
+        } else if hue_prime < 3. {
+            (0., chroma, x)
+        } else if hue_prime < 4. {
+            (0., x, chroma)
+        } else if hue_prime < 5. {
+            (x, 0., chroma)
+        } else {
+            (chroma, 0., x)
+        };
+        let m = lightness - chroma / 2.;
+        Color::RGBA {
+            r: ((r + m) * 255.) as u8,
+            g: ((g + m) * 255.) as u8,
+            b: ((b + m) * 255.) as u8,
+            a,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
