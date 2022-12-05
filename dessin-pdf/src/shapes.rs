@@ -5,8 +5,8 @@ use dessin::{
     vec2, Shape, ShapeType, Vec2,
 };
 use printpdf::{
-    image::EncodableLayout, Color, Image, IndirectFontRef, Line, LineCapStyle, LineDashPattern, Mm,
-    PdfLayerReference, Point, Rgb,
+    image_crate::EncodableLayout, Color, Image, ImageTransform, IndirectFontRef, Line,
+    LineCapStyle, LineDashPattern, Mm, PdfLayerReference, Point, Rgb,
 };
 use rusttype::{Font, Scale};
 
@@ -217,14 +217,18 @@ impl ToPDFPart for Shape {
             ShapeType::Image { data } => {
                 let image = match data {
                     ImageFormat::PNG(data) => Image::try_from(
-                        printpdf::image::codecs::png::PngDecoder::new(&mut data.as_bytes())?,
+                        printpdf::image_crate::codecs::png::PngDecoder::new(&mut data.as_bytes())?,
                     ),
-                    ImageFormat::JPEG(data) => Image::try_from(
-                        printpdf::image::codecs::jpeg::JpegDecoder::new(&mut data.as_bytes())?,
-                    ),
-                    ImageFormat::Webp(data) => Image::try_from(
-                        printpdf::image::codecs::webp::WebPDecoder::new(&mut data.as_bytes())?,
-                    ),
+                    ImageFormat::JPEG(data) => {
+                        Image::try_from(printpdf::image_crate::codecs::jpeg::JpegDecoder::new(
+                            &mut data.as_bytes(),
+                        )?)
+                    }
+                    ImageFormat::Webp(data) => {
+                        Image::try_from(printpdf::image_crate::codecs::webp::WebPDecoder::new(
+                            &mut data.as_bytes(),
+                        )?)
+                    }
                 }?;
 
                 let width = Mm::from(image.image.width.into_pt(dpi)).0 as f32;
@@ -235,12 +239,14 @@ impl ToPDFPart for Shape {
 
                 image.add_to_layer(
                     layer.clone(),
-                    Some(Mm(10.)),
-                    Some(Mm(10.)),
-                    None,
-                    Some(scale_x as f64),
-                    Some(scale_y as f64),
-                    Some(300.),
+                    ImageTransform {
+                        translate_x: Some(Mm((pos.x - size.x / 2.) as f64)),
+                        translate_y: Some(Mm((pos.y - size.x / 2.) as f64)),
+                        rotate: None,
+                        scale_x: Some(scale_x as f64),
+                        scale_y: Some(scale_y as f64),
+                        dpi: Some(dpi),
+                    },
                 );
             }
             ShapeType::Drawing(shapes) => {

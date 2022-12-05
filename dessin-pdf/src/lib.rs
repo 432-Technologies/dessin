@@ -57,14 +57,3 @@ trait ToPDFPart {
         layer: &PdfLayerReference,
     ) -> Result<(), Box<dyn Error>>;
 }
-
-//     let armees = Image::try_from(JpegDecoder::new(IMAGE_ARMEES)?)?;
-//     armees.add_to_layer(
-//         current_layer.clone(),
-//         Some(Mm(10.)),
-//         Some(Mm(260.)),
-//         None,
-//         Some(1.5),
-//         Some(1.5),
-//         None,
-//     );

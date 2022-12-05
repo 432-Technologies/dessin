@@ -131,8 +131,8 @@ pub fn embedded(dessin: Drawing) -> Drawing {
                 }),
         )
         .add(
-            Image::new(ImageFormat::PNG(
-                include_bytes!("rustacean-flat-happy.png").to_vec(),
+            Image::new(ImageFormat::JPEG(
+                include_bytes!("rustacean-flat-happy.jpg").to_vec(),
             ))
             .at(vec2(-25., 0.))
             .with_size(vec2(50., 40.)),
@@ -157,7 +157,6 @@ pub fn main() -> Result<(), Box<dyn Error>> {
             ),
         )?;
     }
-
     // PDF
     {
         let dessin = dessin();

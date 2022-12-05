@@ -6,6 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dessin = { version = "0.7.0", path = "../../dessin" }
-dessin-svg = { version = "0.7.0", path = "../../dessin-svg" }
-dessin-pdf = { version = "0.7.0", path = "../../dessin-pdf" }
+dessin = { version = "0.7", path = "../../dessin" }
+dessin-svg = { version = "0.7", path = "../../dessin-svg" }
+dessin-pdf = { version = "0.7", path = "../../dessin-pdf" }
