@@ -1,12 +1,12 @@
 [package]
 name = "dessin-pdf"
-version = "0.7.2"
+version = "0.7.3"
 edition = "2021"
 repository = "https://github.com/daedalus-aero-space/dessin"
 license = "MIT"
 description = "Dessin to PDF"
 
 [dependencies]
-dessin = { version = "0.7.2", path = "../dessin" }
-printpdf = { version = "0.5.3", features = ["webp", "svg"] }
-rusttype = "0.9.2"
+dessin = { version = "0.7.3", path = "../dessin" }
+printpdf = { git="https://github.com/fschutt/printpdf", features = ["webp", "svg"] }
+rusttype = "0.9.3"
