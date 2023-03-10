@@ -8,7 +8,7 @@ description = "Dessin to PDF"
 
 [dependencies]
 dessin = { version = "0.7.3", path = "../dessin" }
-printpdf = { git = "https://github.com/fschutt/printpdf", rev = "09958f9", version="0.5.3", features = [
+printpdf = { git = "https://github.com/fschutt/printpdf", rev = "09958f9", features = [
   "webp",
   "svg",
 ] }
