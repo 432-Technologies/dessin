@@ -62,15 +62,15 @@ fn setup_style(style: &Option<Style>, _: &IndirectFontRef, layer: &PdfLayerRefer
             } => {
                 layer.set_outline_color(color(c));
                 layer.set_outline_thickness(width as f64);
-                layer.set_line_dash_pattern(LineDashPattern::new(
-                    0,
-                    Some(on as i64),
-                    Some(off as i64),
-                    None,
-                    None,
-                    None,
-                    None,
-                ));
+                layer.set_line_dash_pattern(LineDashPattern {
+                    offset: 0,
+                    dash_1: Some(on as i64),
+                    gap_1: Some(off as i64),
+                    dash_2: None,
+                    gap_2: None,
+                    dash_3: None,
+                    gap_3: None,
+                });
                 layer.set_line_cap_style(LineCapStyle::Butt);
             }
         }

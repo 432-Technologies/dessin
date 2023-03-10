@@ -1,4 +1,5 @@
 use crate::ToSVG;
+use base64::Engine;
 use dessin::{shape::*, style::*, Shape, ShapeType};
 use std::error::Error;
 
@@ -45,13 +46,13 @@ impl ToSVG for Shape {
                 height = size.y,
                 href = match data {
                     ImageFormat::PNG(ref d) => {
-                        format!("data:image/png;base64,{}", base64::encode(d))
+                        format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD_NO_PAD.encode(d))
                     }
                     ImageFormat::JPEG(ref d) => {
-                        format!("data:image/jpeg;base64,{}", base64::encode(d))
+                        format!("data:image/jpeg;base64,{}", base64::engine::general_purpose::STANDARD_NO_PAD.encode(d))
                     }
                     ImageFormat::Webp(ref d) => {
-                        format!("data:image/webp;base64,{}", base64::encode(d))
+                        format!("data:image/webp;base64,{}", base64::engine::general_purpose::STANDARD_NO_PAD.encode(d))
                     }
                 }
             )),
