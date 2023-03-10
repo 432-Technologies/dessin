@@ -8,5 +8,5 @@ description = "Dessin to PDF"
 
 [dependencies]
 dessin = { version = "0.7.3", path = "../dessin" }
-printpdf = { git="https://github.com/fschutt/printpdf", features = ["webp", "svg"] }
+printpdf = { git="https://github.com/fschutt/printpdf", rev="09958f9", features = ["webp", "svg"] }
 rusttype = "0.9.3"
