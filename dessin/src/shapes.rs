@@ -1,142 +1,88 @@
-pub mod circle;
-pub mod embedded;
-pub mod image;
-pub mod line;
-pub mod path;
-pub mod text;
+mod ellipse;
+mod image;
+mod text;
 
-use algebr::Vec2;
+use std::any::Any;
 
-use crate::{position::Rect, style::Style};
+pub use self::image::*;
+pub use ellipse::*;
+pub use text::*;
 
-use self::{
-    image::ImageFormat,
-    path::Keypoint,
-    text::{FontWeight, TextAlign},
-};
+use na::{Rotation2, Scale2};
+use nalgebra::{self as na, Transform2, Translation2};
 
-use crate::style::Stroke;
+pub trait ShapeOp: Into<Shape> + Clone {
+    fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self;
 
-/// Base shape.
-///
-/// The [`Shape::pos`][Shape::pos] member must *at any time* reflect the bounding box of the shape.
-#[derive(Debug, Clone)]
-pub struct Shape {
-    pub pos: Rect,
-    pub style: Option<Style>,
-    pub shape_type: ShapeType,
+    #[inline]
+    fn translate(&mut self, translation: Translation2<f32>) -> &mut Self {
+        self.transform(na::convert::<_, Transform2<f32>>(translation));
+        self
+    }
+    #[inline]
+    fn resize(&mut self, scale: Scale2<f32>) -> &mut Self {
+        self.transform(na::convert::<_, Transform2<f32>>(scale));
+        self
+    }
+    #[inline]
+    fn rotate(&mut self, rotation: Rotation2<f32>) -> &mut Self {
+        self.transform(na::convert::<_, Transform2<f32>>(rotation));
+        self
+    }
 }
 
-#[derive(Debug, Clone)]
-pub enum ShapeType {
-    Drawing(Vec<Shape>),
-    Text {
-        text: String,
-        align: TextAlign,
-        font_size: f32,
-        font_weight: FontWeight,
-    },
-    Line {
-        from: Vec2,
-        to: Vec2,
-    },
-    Circle {
-        radius: f32,
-    },
-    Image {
-        data: ImageFormat,
-    },
-    Path {
-        keypoints: Vec<Keypoint>,
-        closed: bool,
-    },
-}
-impl Shape {
-    /// Update the position of the shape.
-    pub(crate) fn update_pos(&mut self, pos: Vec2) {
-        let prev_pos = self.pos.pos;
-        self.pos.pos = pos;
-        match &mut self.shape_type {
-            ShapeType::Drawing(s) => {
-                let self_pos = self.pos.pos;
-                s.iter_mut().for_each(|v| {
-                    v.update_pos(self_pos + pos);
-                });
-            }
-            ShapeType::Line { from, to } => {
-                let delta = pos - prev_pos;
-                *from += delta;
-                *to += delta;
-            }
-            ShapeType::Path {
-                keypoints,
-                closed: _,
-            } => {
-                keypoints.iter_mut().for_each(|v| {
-                    let delta = pos - prev_pos;
-                    *v += delta;
-                });
-            }
-            ShapeType::Circle { .. } => {}
-            ShapeType::Image { .. } => {}
-            ShapeType::Text { .. } => {}
-        }
+pub trait ShapeOpWith: ShapeOp {
+    #[inline]
+    fn with_transform(mut self, transform_matrix: Transform2<f32>) -> Self {
+        self.transform(transform_matrix);
+        self
     }
 
-    /// Update the scale of the shape.
-    pub(crate) fn update_scale(&mut self, scale: f32) {
-        match &mut self.shape_type {
-            ShapeType::Drawing(s) => {
-                let self_pos = self.pos.pos;
-                s.iter_mut().for_each(|v| {
-                    v.update_scale(scale);
-                    v.update_pos(self_pos + v.pos.pos * scale);
-                })
-            }
-            ShapeType::Text {
-                text: _,
-                align: _,
-                font_size,
-                font_weight: _,
-            } => {
-                *font_size *= scale;
-            }
-            ShapeType::Line { from, to } => {
-                *from *= scale;
-                *to *= scale;
-            }
-            ShapeType::Circle { radius } => {
-                *radius *= scale;
-            }
-            ShapeType::Image { data: _ } => {}
-            ShapeType::Path {
-                keypoints,
-                closed: _,
-            } => {
-                keypoints.iter_mut().for_each(|v| {
-                    *v *= scale;
-                });
-            }
-        }
+    #[inline]
+    fn with_translate(mut self, translation: Translation2<f32>) -> Self {
+        self.translate(translation);
+        self
+    }
+    #[inline]
+    fn with_resize(mut self, scale: Scale2<f32>) -> Self {
+        self.resize(scale);
+        self
+    }
+    #[inline]
+    fn with_rotate(mut self, rotation: Rotation2<f32>) -> Self {
+        self.rotate(rotation);
+        self
+    }
+}
+impl<T: ShapeOp> ShapeOpWith for T {}
 
-        self.pos.pos = self.pos.position_from_center() * scale;
-        self.pos.size = self.pos.size.map(|v| v * scale);
+#[derive(Default, Debug, Clone, PartialEq)]
+pub enum Shape {
+    #[default]
+    Empty,
+    Ellipse(Ellipse),
+    Image(Image),
+    Path(),
+    Text(Text),
+    Style {
+        fill: Option<crate::style::Fill>,
+        stroke: Option<crate::style::Stroke>,
+        shape: Box<Shape>,
+    },
+    Group(Vec<Shape>),
+}
+impl ShapeOp for Shape {
+    fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
+        match self {
+            Shape::Ellipse(v) => {
+                v.transform(transform_matrix);
+            }
+            Shape::Group(v) => v.iter_mut().for_each(|v| {
+                v.transform(transform_matrix);
+            }),
+            _ => todo!(),
+        };
 
-        match self.style.as_mut().map(|v| &mut v.stroke) {
-            Some(Some(Stroke::Full { color: _, width })) => {
-                *width *= scale;
-            }
-            Some(Some(Stroke::Dashed {
-                color: _,
-                width,
-                on,
-                off,
-            })) => {
-                *width *= scale;
-                *on *= scale;
-                *off *= scale;
-            }
-            _ => {}
-        }
+        self
     }
 }

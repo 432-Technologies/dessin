@@ -1,6 +1,7 @@
-use algebr::Vec2;
+use na::Point2;
+use nalgebra::{self as na, Transform2};
 
-use crate::{position::Rect, style::Style, Shape, ShapeType};
+use crate::{Shape, ShapeOp};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum FontWeight {
@@ -19,59 +20,60 @@ pub enum TextAlign {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Text {
-    pub(crate) pos: Rect,
-    pub(crate) text: String,
-    pub(crate) style: Option<Style>,
-    pub(crate) align: TextAlign,
-    pub(crate) font_size: f32,
-    pub(crate) font_weight: FontWeight,
+    pub text: String,
+    pub transform: Transform2<f32>,
+    pub align: TextAlign,
+    pub font_weight: FontWeight,
 }
-crate::impl_pos!(Text);
-crate::impl_style!(Text);
 impl Text {
-    pub const fn new(text: String) -> Self {
-        Text {
-            pos: Rect::new(),
-            text,
-            style: None,
-            align: TextAlign::Left,
-            font_size: 16.,
-            font_weight: FontWeight::Regular,
-        }
+    #[inline]
+    pub fn text<T: AsRef<str>>(&mut self, text: T) -> &mut Self {
+        self.text = text.as_ref().to_string();
+        self
     }
-
-    pub fn with_text(mut self, text: String) -> Self {
-        self.text = text;
+    #[inline]
+    pub fn with_text<T: AsRef<str>>(mut self, text: T) -> Self {
+        self.text(text);
         self
     }
 
-    pub const fn with_align(mut self, align: TextAlign) -> Self {
+    #[inline]
+    pub fn align(&mut self, align: TextAlign) -> &mut Self {
         self.align = align;
         self
     }
-
-    pub const fn with_font_size(mut self, font_size: f32) -> Self {
-        self.font_size = font_size;
+    #[inline]
+    pub fn with_align(mut self, align: TextAlign) -> Self {
+        self.align(align);
         self
     }
 
-    pub const fn with_font_weight(mut self, font_weight: FontWeight) -> Self {
+    #[inline]
+    pub fn font_weight(&mut self, font_weight: FontWeight) -> &mut Self {
         self.font_weight = font_weight;
         self
     }
+    #[inline]
+    pub fn with_font_weight(mut self, font_weight: FontWeight) -> Self {
+        self.font_weight(font_weight);
+        self
+    }
+
+    #[inline]
+    pub fn get_font_size(&self) -> f32 {
+        (self.transform * Point2::new(0., 1.)).y
+    }
 }
 
-impl Into<Shape> for Text {
-    fn into(self) -> Shape {
-        Shape {
-            pos: self.pos.with_size(Vec2::ones()),
-            style: self.style,
-            shape_type: ShapeType::Text {
-                text: self.text,
-                align: self.align,
-                font_size: self.font_size,
-                font_weight: self.font_weight,
-            },
-        }
+impl From<Text> for Shape {
+    fn from(v: Text) -> Self {
+        Shape::Text(v)
+    }
+}
+
+impl ShapeOp for Text {
+    fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
+        self.transform *= transform_matrix;
+        self
     }
 }

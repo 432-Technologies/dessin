@@ -1,4 +1,8 @@
-pub use crate::shapes::text::{FontWeight, TextAlign};
+use std::ops::{Deref, DerefMut};
+
+use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
+
+use crate::{Shape, ShapeOp};
 
 pub const fn rbg(r: u8, g: u8, b: u8) -> Color {
     Color::RGB { r, g, b }
@@ -89,27 +93,96 @@ pub enum Stroke {
         off: f32,
     },
 }
-// impl Stroke {
-//     pub(crate) fn apply_transform(&mut self, _: Vec2, scale: f32) {
-//         match self {
-//             Stroke::Full { color: _, width } => *width *= scale,
-//             Stroke::Dashed {
-//                 color: _,
-//                 width,
-//                 on,
-//                 off,
-//             } => {
-//                 *width *= scale;
-//                 *on *= scale;
-//                 *off *= scale;
-//             }
-//         }
-//     }
-// }
 
-/// A style is a set of attributes that can be applied to a shape.
-#[derive(Debug, Clone, Default, PartialEq)]
-pub struct Style {
+#[derive(Default, Debug, Clone, PartialEq)]
+pub struct Style<T> {
+    pub shape: T,
     pub fill: Option<Fill>,
     pub stroke: Option<Stroke>,
+}
+impl<T> Style<T> {
+    pub fn new(shape: T) -> Self {
+        Style {
+            shape,
+            fill: None,
+            stroke: None,
+        }
+    }
+
+    #[inline]
+    pub fn stroke(&mut self, stroke: Stroke) -> &mut Self {
+        self.stroke = Some(stroke);
+        self
+    }
+    #[inline]
+    pub fn with_stroke(mut self, stroke: Stroke) -> Self {
+        self.stroke(stroke);
+        self
+    }
+
+    #[inline]
+    pub fn fill(&mut self, fill: Fill) -> &mut Self {
+        self.fill = Some(fill);
+        self
+    }
+    #[inline]
+    pub fn with_fill(mut self, fill: Fill) -> Self {
+        self.fill(fill);
+        self
+    }
+}
+
+impl<T> Deref for Style<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.shape
+    }
+}
+
+impl<T> DerefMut for Style<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.shape
+    }
+}
+
+impl<T: ShapeOp> From<Style<T>> for Shape {
+    #[inline]
+    fn from(
+        Style {
+            shape,
+            fill,
+            stroke,
+        }: Style<T>,
+    ) -> Self {
+        Shape::Style {
+            fill,
+            stroke,
+            shape: Box::new(shape.into()),
+        }
+    }
+}
+
+impl<T: ShapeOp> ShapeOp for Style<T> {
+    #[inline]
+    fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
+        self.shape.transform(transform_matrix);
+        self
+    }
+
+    #[inline]
+    fn translate(&mut self, translation: Translation2<f32>) -> &mut Self {
+        self.shape.translate(translation);
+        self
+    }
+    #[inline]
+    fn resize(&mut self, scale: Scale2<f32>) -> &mut Self {
+        self.shape.resize(scale);
+        self
+    }
+    #[inline]
+    fn rotate(&mut self, rotation: Rotation2<f32>) -> &mut Self {
+        self.shape.rotate(rotation);
+        self
+    }
 }

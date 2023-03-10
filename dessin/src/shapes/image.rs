@@ -1,37 +1,37 @@
-use crate::{position::Rect, style::Style, Shape, ShapeType};
+use image::DynamicImage;
+use nalgebra::Transform2;
 
-#[derive(Debug, Clone)]
-pub enum ImageFormat {
-    PNG(Vec<u8>),
-    JPEG(Vec<u8>),
-    Webp(Vec<u8>),
-}
+use crate::{Shape, ShapeOp};
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub struct Image {
-    pub(crate) pos: Rect,
-    pub(crate) style: Option<Style>,
-    pub(crate) data: ImageFormat,
+    pub image: DynamicImage,
+    pub transform: Transform2<f32>,
 }
-crate::impl_pos!(Image);
-crate::impl_style!(Image);
 impl Image {
-    /// Create a new image from a raw data.
-    pub fn new(data: ImageFormat) -> Image {
-        Image {
-            pos: Rect::new(),
-            style: None,
-            data,
-        }
+    #[inline]
+    pub fn image(&mut self, image: DynamicImage) -> &mut Self {
+        self.image = image;
+        self
+    }
+    #[inline]
+    pub fn with_image(mut self, image: DynamicImage) -> Self {
+        self.image(image);
+        self
     }
 }
 
-impl Into<Shape> for Image {
-    fn into(self) -> Shape {
-        Shape {
-            pos: self.pos,
-            style: self.style,
-            shape_type: ShapeType::Image { data: self.data },
-        }
+impl From<Image> for Shape {
+    #[inline]
+    fn from(v: Image) -> Self {
+        Shape::Image(v)
+    }
+}
+
+impl ShapeOp for Image {
+    #[inline]
+    fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
+        self.transform *= transform_matrix;
+        self
     }
 }

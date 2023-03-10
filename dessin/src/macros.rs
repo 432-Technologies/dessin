@@ -1,94 +1,103 @@
-#[doc(hidden)]
-#[macro_export]
-macro_rules! impl_pos_at {
-    ($t:ty) => {
-        impl $t {
-            #[deprecated(
-                since = "0.4.3",
-                note = "Please use `at`, `with_size` and `with_anchor` instead."
-            )]
-            /// This method is deprecated because it breaks the bounding box rule when using `EmbeddedDrawing`.
-            pub const fn with_pos(mut self, pos: $crate::Rect) -> Self {
-                self.pos = pos;
-                self
-            }
+use crate::Color;
 
-            pub const fn at(mut self, pos: $crate::Vec2) -> Self {
-                self.pos = self.pos.at(pos);
-                self
-            }
-        }
+#[macro_export]
+macro_rules! dessin {
+	() => {$crate::Shape::default()};
+	(var |$v:ident|: ($($fn_name:ident={$value:expr})*)) => {
+		{
+			#[allow(unused_mut)]
+			let mut shape = $v.clone();
+			$(shape.$fn_name($value);)*
+			shape
+		}
+	};
+	(style: ($($fn_name:ident={$value:expr})*) { $($rest:tt)* }) => {
+		{
+			#[allow(unused_mut)]
+			let mut style = $crate::Style::new(
+				dessin! ($($rest)*)
+			);
+
+			$(style.$fn_name($value);)*
+
+			style
+		}
+	};
+	(group: ($($fn_name:ident={$value:expr})*) [$( { $($rest:tt)* } )*]) => {
+		{
+			#[allow(unused_mut)]
+			let mut acc = Vec::new();
+
+			$(
+				acc.push(
+					$crate::Shape::from(
+						dessin! ($($rest)*)
+					)
+				);
+			)*
+
+			#[allow(unused_mut)]
+			let mut group = $crate::Shape::Group(acc);
+			$(group.$fn_name($value);)*
+
+			group
+		}
+	};
+	($shape:ty: style=($($style_fn_name:ident={$style_value:expr})*) ($($fn_name:ident={$value:expr})*)) => {
+        {
+			#[allow(unused_mut)]
+			let mut shape = $crate::Style::<$shape>::default();
+
+			$(shape.$fn_name($value);)*
+			$(shape.$style_fn_name($style_value);)*
+
+			shape
+		}
+    };
+    ($shape:ty: ($($fn_name:ident={$value:expr})*)) => {
+        {
+			#[allow(unused_mut)]
+			let mut shape = <$shape>::default();
+			$(shape.$fn_name($value);)*
+			shape
+		}
     };
 }
 
-#[doc(hidden)]
-#[macro_export]
-macro_rules! impl_pos_anchor {
-    ($t:ty) => {
-        impl $t {
-            pub const fn with_anchor(mut self, anchor: $crate::Vec2) -> Self {
-                self.pos = self.pos.with_anchor(anchor);
-                self
-            }
+// #[cfg(test)]
+fn test() {
+    use crate::prelude::*;
+    use nalgebra::{Rotation2, Translation2};
+
+    let ellipse = dessin! {
+        style: (
+            stroke={crate::Stroke::Full { color: Color::RED, width: 1. }}
+        ) {
+            Ellipse: (
+                translate={ Translation2::new(0., 0.) }
+                rotate={ Rotation2::new(0.) }
+            )
         }
     };
-}
 
-#[doc(hidden)]
-#[macro_export]
-macro_rules! impl_pos_size {
-    ($t:ty) => {
-        impl $t {
-            pub const fn with_size(mut self, size: $crate::Vec2) -> Self {
-                self.pos = self.pos.with_size(size);
-                self
+    let g = dessin! {
+        group: (
+            translate={ Translation2::new(0., 0.) }
+            rotate={ Rotation2::new(0.) }
+        ) [
+            {
+                Ellipse: style=(
+                    stroke={crate::Stroke::Full { color: Color::RED, width: 1. }}
+                ) (
+                    semi_major_axis={10.}
+                    semi_minor_axis={5.}
+                )
             }
-        }
-    };
-}
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! impl_pos {
-    ($t:ty) => {
-        $crate::impl_pos_at!($t);
-        $crate::impl_pos_anchor!($t);
-        $crate::impl_pos_size!($t);
-    };
-}
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! impl_style {
-    ($t:ty) => {
-        impl $t {
-            pub const fn with_maybe_style(mut self, style: Option<$crate::style::Style>) -> Self {
-                self.style = style;
-                self
+            {
+                var |ellipse|: (
+                    semi_major_axis={10.}
+                )
             }
-
-            pub const fn with_style(mut self, style: $crate::style::Style) -> Self {
-                self.style = Some(style);
-                self
-            }
-
-            pub fn with_stroke(mut self, stroke: $crate::style::Stroke) -> Self {
-                self.style = {
-                    let mut style = self.style.unwrap_or_default();
-                    style.stroke = Some(stroke);
-                    Some(style)
-                };
-                self
-            }
-
-            pub fn with_fill(mut self, fill: $crate::style::Fill) -> Self {
-                self.style = {
-                    let mut style = self.style.unwrap_or_default();
-                    style.fill = Some(fill);
-                    Some(style)
-                };
-                self
-            }
-        }
+        ]
     };
 }
