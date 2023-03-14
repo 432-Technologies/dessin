@@ -1,4 +1,4 @@
-use na::Point2;
+use na::{Point2, Scale2, Vector2};
 use nalgebra::{self as na, Transform2};
 
 use crate::{Shape, ShapeOp};
@@ -60,8 +60,18 @@ impl Text {
     }
 
     #[inline]
+    pub fn font_size(&mut self, font_size: f32) -> &mut Self {
+        self.resize(Scale2::new(font_size, font_size))
+    }
+    #[inline]
+    pub fn with_font_size(mut self, font_size: f32) -> Self {
+        self.font_size(font_size);
+        self
+    }
+
+    #[inline]
     pub fn get_font_size(&self) -> f32 {
-        (self.transform * Point2::new(0., 1.)).y
+        (self.transform * Vector2::new(0., 1.)).magnitude()
     }
 }
 

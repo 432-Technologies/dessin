@@ -1,3 +1,4 @@
+mod contrib;
 mod macros;
 mod shapes;
 mod style;

@@ -1,8 +1,7 @@
+mod curve;
 mod ellipse;
 mod image;
 mod text;
-
-use std::any::Any;
 
 pub use self::image::*;
 pub use ellipse::*;
@@ -60,26 +59,36 @@ impl<T: ShapeOp> ShapeOpWith for T {}
 pub enum Shape {
     #[default]
     Empty,
-    Ellipse(Ellipse),
-    Image(Image),
-    Path(),
-    Text(Text),
+    Group(Vec<Shape>),
     Style {
         fill: Option<crate::style::Fill>,
         stroke: Option<crate::style::Stroke>,
         shape: Box<Shape>,
     },
-    Group(Vec<Shape>),
+    Ellipse(Ellipse),
+    Image(Image),
+    Text(Text),
+    Curve(),
 }
 impl ShapeOp for Shape {
     fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
         match self {
-            Shape::Ellipse(v) => {
-                v.transform(transform_matrix);
-            }
+            Shape::Empty => {}
             Shape::Group(v) => v.iter_mut().for_each(|v| {
                 v.transform(transform_matrix);
             }),
+            Shape::Style { shape, .. } => {
+                shape.transform(transform_matrix);
+            }
+            Shape::Ellipse(v) => {
+                v.transform(transform_matrix);
+            }
+            Shape::Image(v) => {
+                v.transform(transform_matrix);
+            }
+            Shape::Text(v) => {
+                v.transform(transform_matrix);
+            }
             _ => todo!(),
         };
 

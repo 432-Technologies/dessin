@@ -7,6 +7,6 @@ repository = "https://github.com/daedalus-aero-space/dessin"
 description = "Build complex drawing for PDF, SVG, ..."
 
 [dependencies]
-image = "0.24.5"
-nalgebra = "0.32.2"
-rusttype = "0.9.3"
+fontdue = "^0.7.2"
+image = "^0.24.5"
+nalgebra = "^0.32.2"
