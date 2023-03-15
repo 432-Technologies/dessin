@@ -6,103 +6,137 @@
 // use algebr::{vec2, Vec2};
 // use rusttype::{Font, Scale};
 
-use nalgebra::Transform3;
+use fontdue::{
+    layout::{CoordinateSystem, Layout, TextStyle},
+    Font, FontSettings,
+};
+use nalgebra::Transform2;
+
+use crate::{
+    prelude::{FontWeight, Text, TextAlign},
+    Shape, ShapeOp,
+};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct TextBox {
-    // pub transform: Transform3<f32>,
+    pub local_transform: Transform2<f32>,
+    pub font_size: f32,
+    pub line_spacing: f32,
     pub text: String,
-    // pub width:
+    pub width: f32,
+    pub height: Option<f32>,
+}
+impl TextBox {
+    #[inline]
+    fn font_size(&mut self, font_size: f32) -> &mut Self {
+        self.font_size *= font_size;
+        self
+    }
+    #[inline]
+    fn with_font_size(mut self, font_size: f32) -> Self {
+        self.font_size(font_size);
+        self
+    }
 }
 
-// #[derive(Debug, Clone, PartialEq)]
-// pub struct TextLayout {
-//     pub(crate) text: String,
-//     pub(crate) pos: Rect,
-//     pub(crate) boxes: Vec<TextBox>,
-// }
-// crate::impl_pos_at!(TextLayout);
-// crate::impl_pos_anchor!(TextLayout);
-// impl TextLayout {
-//     pub const fn new(text: String) -> Self {
-//         TextLayout {
-//             text,
-//             pos: Rect::new(),
-//             boxes: vec![],
-//         }
-//     }
+impl ShapeOp for TextBox {
+    #[inline]
+    fn transform(&mut self, transform_matrix: nalgebra::Transform2<f32>) -> &mut Self {
+        self.local_transform *= transform_matrix;
+        self
+    }
 
-//     pub fn add_box(mut self, b: TextBox) -> Self {
-//         self.boxes.push(b);
-//         self
-//     }
+    #[inline]
+    fn local_transform(&self) -> &nalgebra::Transform2<f32> {
+        &self.local_transform
+    }
+}
 
-//     pub fn with_scale(mut self, scale: f32) -> Self {
-//         self.pos = self.pos.with_size(vec2(scale, scale));
-//         self
-//     }
-// }
+impl From<TextBox> for Shape {
+    fn from(
+        TextBox {
+            local_transform,
+            font_size,
+            line_spacing,
+            text,
+            width,
+            height,
+        }: TextBox,
+    ) -> Self {
+        const ARIAL_REGULAR: &[u8] = include_bytes!("Arial.ttf");
+        // const ARIAL_BOLD: &[u8] = include_bytes!("Arial Bold.ttf");
+        // const ARIAL_ITALIC: &[u8] = include_bytes!("Arial Italic.ttf");
+        // const ARIAL_BOLD_ITALIC: &[u8] = include_bytes!("Arial Bold Italic.ttf");
 
-// #[derive(Debug, Clone, PartialEq)]
-// pub struct TextBox {
-//     pub(crate) pos: Rect,
-//     pub(crate) style: Option<Style>,
-//     pub(crate) align: TextAlign,
-//     pub(crate) font_size: f32,
-//     pub(crate) font_weight: FontWeight,
-//     pub(crate) spacing: f32,
-// }
-// crate::impl_pos!(TextBox);
-// crate::impl_style!(TextBox);
-// impl TextBox {
-//     pub const fn new() -> Self {
-//         TextBox {
-//             pos: Rect::new(),
-//             style: None,
-//             align: TextAlign::Left,
-//             font_size: 16.,
-//             font_weight: FontWeight::Regular,
-//             spacing: 0.,
-//         }
-//     }
+        let font = Font::from_bytes(ARIAL_REGULAR, FontSettings::default()).unwrap();
 
-//     pub fn with_scale(mut self, scale: f32) -> Self {
-//         self.pos = self.pos.with_size(vec2(scale, scale));
-//         self
-//     }
+        fn size_of(font: &Font, s: &str, font_size: f32) -> Option<f32> {
+            s.chars()
+                .scan(None, |last, curr| {
+                    let l = last.unwrap_or(' ');
+                    let r = font.horizontal_kern(l, curr, font_size);
 
-//     pub const fn with_align(mut self, align: TextAlign) -> Self {
-//         self.align = align;
-//         self
-//     }
+                    *last = Some(curr);
 
-//     pub const fn with_spacing(mut self, spacing: f32) -> Self {
-//         self.spacing = spacing;
-//         self
-//     }
+                    Some(r)
+                })
+                .fold(Some(0.), |acc, curr| match (acc, curr) {
+                    (None, _) | (_, None) => None,
+                    (Some(acc), Some(curr)) => Some(acc + curr),
+                })
+        }
 
-//     pub const fn with_font_size(mut self, font_size: f32) -> Self {
-//         self.font_size = font_size;
-//         self
-//     }
+        let mut lines = vec![];
+        let mut height = height.unwrap_or(f32::MAX);
 
-//     pub const fn with_font_weight(mut self, font_weight: FontWeight) -> Self {
-//         self.font_weight = font_weight;
-//         self
-//     }
-// }
-// impl From<TextLayout> for Shape {
-//     fn from(
-//         TextLayout {
-//             mut text,
-//             pos: global_pos,
-//             boxes,
-//         }: TextLayout,
-//     ) -> Self {
-//         const ARIAL_REGULAR: &[u8] = include_bytes!("Arial.ttf");
-//         const ARIAL_BOLD: &[u8] = include_bytes!("Arial Bold.ttf");
-//         const ARIAL_ITALIC: &[u8] = include_bytes!("Arial Italic.ttf");
-//         const ARIAL_BOLD_ITALIC: &[u8] = include_bytes!("Arial Bold Italic.ttf");
+        for line in text.lines() {
+            let mut len = 0.;
+            let mut acc = String::new();
+
+            if height - font_size < 0. {
+                break;
+            }
+
+            for word in line.split_whitespace() {
+                let word_size = size_of(&font, word, font_size).unwrap();
+
+                if len + word_size > width {
+                    lines.push(std::mem::take(&mut acc));
+
+                    acc = word.to_owned();
+                    len = word_size;
+
+                    height -= font_size + line_spacing;
+                } else {
+                    len += word_size;
+
+                    if !acc.is_empty() {
+                        acc.push(' ');
+                    }
+
+                    acc.push_str(word)
+                }
+            }
+        }
+
+        let shapes = lines
+            .into_iter()
+            .map(|v| {
+                Shape::Text(Text {
+                    text: v,
+                    local_transform,
+                    align: TextAlign::Left,
+                    font_weight: FontWeight::Regular,
+                })
+            })
+            .collect();
+
+        Shape::Group {
+            local_transform,
+            shapes,
+        }
+    }
+}
 
 //         fn length_of(word: &str, font: Font, scale: f32) -> f32 {
 //             let scale = Scale::uniform(scale);

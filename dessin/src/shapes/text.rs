@@ -27,12 +27,12 @@ pub struct Text {
 }
 impl Text {
     #[inline]
-    pub fn text<T: AsRef<str>>(&mut self, text: T) -> &mut Self {
-        self.text = text.as_ref().to_string();
+    pub fn text<T: ToString>(&mut self, text: T) -> &mut Self {
+        self.text = text.to_string();
         self
     }
     #[inline]
-    pub fn with_text<T: AsRef<str>>(mut self, text: T) -> Self {
+    pub fn with_text<T: ToString>(mut self, text: T) -> Self {
         self.text(text);
         self
     }
