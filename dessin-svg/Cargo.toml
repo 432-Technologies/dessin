@@ -13,3 +13,4 @@ version = "0.8.0"
 [dependencies]
 base64 = "0.21.0"
 dessin = { version = "0.8.0", path = "../dessin" }
+nalgebra = "^0.32.2"

@@ -1,4 +1,7 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    fmt,
+    ops::{Deref, DerefMut},
+};
 
 use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
 
@@ -71,6 +74,17 @@ impl Color {
             g: ((g + m) * 255.) as u8,
             b: ((b + m) * 255.) as u8,
             a,
+        }
+    }
+}
+
+impl fmt::Display for Color {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.rgba() {
+            Color::RGBA { r, g, b, a } => {
+                write!(f, "rgba({},{},{},{})", r, g, b, a as f32 / 255.)
+            }
+            _ => unreachable!(),
         }
     }
 }
