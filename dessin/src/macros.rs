@@ -37,28 +37,31 @@ macro_rules! dessin {
 			)*
 
 			#[allow(unused_mut)]
-			let mut group = $crate::Shape::Group(acc);
+			let mut group = $crate::Shape::Group {
+				local_transform: ::nalgebra::Transform2::default(),
+				shapes: acc,
+			};
 			$(group.$fn_name($value);)*
 
 			group
 		}
 	};
-	($shape:ty: style=($($style_fn_name:ident={$style_value:expr})*) ($($fn_name:ident={$value:expr})*)) => {
+	($shape:ty: style=($($style_fn_name:ident $( ={$style_value:expr} )? )*) ($($fn_name:ident={$value:expr})*)) => {
         {
 			#[allow(unused_mut)]
 			let mut shape = $crate::Style::<$shape>::default();
 
 			$(shape.$fn_name($value);)*
-			$(shape.$style_fn_name($style_value);)*
+			$(shape.$style_fn_name($($style_value)?);)*
 
 			shape
 		}
     };
-    ($shape:ty: ($($fn_name:ident={$value:expr})*)) => {
+    ($shape:ty: ($($fn_name:ident $( ={$value:expr} )? )*)) => {
         {
 			#[allow(unused_mut)]
 			let mut shape = <$shape>::default();
-			$(shape.$fn_name($value);)*
+			$(shape.$fn_name($($value)?);)*
 			shape
 		}
     };

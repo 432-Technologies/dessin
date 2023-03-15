@@ -21,7 +21,7 @@ pub enum TextAlign {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Text {
     pub text: String,
-    pub transform: Transform2<f32>,
+    pub local_transform: Transform2<f32>,
     pub align: TextAlign,
     pub font_weight: FontWeight,
 }
@@ -71,7 +71,7 @@ impl Text {
 
     #[inline]
     pub fn get_font_size(&self) -> f32 {
-        (self.transform * Vector2::new(0., 1.)).magnitude()
+        (self.local_transform * Vector2::new(0., 1.)).magnitude()
     }
 }
 
@@ -83,7 +83,12 @@ impl From<Text> for Shape {
 
 impl ShapeOp for Text {
     fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
-        self.transform *= transform_matrix;
+        self.local_transform *= transform_matrix;
         self
+    }
+
+    #[inline]
+    fn local_transform(&self) -> &Transform2<f32> {
+        &self.local_transform
     }
 }

@@ -4,7 +4,7 @@ use crate::{Shape, ShapeOp};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Ellipse {
-    pub transform: Transform2<f32>,
+    pub local_transform: Transform2<f32>,
 }
 
 impl Ellipse {
@@ -52,7 +52,12 @@ impl From<Ellipse> for Shape {
 impl ShapeOp for Ellipse {
     #[inline]
     fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
-        self.transform *= transform_matrix;
+        self.local_transform *= transform_matrix;
         self
+    }
+
+    #[inline]
+    fn local_transform(&self) -> &Transform2<f32> {
+        &self.local_transform
     }
 }

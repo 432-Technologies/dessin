@@ -6,7 +6,7 @@ use crate::{Shape, ShapeOp};
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Image {
     pub image: DynamicImage,
-    pub transform: Transform2<f32>,
+    pub local_transform: Transform2<f32>,
 }
 impl Image {
     #[inline]
@@ -31,7 +31,12 @@ impl From<Image> for Shape {
 impl ShapeOp for Image {
     #[inline]
     fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
-        self.transform *= transform_matrix;
+        self.local_transform *= transform_matrix;
         self
+    }
+
+    #[inline]
+    fn local_transform(&self) -> &Transform2<f32> {
+        &self.local_transform
     }
 }

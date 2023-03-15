@@ -185,4 +185,13 @@ impl<T: ShapeOp> ShapeOp for Style<T> {
         self.shape.rotate(rotation);
         self
     }
+
+    #[inline]
+    fn local_transform(&self) -> &Transform2<f32> {
+        self.shape.local_transform()
+    }
+    #[inline]
+    fn global_transform(&self, parent_transform: &Transform2<f32>) -> Transform2<f32> {
+        self.shape.global_transform(parent_transform)
+    }
 }

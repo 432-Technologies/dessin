@@ -4,6 +4,7 @@ mod image;
 mod text;
 
 pub use self::image::*;
+pub use curve::*;
 pub use ellipse::*;
 pub use text::*;
 
@@ -27,6 +28,12 @@ pub trait ShapeOp: Into<Shape> + Clone {
     fn rotate(&mut self, rotation: Rotation2<f32>) -> &mut Self {
         self.transform(na::convert::<_, Transform2<f32>>(rotation));
         self
+    }
+
+    fn local_transform(&self) -> &Transform2<f32>;
+    #[inline]
+    fn global_transform(&self, parent_transform: &Transform2<f32>) -> Transform2<f32> {
+        parent_transform * self.local_transform()
     }
 }
 
@@ -55,11 +62,12 @@ pub trait ShapeOpWith: ShapeOp {
 }
 impl<T: ShapeOp> ShapeOpWith for T {}
 
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Shape {
-    #[default]
-    Empty,
-    Group(Vec<Shape>),
+    Group {
+        local_transform: Transform2<f32>,
+        shapes: Vec<Shape>,
+    },
     Style {
         fill: Option<crate::style::Fill>,
         stroke: Option<crate::style::Stroke>,
@@ -68,15 +76,26 @@ pub enum Shape {
     Ellipse(Ellipse),
     Image(Image),
     Text(Text),
-    Curve(),
+    Curve(Curve),
 }
+
+impl Default for Shape {
+    fn default() -> Self {
+        Shape::Group {
+            local_transform: Transform2::default(),
+            shapes: vec![],
+        }
+    }
+}
+
 impl ShapeOp for Shape {
     fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
         match self {
-            Shape::Empty => {}
-            Shape::Group(v) => v.iter_mut().for_each(|v| {
-                v.transform(transform_matrix);
-            }),
+            Shape::Group {
+                local_transform, ..
+            } => {
+                *local_transform *= transform_matrix;
+            }
             Shape::Style { shape, .. } => {
                 shape.transform(transform_matrix);
             }
@@ -93,5 +112,19 @@ impl ShapeOp for Shape {
         };
 
         self
+    }
+
+    #[inline]
+    fn local_transform(&self) -> &Transform2<f32> {
+        match self {
+            Shape::Group {
+                local_transform, ..
+            } => local_transform,
+            Shape::Style { shape, .. } => shape.local_transform(),
+            Shape::Ellipse(v) => v.local_transform(),
+            Shape::Image(v) => v.local_transform(),
+            Shape::Text(v) => v.local_transform(),
+            _ => todo!(),
+        }
     }
 }
