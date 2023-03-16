@@ -42,7 +42,7 @@ impl TextBox {
 impl ShapeOp for TextBox {
     #[inline]
     fn transform(&mut self, transform_matrix: nalgebra::Transform2<f32>) -> &mut Self {
-        self.local_transform *= transform_matrix;
+        self.local_transform = transform_matrix * self.local_transform;
         self
     }
 

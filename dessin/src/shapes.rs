@@ -20,7 +20,7 @@ pub trait ShapeOp: Into<Shape> + Clone {
         self
     }
     #[inline]
-    fn resize(&mut self, scale: Scale2<f32>) -> &mut Self {
+    fn scale(&mut self, scale: Scale2<f32>) -> &mut Self {
         self.transform(na::convert::<_, Transform2<f32>>(scale));
         self
     }
@@ -51,7 +51,7 @@ pub trait ShapeOpWith: ShapeOp {
     }
     #[inline]
     fn with_resize(mut self, scale: Scale2<f32>) -> Self {
-        self.resize(scale);
+        self.scale(scale);
         self
     }
     #[inline]

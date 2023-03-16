@@ -10,7 +10,7 @@ pub struct Circle {
 impl Circle {
     #[inline]
     pub fn radius(&mut self, radius: f32) -> &mut Self {
-        self.resize(Scale2::new(radius, radius));
+        self.scale(Scale2::new(radius, radius));
         self
     }
     #[inline]
@@ -23,7 +23,7 @@ impl Circle {
 impl ShapeOp for Circle {
     #[inline]
     fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
-        self.local_transform *= transform_matrix;
+        self.local_transform = transform_matrix * self.local_transform;
         self
     }
 

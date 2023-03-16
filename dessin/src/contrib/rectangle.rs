@@ -34,7 +34,7 @@ impl Rectangle {
 
 impl ShapeOp for Rectangle {
     fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
-        self.local_transform *= transform_matrix;
+        self.local_transform = transform_matrix * self.local_transform;
         self
     }
 

@@ -190,8 +190,8 @@ impl<T: ShapeOp> ShapeOp for Style<T> {
         self
     }
     #[inline]
-    fn resize(&mut self, scale: Scale2<f32>) -> &mut Self {
-        self.shape.resize(scale);
+    fn scale(&mut self, scale: Scale2<f32>) -> &mut Self {
+        self.shape.scale(scale);
         self
     }
     #[inline]

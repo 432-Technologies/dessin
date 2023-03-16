@@ -10,7 +10,7 @@ pub struct Ellipse {
 impl Ellipse {
     #[inline]
     pub fn axis(&mut self, scale: Scale2<f32>) -> &mut Self {
-        self.resize(scale);
+        self.scale(scale);
         self
     }
     #[inline]
@@ -21,7 +21,7 @@ impl Ellipse {
 
     #[inline]
     pub fn semi_major_axis(&mut self, value: f32) -> &mut Self {
-        self.resize(Scale2::new(value, 1.));
+        self.scale(Scale2::new(value, 1.));
         self
     }
     #[inline]
@@ -32,7 +32,7 @@ impl Ellipse {
 
     #[inline]
     pub fn semi_minor_axis(&mut self, value: f32) -> &mut Self {
-        self.resize(Scale2::new(1., value));
+        self.scale(Scale2::new(1., value));
         self
     }
     #[inline]
@@ -52,7 +52,7 @@ impl From<Ellipse> for Shape {
 impl ShapeOp for Ellipse {
     #[inline]
     fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
-        self.local_transform *= transform_matrix;
+        self.local_transform = transform_matrix * self.local_transform;
         self
     }
 

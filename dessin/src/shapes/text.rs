@@ -61,7 +61,7 @@ impl Text {
 
     #[inline]
     pub fn font_size(&mut self, font_size: f32) -> &mut Self {
-        self.resize(Scale2::new(font_size, font_size))
+        self.scale(Scale2::new(font_size, font_size))
     }
     #[inline]
     pub fn with_font_size(mut self, font_size: f32) -> Self {
@@ -83,7 +83,7 @@ impl From<Text> for Shape {
 
 impl ShapeOp for Text {
     fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
-        self.local_transform *= transform_matrix;
+        self.local_transform = transform_matrix * self.local_transform;
         self
     }
 

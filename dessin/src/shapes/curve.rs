@@ -44,7 +44,7 @@ impl Curve {
 
 impl ShapeOp for Curve {
     fn transform(&mut self, transform_matrix: nalgebra::Transform2<f32>) -> &mut Self {
-        self.local_transform *= transform_matrix;
+        self.local_transform = transform_matrix * self.local_transform;
         self
     }
 
