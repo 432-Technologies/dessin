@@ -1,6 +1,15 @@
-use nalgebra::{Scale2, Transform2};
-
 use crate::{Shape, ShapeOp};
+use nalgebra::{Point2, Scale2, Transform2, Unit, Vector2};
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct EllipsePosition {
+    pub center: Point2<f32>,
+
+    pub semi_major_axis: f32,
+    pub semi_minor_axis: f32,
+
+    pub rotation: f32,
+}
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Ellipse {
@@ -39,6 +48,24 @@ impl Ellipse {
     pub fn with_semi_minor_axis(mut self, value: f32) -> Self {
         self.semi_minor_axis(value);
         self
+    }
+
+    pub fn position(&self, parent_transform: &Transform2<f32>) -> EllipsePosition {
+        let transform = self.global_transform(parent_transform);
+
+        let center = transform * Point2::origin();
+
+        let semi_major_axis = transform * Vector2::x();
+        let semi_minor_axis = transform * Vector2::y();
+
+        let rotation = Unit::new_normalize(semi_major_axis).angle(&Vector2::x());
+
+        EllipsePosition {
+            center,
+            semi_major_axis: semi_major_axis.magnitude(),
+            semi_minor_axis: semi_minor_axis.magnitude(),
+            rotation,
+        }
     }
 }
 

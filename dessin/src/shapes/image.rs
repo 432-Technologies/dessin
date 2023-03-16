@@ -1,7 +1,6 @@
+use crate::{Shape, ShapeOp};
 use image::DynamicImage;
 use nalgebra::{Point2, Transform2, Unit, Vector2};
-
-use crate::{Shape, ShapeOp};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ImagePosition {

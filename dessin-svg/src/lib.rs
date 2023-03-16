@@ -26,7 +26,10 @@
 //! assert_eq!(svg, r#"<svg viewBox="-25 -25 50 50" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><text x="10" y="-10" text-anchor="start" font-family="Arial" font-size="16" font-weight="bold" fill='rgba(255,0,0,1)' >Hello, world!</text></svg>"#);
 //! ```
 
-use dessin::{Fill, Shape, ShapeOp, Stroke};
+use dessin::{
+    shapes::{Ellipse, EllipsePosition},
+    Fill, Shape, ShapeOp, Stroke,
+};
 use nalgebra::Transform2;
 use std::io::{self, Cursor, Write};
 
@@ -51,10 +54,10 @@ pub trait ToSVG {
         write!(
             w,
             r#"<svg viewBox="{offset_x} {offset_y} {max_x} {max_y}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">"#,
-            offset_x = -1.,
-            offset_y = -1.,
-            max_x = 2.,
-            max_y = 2.,
+            offset_x = -100.,
+            offset_y = -100.,
+            max_x = 200.,
+            max_y = 200.,
         )?;
 
         self.write_raw_svg(w, &Transform2::default())?;
@@ -97,7 +100,7 @@ impl ToSVG for Shape {
                 shapes,
             } => {
                 let transform = transform * local_transform;
-                shapes.write_raw_svg(w, &transform)
+                shapes.write_raw_svg(w, &transform)?;
             }
             Shape::Style {
                 fill,
@@ -137,11 +140,26 @@ impl ToSVG for Shape {
                 write!(w, ">")?;
                 shape.write_raw_svg(w, transform)?;
                 write!(w, "</g>")?;
-
-                Ok(())
+            }
+            Shape::Ellipse(e) => {
+                let EllipsePosition {
+                    center,
+                    semi_major_axis,
+                    semi_minor_axis,
+                    rotation,
+                } = e.position(transform);
+                write!(
+                    w,
+                    r#"<ellipse cx="{cx}" cy="{cy}" rx="{semi_major_axis}" ry="{semi_minor_axis}" transform="rotate({rot}rad)"/>"#,
+                    cx = center.x,
+                    cy = center.y,
+                    rot = -rotation.to_degrees()
+                )?;
             }
             _ => todo!(),
         }
+
+        Ok(())
     }
 }
 

@@ -1,9 +1,10 @@
-mod contrib;
+pub mod contrib;
 mod macros;
-mod shapes;
-mod style;
+pub mod shapes;
+pub mod style;
 
 pub mod prelude {
+    pub use crate::contrib::*;
     pub use crate::dessin;
     pub use crate::shapes::*;
     pub use crate::style::*;
