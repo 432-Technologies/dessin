@@ -1,11 +1,9 @@
+use crate::shapes::{Shape, ShapeOp};
+use nalgebra::{Rotation2, Scale2, Transform2, Translation2};
 use std::{
     fmt,
     ops::{Deref, DerefMut},
 };
-
-use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
-
-use crate::{Shape, ShapeOp};
 
 pub const fn rbg(r: u8, g: u8, b: u8) -> Color {
     Color::RGB { r, g, b }

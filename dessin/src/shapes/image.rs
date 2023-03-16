@@ -1,4 +1,4 @@
-use crate::{Shape, ShapeOp};
+use crate::shapes::{Shape, ShapeOp};
 use image::DynamicImage;
 use nalgebra::{Point2, Transform2, Unit, Vector2};
 

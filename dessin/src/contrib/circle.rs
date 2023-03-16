@@ -1,6 +1,5 @@
+use crate::prelude::{Ellipse, Shape, ShapeOp};
 use nalgebra::{Scale2, Transform2};
-
-use crate::{prelude::Ellipse, Shape, ShapeOp};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Circle {
@@ -10,7 +9,7 @@ pub struct Circle {
 impl Circle {
     #[inline]
     pub fn radius(&mut self, radius: f32) -> &mut Self {
-        self.scale(Scale2::new(radius, radius));
+        self.scale(Scale2::new(2. * radius, 2. * radius));
         self
     }
     #[inline]

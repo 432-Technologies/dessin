@@ -1,5 +1,7 @@
-use crate::{Shape, ShapeOp};
+use crate::shapes::{Shape, ShapeOp};
 use nalgebra::{Point2, Scale2, Transform2, Unit, Vector2};
+
+use super::{BoundingBox, ShapeBoundingBox};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct EllipsePosition {
@@ -30,7 +32,7 @@ impl Ellipse {
 
     #[inline]
     pub fn semi_major_axis(&mut self, value: f32) -> &mut Self {
-        self.scale(Scale2::new(value, 1.));
+        self.scale(Scale2::new(2. * value, 1.));
         self
     }
     #[inline]
@@ -41,7 +43,7 @@ impl Ellipse {
 
     #[inline]
     pub fn semi_minor_axis(&mut self, value: f32) -> &mut Self {
-        self.scale(Scale2::new(1., value));
+        self.scale(Scale2::new(1., 2. * value));
         self
     }
     #[inline]
@@ -55,8 +57,8 @@ impl Ellipse {
 
         let center = transform * Point2::origin();
 
-        let semi_major_axis = transform * Vector2::x();
-        let semi_minor_axis = transform * Vector2::y();
+        let semi_major_axis = transform * Vector2::new(0.5, 0.);
+        let semi_minor_axis = transform * Vector2::new(0., 0.5);
 
         let rotation = Unit::new_normalize(semi_major_axis).angle(&Vector2::x());
 
@@ -86,5 +88,18 @@ impl ShapeOp for Ellipse {
     #[inline]
     fn local_transform(&self) -> &Transform2<f32> {
         &self.local_transform
+    }
+}
+
+impl ShapeBoundingBox for Ellipse {
+    fn local_bounding_box(&self) -> BoundingBox<super::UnParticular> {
+        let mut bb = BoundingBox::new();
+
+        bb.top_left = self.local_transform() * Point2::new(-0.5, 0.5);
+        bb.top_right = self.local_transform() * Point2::new(0.5, 0.5);
+        bb.bottom_right = self.local_transform() * Point2::new(0.5, -0.5);
+        bb.bottom_left = self.local_transform() * Point2::new(-0.5, -0.5);
+
+        bb.as_unparticular()
     }
 }

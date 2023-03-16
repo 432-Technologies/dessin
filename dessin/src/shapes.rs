@@ -3,12 +3,14 @@ mod ellipse;
 mod image;
 mod text;
 
+use std::marker::PhantomData;
+
 pub use self::image::*;
 pub use curve::*;
 pub use ellipse::*;
 pub use text::*;
 
-use na::{Rotation2, Scale2};
+use na::{Point2, Rotation2, Scale2, Vector2};
 use nalgebra::{self as na, Transform2, Translation2};
 
 pub trait ShapeOp: Into<Shape> + Clone {
@@ -62,6 +64,116 @@ pub trait ShapeOpWith: ShapeOp {
 }
 impl<T: ShapeOp> ShapeOpWith for T {}
 
+pub struct UnParticular;
+pub struct Straight;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct BoundingBox<Type> {
+    _ty: PhantomData<Type>,
+    pub top_left: Point2<f32>,
+    pub top_right: Point2<f32>,
+    pub bottom_right: Point2<f32>,
+    pub bottom_left: Point2<f32>,
+}
+impl<T> BoundingBox<T> {
+    pub fn straigthen(&self) -> BoundingBox<Straight> {
+        let top = self
+            .top_left
+            .y
+            .max(self.top_right.y)
+            .max(self.bottom_left.y)
+            .max(self.bottom_right.y);
+        let bottom = self
+            .top_left
+            .y
+            .min(self.top_right.y)
+            .min(self.bottom_left.y)
+            .min(self.bottom_right.y);
+
+        let right = self
+            .top_left
+            .x
+            .max(self.top_right.x)
+            .max(self.bottom_left.x)
+            .max(self.bottom_right.x);
+        let left = self
+            .top_left
+            .x
+            .min(self.top_right.x)
+            .min(self.bottom_left.x)
+            .min(self.bottom_right.x);
+
+        BoundingBox {
+            _ty: PhantomData,
+            top_left: Point2::new(left, top),
+            top_right: Point2::new(right, top),
+            bottom_right: Point2::new(right, bottom),
+            bottom_left: Point2::new(left, bottom),
+        }
+    }
+
+    pub fn transform(self, transform: &Transform2<f32>) -> BoundingBox<UnParticular> {
+        BoundingBox {
+            _ty: PhantomData,
+            top_left: transform * self.top_left,
+            top_right: transform * self.top_right,
+            bottom_right: transform * self.bottom_right,
+            bottom_left: transform * self.bottom_left,
+        }
+    }
+
+    pub fn width(&self) -> f32 {
+        (self.top_right - self.top_left).magnitude()
+    }
+
+    pub fn height(&self) -> f32 {
+        (self.top_right - self.bottom_right).magnitude()
+    }
+}
+
+impl BoundingBox<Straight> {
+    pub fn new() -> BoundingBox<Straight> {
+        BoundingBox {
+            _ty: PhantomData,
+            top_left: Point2::origin(),
+            top_right: Point2::origin(),
+            bottom_right: Point2::origin(),
+            bottom_left: Point2::origin(),
+        }
+    }
+
+    pub fn as_unparticular(self) -> BoundingBox<UnParticular> {
+        BoundingBox {
+            _ty: PhantomData,
+            top_left: self.top_left,
+            top_right: self.top_right,
+            bottom_right: self.bottom_right,
+            bottom_left: self.bottom_left,
+        }
+    }
+
+    pub fn join(mut self, other: BoundingBox<Straight>) -> BoundingBox<Straight> {
+        self.top_left.x = self.top_left.x.min(other.top_left.x);
+        self.top_left.y = self.top_left.y.max(other.top_left.y);
+        self.top_right.x = self.top_right.x.max(other.top_right.x);
+        self.top_right.y = self.top_right.y.max(other.top_right.y);
+        self.bottom_right.x = self.bottom_right.x.max(other.bottom_right.x);
+        self.bottom_right.y = self.bottom_right.y.min(other.bottom_right.y);
+        self.bottom_left.x = self.bottom_left.x.min(other.bottom_left.x);
+        self.bottom_left.y = self.bottom_left.y.min(other.bottom_left.y);
+
+        self
+    }
+}
+
+pub trait ShapeBoundingBox: ShapeOp {
+    fn local_bounding_box(&self) -> BoundingBox<UnParticular>;
+    fn global_bounding_box(&self, parent_transform: &Transform2<f32>) -> BoundingBox<UnParticular> {
+        self.local_bounding_box()
+            .transform(&self.global_transform(parent_transform))
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Shape {
     Group {
@@ -94,7 +206,7 @@ impl ShapeOp for Shape {
             Shape::Group {
                 local_transform, ..
             } => {
-                *local_transform *= transform_matrix;
+                *local_transform = transform_matrix * *local_transform;
             }
             Shape::Style { shape, .. } => {
                 shape.transform(transform_matrix);
@@ -125,6 +237,26 @@ impl ShapeOp for Shape {
             Shape::Image(v) => v.local_transform(),
             Shape::Text(v) => v.local_transform(),
             _ => todo!(),
+        }
+    }
+}
+
+impl ShapeBoundingBox for Shape {
+    fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
+        match self {
+            Shape::Group {
+                local_transform,
+                shapes,
+            } => shapes
+                .iter()
+                .map(|v| v.local_bounding_box())
+                .fold(BoundingBox::new(), |acc, curr| {
+                    BoundingBox::join(acc, curr.straigthen())
+                })
+                .transform(local_transform),
+            Shape::Style { shape, .. } => shape.local_bounding_box(),
+            Shape::Ellipse(e) => e.local_bounding_box(),
+            x => todo!("{x:?}"),
         }
     }
 }

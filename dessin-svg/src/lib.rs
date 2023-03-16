@@ -1,41 +1,11 @@
-//! Export a [`Drawing`] in [`SVG`].
-//!
-//! [`Drawing`]: https://github.com/daedalus-aero-space/drawing
-//! [`SVG`]: https://www.w3.org/Graphics/SVG/
-//!
-//! After importing [`ToSVG`][ToSVG] in scope, one can call [`ToSVG::to_svg`][ToSVG::to_svg] on any [`Drawing`][Drawing].
-//!
-//! See the [`Dessin`] crate for more details on how to build a drawing.
-//!
-//! [`Dessin`]: https://github.com/daedalus-aero-space/drawing
-//! ```
-//! use dessin::{shape::Text, style::{FontWeight, Fill, Color}, vec2, Drawing};
-//! use dessin_svg::ToSVG;
-//!
-//! let mut drawing = Drawing::empty().with_canvas_size(vec2(50., 50.));
-//!
-//! drawing.add(
-//!    Text::new("Hello, world!".to_owned())
-//!        .at(vec2(10., 10.))
-//!        .with_font_weight(FontWeight::Bold)
-//!        .with_fill(Fill::Color(Color::U32(0xFF0000)))
-//!     );
-//!
-//! let svg = drawing.to_svg().unwrap();
-//!
-//! assert_eq!(svg, r#"<svg viewBox="-25 -25 50 50" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><text x="10" y="-10" text-anchor="start" font-family="Arial" font-size="16" font-weight="bold" fill='rgba(255,0,0,1)' >Hello, world!</text></svg>"#);
-//! ```
-
-use dessin::{
-    shapes::{Ellipse, EllipsePosition},
-    Fill, Shape, ShapeOp, Stroke,
-};
+use dessin::prelude::*;
 use nalgebra::Transform2;
 use std::io::{self, Cursor, Write};
 
 #[derive(Debug)]
 pub enum SvgError {
     WriteError(io::Error),
+    CurveHasNoStartingPoint,
 }
 impl From<io::Error> for SvgError {
     fn from(e: io::Error) -> Self {
@@ -47,17 +17,18 @@ pub trait ToSVG {
     fn write_raw_svg<W: Write>(
         &self,
         w: &mut W,
-        transform: &Transform2<f32>,
+        parent_transform: &Transform2<f32>,
     ) -> Result<(), SvgError>;
 
     fn write_svg<W: Write>(&self, w: &mut W) -> Result<(), SvgError> {
+        let max_x = 150.;
+        let max_y = 150.;
+
         write!(
             w,
             r#"<svg viewBox="{offset_x} {offset_y} {max_x} {max_y}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">"#,
-            offset_x = -100.,
-            offset_y = -100.,
-            max_x = 200.,
-            max_y = 200.,
+            offset_x = -max_x / 2.,
+            offset_y = -max_y / 2.,
         )?;
 
         self.write_raw_svg(w, &Transform2::default())?;
@@ -74,33 +45,18 @@ pub trait ToSVG {
     }
 }
 
-impl<T: ToSVG> ToSVG for [T] {
-    fn write_raw_svg<W: Write>(
-        &self,
-        w: &mut W,
-        transform: &Transform2<f32>,
-    ) -> Result<(), SvgError> {
-        for v in self {
-            v.write_raw_svg(w, transform)?
-        }
-
-        Ok(())
-    }
-}
-
 impl ToSVG for Shape {
     fn write_raw_svg<W: Write>(
         &self,
         w: &mut W,
-        transform: &Transform2<f32>,
+        parent_transform: &Transform2<f32>,
     ) -> Result<(), SvgError> {
         match self {
-            Shape::Group {
-                local_transform,
-                shapes,
-            } => {
-                let transform = transform * local_transform;
-                shapes.write_raw_svg(w, &transform)?;
+            Shape::Group { shapes, .. } => {
+                let transform = self.global_transform(parent_transform);
+                for v in shapes {
+                    v.write_raw_svg(w, &transform)?
+                }
             }
             Shape::Style {
                 fill,
@@ -138,7 +94,7 @@ impl ToSVG for Shape {
                     write_stroke(w, stroke)?;
                 }
                 write!(w, ">")?;
-                shape.write_raw_svg(w, transform)?;
+                shape.write_raw_svg(w, parent_transform)?;
                 write!(w, "</g>")?;
             }
             Shape::Ellipse(e) => {
@@ -147,7 +103,7 @@ impl ToSVG for Shape {
                     semi_major_axis,
                     semi_minor_axis,
                     rotation,
-                } = e.position(transform);
+                } = e.position(parent_transform);
                 write!(
                     w,
                     r#"<ellipse cx="{cx}" cy="{cy}" rx="{semi_major_axis}" ry="{semi_minor_axis}" transform="rotate({rot}rad)"/>"#,
@@ -156,53 +112,73 @@ impl ToSVG for Shape {
                     rot = -rotation.to_degrees()
                 )?;
             }
-            _ => todo!(),
+            Shape::Text(t) => {
+                todo!()
+            }
+            Shape::Curve(c) => {
+                write!(w, r#"<path d=""#)?;
+
+                fn write_curve<W: Write>(
+                    w: &mut W,
+                    c: &Curve,
+                    parent_transform: &Transform2<f32>,
+                    has_start: &mut bool,
+                ) -> Result<(), SvgError> {
+                    let CurvePosition { keypoints } = c.position(parent_transform);
+                    for k in keypoints {
+                        match k {
+                            Keypoint::Point(p) => {
+                                if *has_start {
+                                    write!(w, "L ")?;
+                                } else {
+                                    write!(w, "M ")?;
+                                    *has_start = true;
+                                }
+                                write!(w, "{} {} ", p.x, p.y)?;
+                            }
+                            Keypoint::Bezier(b) => {
+                                if *has_start {
+                                    if let Some(v) = b.start {
+                                        write!(w, "L {} {} ", v.x, v.y)?;
+                                    }
+                                } else {
+                                    if let Some(v) = b.start {
+                                        write!(w, "M {} {} ", v.x, v.y)?;
+                                    } else {
+                                        return Err(SvgError::CurveHasNoStartingPoint);
+                                    }
+                                }
+
+                                write!(w, "C {start_ctrl_x} {start_ctrl_y} {end_ctrl_x} {end_ctrl_y} {end_x} {end_y} ", 
+								start_ctrl_x = b.start_control.x,
+								start_ctrl_y = b.start_control.y,
+								end_ctrl_x = b.end_control.x,
+								end_ctrl_y = b.end_control.y,
+								end_x = b.end.x,
+								end_y = b.end.y,
+							)?;
+                            }
+                            Keypoint::Curve(c) => {
+                                write_curve(w, &c, parent_transform, has_start)?;
+                            }
+                        }
+                    }
+
+                    Ok(())
+                }
+
+                write_curve(w, c, parent_transform, &mut false)?;
+
+                if c.closed {
+                    write!(w, " Z")?;
+                }
+                write!(w, r#""/>"#)?;
+            }
+            x => {
+                todo!("{x:?}")
+            }
         }
 
         Ok(())
     }
 }
-
-// impl ToSVG for Drawing {
-//     fn to_svg(&self) -> Result<String, Box<dyn Error>> {
-//         let offset = -self.canvas_size() / 2.;
-//         Ok(format!(
-//             r#"<svg viewBox="{offset_x} {offset_y} {max_x} {max_y}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">{}</svg>"#,
-//             self.shapes().to_svg()?,
-//             // self.shapes()[0],
-//             offset_x = offset.x,
-//             offset_y = offset.y,
-//             max_x = self.canvas_size().x,
-//             max_y = self.canvas_size().y,
-//         ))
-//     }
-// }
-
-// impl<T: ToSVG> ToSVG for Vec<T> {
-//     fn to_svg(&self) -> Result<String, Box<dyn Error>> {
-//         self.iter()
-//             .map(|v| v.to_svg())
-//             .collect::<Result<String, Box<dyn Error>>>()
-//     }
-// }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-
-//     struct MyStruct;
-//     impl ToSVG for MyStruct {
-//         fn to_svg(&self) -> Result<String, Box<dyn Error>> {
-//             Ok("MyStruct".to_owned())
-//         }
-//     }
-
-//     #[test]
-//     fn test_vec() {
-//         let mut v = Vec::<MyStruct>::new();
-//         v.push(MyStruct);
-//         assert_eq!(v.to_svg().unwrap(), "MyStruct".to_owned());
-//         v.push(MyStruct);
-//         assert_eq!(v.to_svg().unwrap(), "MyStructMyStruct".to_owned());
-//     }
-// }

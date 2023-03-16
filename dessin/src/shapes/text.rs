@@ -1,24 +1,25 @@
-use na::{Point2, Scale2, Vector2};
+use crate::shapes::{Shape, ShapeOp};
+use na::{Scale2, Vector2};
 use nalgebra::{self as na, Transform2};
 
-use crate::{Shape, ShapeOp};
-
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum FontWeight {
+    #[default]
     Regular,
     Bold,
     Italic,
     BoldItalic,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum TextAlign {
+    #[default]
     Left,
     Center,
     Right,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub struct Text {
     pub text: String,
     pub local_transform: Transform2<f32>,

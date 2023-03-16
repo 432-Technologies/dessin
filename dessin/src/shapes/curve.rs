@@ -4,6 +4,11 @@ use crate::shapes::{Shape, ShapeOp};
 pub use keypoint::*;
 use nalgebra::Transform2;
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct CurvePosition {
+    pub keypoints: Vec<Keypoint>,
+}
+
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Curve {
     pub local_transform: Transform2<f32>,
@@ -40,6 +45,16 @@ impl Curve {
     pub fn opened(&mut self) -> &mut Self {
         self.close(false)
     }
+
+    pub fn position(&self, parent_transform: &Transform2<f32>) -> CurvePosition {
+        CurvePosition {
+            keypoints: self
+                .keypoints
+                .iter()
+                .map(|e| e.transform(&self.global_transform(parent_transform)))
+                .collect(),
+        }
+    }
 }
 
 impl ShapeOp for Curve {
@@ -56,6 +71,6 @@ impl ShapeOp for Curve {
 
 impl From<Curve> for Shape {
     fn from(v: Curve) -> Self {
-        todo!()
+        Shape::Curve(v)
     }
 }

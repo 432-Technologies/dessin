@@ -6,16 +6,9 @@
 // use algebr::{vec2, Vec2};
 // use rusttype::{Font, Scale};
 
-use fontdue::{
-    layout::{CoordinateSystem, Layout, TextStyle},
-    Font, FontSettings,
-};
+use crate::prelude::{FontWeight, Shape, ShapeOp, Text, TextAlign};
+use fontdue::{Font, FontSettings};
 use nalgebra::Transform2;
-
-use crate::{
-    prelude::{FontWeight, Text, TextAlign},
-    Shape, ShapeOp,
-};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct TextBox {

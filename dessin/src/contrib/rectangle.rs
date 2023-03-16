@@ -1,6 +1,8 @@
+use crate::{
+    dessin,
+    shapes::{Shape, ShapeOp},
+};
 use nalgebra::{Point2, Transform2};
-
-use crate::{dessin, Shape, ShapeOp};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Rectangle {
