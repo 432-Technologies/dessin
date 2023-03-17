@@ -1,6 +1,6 @@
 use crate::{
     dessin,
-    shapes::{Shape, ShapeOp},
+    shapes::{Curve, Shape, ShapeOp},
 };
 use nalgebra::{Point2, Transform2};
 
@@ -32,6 +32,35 @@ impl Rectangle {
         self.height(height);
         self
     }
+
+    pub fn as_curve(self) -> Curve {
+        use crate::prelude::*;
+
+        let Rectangle {
+            local_transform,
+            width,
+            height,
+        } = self;
+
+        let width = width / 2.;
+        let height = height / 2.;
+
+        let top_left = Point2::new(-width, height);
+        let top_right = Point2::new(width, height);
+        let bottom_right = Point2::new(width, -height);
+        let bottom_left = Point2::new(-width, -height);
+
+        dessin! {
+            Curve: (
+                transform={local_transform}
+                then={top_left}
+                then={bottom_left}
+                then={bottom_right}
+                then={top_right}
+                closed
+            )
+        }
+    }
 }
 
 impl ShapeOp for Rectangle {
@@ -46,34 +75,8 @@ impl ShapeOp for Rectangle {
 }
 
 impl From<Rectangle> for Shape {
-    fn from(
-        Rectangle {
-            local_transform,
-            width,
-            height,
-        }: Rectangle,
-    ) -> Self {
-        use crate::prelude::*;
-
-        let width = width / 2.;
-        let height = height / 2.;
-
-        let top_left = Point2::new(-width, height);
-        let top_right = Point2::new(width, height);
-        let bottom_right = Point2::new(width, -height);
-        let bottom_left = Point2::new(-width, -height);
-
-        dessin! {
-            Curve: (
-                transform={local_transform}
-                then={top_left}
-                then={top_right}
-                then={bottom_right}
-                then={bottom_left}
-                closed
-            )
-        }
-        .into()
+    fn from(v: Rectangle) -> Self {
+        v.as_curve().into()
     }
 }
 // impl From<Rectangle> for Shape {

@@ -120,6 +120,8 @@ impl From<TextBox> for Shape {
                     local_transform,
                     align: TextAlign::Left,
                     font_weight: FontWeight::Regular,
+                    on_curve: None,
+                    font_size,
                 })
             })
             .collect();

@@ -1,12 +1,13 @@
 [package]
 name = "dessin"
-version = "0.8.0"
+version = "0.8.0-pre"
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/daedalus-aero-space/dessin"
+repository = "https://github.com/432-technologies/dessin"
 description = "Build complex drawing for PDF, SVG, ..."
 
 [dependencies]
 fontdue = "^0.7.2"
 image = "^0.24.5"
-nalgebra = "^0.32.2"
+nalgebra = "^0.32.0"
+palette = "^0.6.1"

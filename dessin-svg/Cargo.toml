@@ -7,10 +7,11 @@ description = "Drawing SVG"
 edition = "2021"
 license = "MIT"
 name = "dessin-svg"
-repository = "https://github.com/daedalus-aero-space/dessin"
-version = "0.8.0"
+repository = "https://github.com/432-technologies/dessin"
+version = "0.8.0-pre"
 
 [dependencies]
 base64 = "0.21.0"
-dessin = { version = "0.8.0", path = "../dessin" }
-nalgebra = "^0.32.2"
+dessin = { version = "0.8.0-pre", path = "../dessin" }
+nalgebra = "^0.32.0"
+rand = "0.8.5"

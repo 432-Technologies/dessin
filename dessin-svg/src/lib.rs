@@ -5,7 +5,7 @@ use std::io::{self, Cursor, Write};
 #[derive(Debug)]
 pub enum SvgError {
     WriteError(io::Error),
-    CurveHasNoStartingPoint,
+    CurveHasNoStartingPoint(Curve),
 }
 impl From<io::Error> for SvgError {
     fn from(e: io::Error) -> Self {
@@ -113,59 +113,56 @@ impl ToSVG for Shape {
                 )?;
             }
             Shape::Text(t) => {
-                todo!()
+                let TextPosition {
+                    text,
+                    align,
+                    font_weight,
+                    on_curve,
+                    font_size,
+                } = t.position(parent_transform);
+
+                let id = rand::random::<u64>().to_string();
+
+                let weight = match font_weight {
+                    FontWeight::Bold | FontWeight::BoldItalic => "bold",
+                    _ => "normal",
+                };
+                let text_style = match font_weight {
+                    FontWeight::Italic | FontWeight::BoldItalic => "italic",
+                    _ => "normal",
+                };
+
+                write!(
+                    w,
+                    r#"<text font-size="{font_size}px" font-weight="{weight}" text-style="{text_style}">"#
+                )?;
+                if let Some(CurvePosition { keypoints, closed }) = on_curve {
+                    write!(w, r#"<path id="{id}" d=""#)?;
+
+                    write_curve(
+                        w,
+                        &Curve {
+                            local_transform: Transform2::default(),
+                            keypoints,
+                            closed,
+                        },
+                        parent_transform,
+                        &mut false,
+                    )?;
+
+                    if closed {
+                        write!(w, " Z")?;
+                    }
+                    write!(w, r#""/>"#)?;
+
+                    write!(w, r##"<textPath href="#{id}">{text}</textPath>"##)?;
+                } else {
+                    write!(w, "{text}")?;
+                }
+                write!(w, r#"</text>"#)?;
             }
             Shape::Curve(c) => {
                 write!(w, r#"<path d=""#)?;
-
-                fn write_curve<W: Write>(
-                    w: &mut W,
-                    c: &Curve,
-                    parent_transform: &Transform2<f32>,
-                    has_start: &mut bool,
-                ) -> Result<(), SvgError> {
-                    let CurvePosition { keypoints } = c.position(parent_transform);
-                    for k in keypoints {
-                        match k {
-                            Keypoint::Point(p) => {
-                                if *has_start {
-                                    write!(w, "L ")?;
-                                } else {
-                                    write!(w, "M ")?;
-                                    *has_start = true;
-                                }
-                                write!(w, "{} {} ", p.x, p.y)?;
-                            }
-                            Keypoint::Bezier(b) => {
-                                if *has_start {
-                                    if let Some(v) = b.start {
-                                        write!(w, "L {} {} ", v.x, v.y)?;
-                                    }
-                                } else {
-                                    if let Some(v) = b.start {
-                                        write!(w, "M {} {} ", v.x, v.y)?;
-                                    } else {
-                                        return Err(SvgError::CurveHasNoStartingPoint);
-                                    }
-                                }
-
-                                write!(w, "C {start_ctrl_x} {start_ctrl_y} {end_ctrl_x} {end_ctrl_y} {end_x} {end_y} ", 
-								start_ctrl_x = b.start_control.x,
-								start_ctrl_y = b.start_control.y,
-								end_ctrl_x = b.end_control.x,
-								end_ctrl_y = b.end_control.y,
-								end_x = b.end.x,
-								end_y = b.end.y,
-							)?;
-                            }
-                            Keypoint::Curve(c) => {
-                                write_curve(w, &c, parent_transform, has_start)?;
-                            }
-                        }
-                    }
-
-                    Ok(())
-                }
 
                 write_curve(w, c, parent_transform, &mut false)?;
 
@@ -181,4 +178,56 @@ impl ToSVG for Shape {
 
         Ok(())
     }
+}
+
+fn write_curve<W: Write>(
+    w: &mut W,
+    c: &Curve,
+    parent_transform: &Transform2<f32>,
+    has_start: &mut bool,
+) -> Result<(), SvgError> {
+    let CurvePosition { keypoints, .. } = c.position(parent_transform);
+    for k in keypoints {
+        match k {
+            Keypoint::Point(p) => {
+                if *has_start {
+                    write!(w, "L ")?;
+                } else {
+                    write!(w, "M ")?;
+                    *has_start = true;
+                }
+                write!(w, "{} {} ", p.x, p.y)?;
+            }
+            Keypoint::Bezier(b) => {
+                if *has_start {
+                    if let Some(v) = b.start {
+                        write!(w, "L {} {} ", v.x, v.y)?;
+                    }
+                } else {
+                    if let Some(v) = b.start {
+                        write!(w, "M {} {} ", v.x, v.y)?;
+                        *has_start = true;
+                    } else {
+                        return Err(SvgError::CurveHasNoStartingPoint(c.clone()));
+                    }
+                }
+
+                write!(
+                    w,
+                    "C {start_ctrl_x} {start_ctrl_y} {end_ctrl_x} {end_ctrl_y} {end_x} {end_y} ",
+                    start_ctrl_x = b.start_control.x,
+                    start_ctrl_y = b.start_control.y,
+                    end_ctrl_x = b.end_control.x,
+                    end_ctrl_y = b.end_control.y,
+                    end_x = b.end.x,
+                    end_y = b.end.y,
+                )?;
+            }
+            Keypoint::Curve(c) => {
+                write_curve(w, &c, parent_transform, has_start)?;
+            }
+        }
+    }
+
+    Ok(())
 }

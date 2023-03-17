@@ -1,5 +1,10 @@
-use crate::prelude::{Ellipse, Shape, ShapeOp};
-use nalgebra::{Scale2, Transform2};
+use std::f32::consts::FRAC_PI_2;
+
+use crate::{
+    prelude::{Ellipse, Shape, ShapeOp},
+    shapes::{Bezier, Curve, Keypoint},
+};
+use nalgebra::{self as na, Point2, Rotation2, Scale2, Transform2, Vector2};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Circle {
@@ -16,6 +21,31 @@ impl Circle {
     pub fn with_radius(mut self, radius: f32) -> Self {
         self.radius(radius);
         self
+    }
+
+    pub fn as_curve(&self) -> Curve {
+        let mut q1 = Bezier {
+            start: None,
+            start_control: Point2::new(1., 0.552284749831),
+            end_control: Point2::new(0.552284749831, 1.),
+            end: Point2::new(0., 1.),
+        };
+        let q2 = q1.transform(&na::convert(Rotation2::new(FRAC_PI_2)));
+        let q3 = q2.transform(&na::convert(Rotation2::new(FRAC_PI_2)));
+        let q4 = q3.transform(&na::convert(Rotation2::new(FRAC_PI_2)));
+
+        q1.start = Some(Point2::new(1., 0.));
+
+        Curve {
+            keypoints: vec![
+                Keypoint::Bezier(q1),
+                Keypoint::Bezier(q2),
+                Keypoint::Bezier(q3),
+                Keypoint::Bezier(q4),
+            ],
+            local_transform: self.local_transform,
+            closed: true,
+        }
     }
 }
 
@@ -36,5 +66,12 @@ impl From<Circle> for Shape {
     #[inline]
     fn from(Circle { local_transform }: Circle) -> Self {
         Shape::Ellipse(Ellipse { local_transform })
+    }
+}
+
+impl From<Ellipse> for Circle {
+    #[inline]
+    fn from(Ellipse { local_transform }: Ellipse) -> Self {
+        Circle { local_transform }
     }
 }

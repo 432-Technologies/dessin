@@ -74,6 +74,23 @@ impl Color {
             a,
         }
     }
+
+    pub fn as_rgb(&self) -> (u8, u8, u8) {
+        match *self {
+            Color::RGBA { r, g, b, a: _ } => (r, g, b),
+            Color::RGB { r, g, b } => (r, g, b),
+            Color::U32(c) => (
+                ((c >> 16) & 0xFF) as u8,
+                ((c >> 8) & 0xFF) as u8,
+                (c & 0xFF) as u8,
+            ),
+        }
+    }
+
+    pub fn as_rgb_f64(&self) -> (f64, f64, f64) {
+        let (r, g, b) = self.as_rgb();
+        (r as f64, g as f64, b as f64)
+    }
 }
 
 impl fmt::Display for Color {

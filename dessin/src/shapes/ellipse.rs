@@ -1,7 +1,7 @@
 use crate::shapes::{Shape, ShapeOp};
 use nalgebra::{Point2, Scale2, Transform2, Unit, Vector2};
 
-use super::{BoundingBox, ShapeBoundingBox};
+use super::{BoundingBox, Curve, ShapeBoundingBox};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct EllipsePosition {
@@ -50,6 +50,11 @@ impl Ellipse {
     pub fn with_semi_minor_axis(mut self, value: f32) -> Self {
         self.semi_minor_axis(value);
         self
+    }
+
+    #[inline]
+    pub fn as_curve(&self) -> Curve {
+        crate::contrib::Circle::from(self.clone()).as_curve()
     }
 
     pub fn position(&self, parent_transform: &Transform2<f32>) -> EllipsePosition {

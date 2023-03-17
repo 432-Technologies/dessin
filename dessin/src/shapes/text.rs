@@ -2,6 +2,8 @@ use crate::shapes::{Shape, ShapeOp};
 use na::{Scale2, Vector2};
 use nalgebra::{self as na, Transform2};
 
+use super::{Curve, CurvePosition};
+
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum FontWeight {
     #[default]
@@ -19,12 +21,22 @@ pub enum TextAlign {
     Right,
 }
 
+pub struct TextPosition<'a> {
+    pub text: &'a str,
+    pub align: TextAlign,
+    pub font_weight: FontWeight,
+    pub on_curve: Option<CurvePosition>,
+    pub font_size: f32,
+}
+
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Text {
     pub text: String,
     pub local_transform: Transform2<f32>,
     pub align: TextAlign,
     pub font_weight: FontWeight,
+    pub on_curve: Option<Curve>,
+    pub font_size: f32,
 }
 impl Text {
     #[inline]
@@ -62,7 +74,8 @@ impl Text {
 
     #[inline]
     pub fn font_size(&mut self, font_size: f32) -> &mut Self {
-        self.scale(Scale2::new(font_size, font_size))
+        self.font_size = font_size;
+        self
     }
     #[inline]
     pub fn with_font_size(mut self, font_size: f32) -> Self {
@@ -70,9 +83,20 @@ impl Text {
         self
     }
 
-    #[inline]
-    pub fn get_font_size(&self) -> f32 {
-        (self.local_transform * Vector2::new(0., 1.)).magnitude()
+    pub fn on_curve(&mut self, curve: Curve) -> &mut Self {
+        self.on_curve = Some(curve);
+        self
+    }
+
+    pub fn position(&self, parent_transform: &Transform2<f32>) -> TextPosition {
+        let transform = self.global_transform(parent_transform);
+        TextPosition {
+            text: &self.text,
+            align: self.align,
+            font_weight: self.font_weight,
+            on_curve: self.on_curve.as_ref().map(|v| v.position(&transform)),
+            font_size: self.font_size * (transform * Vector2::new(0., 1.)).magnitude(),
+        }
     }
 }
 

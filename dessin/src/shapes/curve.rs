@@ -2,11 +2,12 @@ mod keypoint;
 
 use crate::shapes::{Shape, ShapeOp};
 pub use keypoint::*;
-use nalgebra::Transform2;
+use nalgebra::{Point2, Transform2};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CurvePosition {
     pub keypoints: Vec<Keypoint>,
+    pub closed: bool,
 }
 
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -46,8 +47,120 @@ impl Curve {
         self.close(false)
     }
 
+    #[inline]
+    pub fn reverse(&mut self) -> &mut Self {
+        *self = self.reversed();
+        self
+    }
+
+    pub fn start_point(&self) -> Option<Point2<f32>> {
+        match self.keypoints.first() {
+            Some(Keypoint::Point(p)) => Some(*p),
+            Some(Keypoint::Bezier(b)) => b.start,
+            Some(Keypoint::Curve(c)) => c.start_point(),
+            None => None,
+        }
+    }
+
+    pub fn reversed(&self) -> Self {
+        let (c, b) = self._reversed();
+        if b.is_some() {
+            panic!("")
+        }
+        c
+    }
+
+    fn _reversed<'a>(&'a self) -> (Self, Option<&'a Bezier>) {
+        let mut keypoints = Vec::with_capacity(self.keypoints.len());
+
+        let mut tmp: Option<&'a Bezier> = None;
+
+        for k in self.keypoints.iter().rev() {
+            match (k, tmp) {
+                (Keypoint::Point(p), None) => {
+                    keypoints.push(Keypoint::Point(*p));
+                }
+                (Keypoint::Point(p), Some(t)) => {
+                    keypoints.push(Keypoint::Bezier(Bezier {
+                        start: Some(t.end),
+                        start_control: t.end_control,
+                        end_control: t.start_control,
+                        end: *p,
+                    }));
+                    tmp = None;
+                }
+                (Keypoint::Bezier(b), None) => {
+                    if let Some(start) = b.start {
+                        keypoints.push(Keypoint::Bezier(Bezier {
+                            start: Some(b.end),
+                            start_control: b.end_control,
+                            end_control: b.start_control,
+                            end: start,
+                        }));
+                    } else {
+                        tmp = Some(b);
+                    }
+                }
+                (Keypoint::Bezier(b), Some(t)) => {
+                    keypoints.push(Keypoint::Bezier(Bezier {
+                        start: Some(t.end),
+                        start_control: t.end_control,
+                        end_control: t.start_control,
+                        end: b.end,
+                    }));
+                    tmp = None;
+
+                    if let Some(start) = b.start {
+                        keypoints.push(Keypoint::Bezier(Bezier {
+                            start: Some(b.end),
+                            start_control: b.end_control,
+                            end_control: b.start_control,
+                            end: start,
+                        }));
+                    } else {
+                        tmp = Some(b);
+                    }
+                }
+                (Keypoint::Curve(c), None) => {
+                    let (curve, rest) = c._reversed();
+                    keypoints.push(Keypoint::Curve(curve));
+                    tmp = rest;
+                }
+                (Keypoint::Curve(c), Some(t)) => {
+                    let (curve, rest) = c._reversed();
+                    if let Some(start) = curve.start_point() {
+                        keypoints.push(Keypoint::Bezier(Bezier {
+                            start: Some(t.end),
+                            start_control: t.end_control,
+                            end_control: t.start_control,
+                            end: start,
+                        }));
+                        tmp = rest;
+                    } else if let None = rest {
+                        // Everithing's good here
+                    } else {
+                        panic!("")
+                    }
+                }
+                _ => {
+                    todo!()
+                }
+            }
+        }
+
+        (
+            Curve {
+                local_transform: self.local_transform,
+                closed: self.closed,
+                keypoints,
+            },
+            tmp,
+        )
+    }
+
     pub fn position(&self, parent_transform: &Transform2<f32>) -> CurvePosition {
         CurvePosition {
+            closed: self.closed,
             keypoints: self
                 .keypoints
                 .iter()
