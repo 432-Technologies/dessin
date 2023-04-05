@@ -1,6 +1,6 @@
 use crate::shapes::{Shape, ShapeOp};
 use image::DynamicImage;
-use nalgebra::{Point2, Transform2, Unit, Vector2};
+use nalgebra::{Point2, Scale2, Transform2, Unit, Vector2};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ImagePosition {
@@ -22,6 +22,16 @@ pub struct Image {
 }
 impl Image {
     #[inline]
+    pub fn image_size_pixel(&self) -> (u32, u32) {
+        (self.image.width(), self.image.height())
+    }
+
+    #[inline]
+    pub fn aspect_ration(&self) -> f32 {
+        let (w, h) = self.image_size_pixel();
+        w as f32 / h as f32
+    }
+
     pub fn image(&mut self, image: DynamicImage) -> &mut Self {
         self.image = image;
         self
@@ -29,6 +39,16 @@ impl Image {
     #[inline]
     pub fn with_image(mut self, image: DynamicImage) -> Self {
         self.image(image);
+        self
+    }
+
+    pub fn keep_aspect_ratio(&mut self) -> &mut Self {
+        self.scale(Scale2::new(self.aspect_ration(), 1.));
+        self
+    }
+    #[inline]
+    pub fn with_keep_aspect_ratio(mut self) -> Self {
+        self.keep_aspect_ratio();
         self
     }
 

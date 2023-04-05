@@ -306,6 +306,13 @@ impl ToPDF for Image {
         let width_px = image.width();
         let height_px = image.height();
 
+        let dpi = 300.;
+        let raw_width = width_px as f32 * 25.4 / dpi;
+        let raw_height = height_px as f32 * 25.4 / dpi;
+
+        let width = width / raw_width;
+        let height = height / raw_height;
+
         let center_x = (top_right.x + bottom_left.x) / 2.;
         let center_y = (top_right.y + bottom_left.y) / 2.;
 
@@ -321,7 +328,7 @@ impl ToPDF for Image {
                 }),
                 scale_x: Some(width as f64),
                 scale_y: Some(height as f64),
-                dpi: None,
+                dpi: Some(dpi as f64),
             },
         );
 
