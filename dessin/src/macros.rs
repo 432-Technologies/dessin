@@ -1,14 +1,16 @@
 #[macro_export]
 macro_rules! dessin {
 	() => {$crate::shapes::Shape::default()};
-	(do {$range:expr}: |$x:ident| { $f:expr }) => {
+	(for $x:ident in {$range:expr}: $($f:block)?) => {
 		{
 			#[allow(unused_mut)]
 			let mut shapes = vec![];
 
-			for $x in $range {
-				shapes.push($crate::shapes::Shape::from($f))
-			}
+			$(
+				for $x in $range {
+					shapes.push($crate::shapes::Shape::from($f))
+				}
+			)?
 
 			$crate::shapes::Shape::Group {
 				local_transform: ::nalgebra::Transform2::default(),
@@ -16,14 +18,16 @@ macro_rules! dessin {
 			}
 		}
 	};
-	(do {$range:expr}: #($($fn_name:ident={$value:expr})*) |$x:ident| { $f:expr }) => {
+	(for $x:ident in {$range:expr}: #($($fn_name:ident={$value:expr})*) $($f:block)?) => {
 		{
 			#[allow(unused_mut)]
 			let mut shapes = vec![];
 
-			for $x in $range {
-				shapes.push($crate::shapes::Shape::from($f))
-			}
+			$(
+				for $x in $range {
+					shapes.push($crate::shapes::Shape::from($f))
+				}
+			)?
 
 			#[allow(unused_mut)]
 			let mut shape = $crate::style::Style::new($crate::shapes::Shape::Group {
@@ -34,14 +38,16 @@ macro_rules! dessin {
 			shape
 		}
 	};
-	(do {$range:expr}: ($($fn_name:ident={$value:expr})*) |$x:ident| { $f:expr }) => {
+	(for $x:ident in {$range:expr}: ($($fn_name:ident={$value:expr})*) $($f:block)?) => {
 		{
 			#[allow(unused_mut)]
 			let mut shapes = vec![];
 
-			for $x in $range {
-				shapes.push($crate::shapes::Shape::from($f))
-			}
+			$(
+				for $x in $range {
+					shapes.push($crate::shapes::Shape::from($f))
+				}
+			)?
 
 			#[allow(unused_mut)]
 			let mut shape = $crate::shapes::Shape::Group {
@@ -77,6 +83,22 @@ macro_rules! dessin {
 		}
 	};
 	(use |$v:ident|: ($($fn_name:ident={$value:expr})*)) => {
+		{
+			#[allow(unused_mut)]
+			let mut shape = $v;
+			$(shape.$fn_name($value);)*
+			shape
+		}
+	};
+	(use {$v:expr}: #($($fn_name:ident={$value:expr})*)) => {
+		{
+			#[allow(unused_mut)]
+			let mut shape = $crate::style::Style::new($v);
+			$(shape.$fn_name($value);)*
+			shape
+		}
+	};
+	(use {$v:expr}: ($($fn_name:ident={$value:expr})*)) => {
 		{
 			#[allow(unused_mut)]
 			let mut shape = $v;
