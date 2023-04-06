@@ -6,11 +6,10 @@ mod text;
 pub use self::image::*;
 pub use curve::*;
 pub use ellipse::*;
-use std::marker::PhantomData;
-pub use text::*;
-
 use na::{Point2, Rotation2, Scale2};
 use nalgebra::{self as na, Transform2, Translation2};
+use std::marker::PhantomData;
+pub use text::*;
 
 pub trait ShapeOp: Into<Shape> + Clone {
     fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self;
@@ -161,6 +160,16 @@ impl BoundingBox<UnParticular> {
 }
 
 impl BoundingBox<Straight> {
+    pub fn zero() -> Self {
+        BoundingBox {
+            _ty: PhantomData,
+            top_left: Point2::origin(),
+            top_right: Point2::origin(),
+            bottom_right: Point2::origin(),
+            bottom_left: Point2::origin(),
+        }
+    }
+
     pub fn as_unparticular(self) -> BoundingBox<UnParticular> {
         BoundingBox {
             _ty: PhantomData,
@@ -271,7 +280,7 @@ impl ShapeBoundingBox for Shape {
                 shapes,
             } => shapes
                 .iter()
-                .filter_map(|v| v.local_bounding_box())
+                .filter_map(|v| v.global_bounding_box(local_transform))
                 .map(|v| v.straigthen())
                 .reduce(|acc, curr| BoundingBox::join(acc, curr))
                 .map(|v| v.transform(local_transform)),
@@ -282,4 +291,10 @@ impl ShapeBoundingBox for Shape {
             Shape::Curve(c) => c.local_bounding_box(),
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn f() {}
 }

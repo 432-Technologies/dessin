@@ -102,6 +102,7 @@ impl ToPDF for Shape {
             Shape::Image(i) => i.draw_on_layer_with_parent_transform(layer, parent_transform),
             Shape::Text(t) => t.draw_on_layer_with_parent_transform(layer, parent_transform),
             Shape::Ellipse(e) => e.draw_on_layer_with_parent_transform(layer, parent_transform),
+            Shape::Curve(c) => c.draw_on_layer_with_parent_transform(layer, parent_transform),
             Shape::Group {
                 local_transform: _,
                 shapes,
@@ -129,7 +130,9 @@ impl ToPDF for Shape {
                         g,
                         b,
                         icc_profile: None,
-                    }))
+                    }));
+
+                    // layer.fil
                 }
 
                 if let Some(stroke) = stroke {
@@ -148,23 +151,34 @@ impl ToPDF for Shape {
                         g,
                         b,
                         icc_profile: None,
-                    }))
+                    }));
+
+                    layer.set_outline_thickness(*w as f64);
                 }
 
                 shape.draw_on_layer_with_parent_transform(layer, parent_transform)?;
 
                 if stroke.is_some() {
-                    layer.restore_graphics_state();
-                    layer.restore_graphics_state();
+                    layer.set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
+                        r: 0.,
+                        g: 0.,
+                        b: 0.,
+                        icc_profile: None,
+                    }));
+                    layer.set_outline_thickness(0.);
                 }
 
                 if fill.is_some() {
-                    layer.restore_graphics_state();
+                    layer.set_fill_color(printpdf::Color::Rgb(printpdf::Rgb {
+                        r: 0.,
+                        g: 0.,
+                        b: 0.,
+                        icc_profile: None,
+                    }));
                 }
 
                 Ok(())
             }
-            x => todo!("{x:?}"),
         }
     }
 }
@@ -290,10 +304,11 @@ impl ToPDF for Image {
         parent_transform: &Transform2<f32>,
     ) -> Result<(), PDFError> {
         let ImagePosition {
+            center,
             top_left: _,
-            top_right,
+            top_right: _,
             bottom_right: _,
-            bottom_left,
+            bottom_left: _,
             width,
             height,
             rotation,
@@ -310,24 +325,23 @@ impl ToPDF for Image {
         let raw_width = width_px as f32 * 25.4 / dpi;
         let raw_height = height_px as f32 * 25.4 / dpi;
 
-        let width = width / raw_width;
-        let height = height / raw_height;
+        let scale_width = width / raw_width;
+        let scale_height = height / raw_height;
 
-        let center_x = (top_right.x + bottom_left.x) / 2.;
-        let center_y = (top_right.y + bottom_left.y) / 2.;
+        println!("{dpi} {raw_width} {raw_height} {width_px} {height_px}");
 
         printpdf::Image::from_dynamic_image(image).add_to_layer(
             layer.clone(),
             printpdf::ImageTransform {
-                translate_x: Some(printpdf::Mm(center_x as f64)),
-                translate_y: Some(printpdf::Mm(center_y as f64)),
+                translate_x: Some(printpdf::Mm(center.x as f64)),
+                translate_y: Some(printpdf::Mm(center.y as f64)),
                 rotate: Some(printpdf::ImageRotation {
                     angle_ccw_degrees: rotation.to_degrees() as f64,
                     rotation_center_x: printpdf::Px((width_px / 2) as usize),
                     rotation_center_y: printpdf::Px((height_px / 2) as usize),
                 }),
-                scale_x: Some(width as f64),
-                scale_y: Some(height as f64),
+                scale_x: Some(scale_width as f64),
+                scale_y: Some(scale_height as f64),
                 dpi: Some(dpi as f64),
             },
         );

@@ -1,4 +1,5 @@
 use dessin::prelude::*;
+use image::ImageFormat;
 use nalgebra::Transform2;
 use std::io::{self, Cursor, Write};
 
@@ -13,16 +14,28 @@ impl From<io::Error> for SvgError {
     }
 }
 
-pub trait ToSVG {
+#[derive(Default)]
+pub struct SVGOptions {
+    pub size: Option<(f32, f32)>,
+}
+
+pub trait ToSVG: ShapeBoundingBox {
     fn write_raw_svg<W: Write>(
         &self,
         w: &mut W,
         parent_transform: &Transform2<f32>,
     ) -> Result<(), SvgError>;
 
-    fn write_svg<W: Write>(&self, w: &mut W) -> Result<(), SvgError> {
-        let max_x = 150.;
-        let max_y = 150.;
+    fn write_svg<W: Write>(&self, w: &mut W, options: SVGOptions) -> Result<(), SvgError> {
+        let (max_x, max_y) = match options.size {
+            Some(v) => v,
+            None => {
+                let bb = self
+                    .local_bounding_box()
+                    .unwrap_or_else(|| BoundingBox::zero().as_unparticular());
+                (bb.width(), bb.height())
+            }
+        };
 
         write!(
             w,
@@ -38,10 +51,14 @@ pub trait ToSVG {
         Ok(())
     }
 
-    fn to_svg(&self) -> Result<String, SvgError> {
+    fn to_svg_with_options(&self, options: SVGOptions) -> Result<String, SvgError> {
         let mut res = Cursor::new(vec![]);
-        self.write_svg(&mut res)?;
+        self.write_svg(&mut res, options)?;
         Ok(unsafe { String::from_utf8_unchecked(res.into_inner()) })
+    }
+
+    fn to_svg(&self) -> Result<String, SvgError> {
+        self.to_svg_with_options(SVGOptions::default())
     }
 }
 
@@ -171,9 +188,32 @@ impl ToSVG for Shape {
                 }
                 write!(w, r#""/>"#)?;
             }
-            x => {
-                todo!("{x:?}")
-            }
+            Shape::Image(i) => {
+                let ImagePosition {
+                    center,
+                    top_left: _,
+                    top_right: _,
+                    bottom_right: _,
+                    bottom_left: _,
+                    width,
+                    height,
+                    rotation,
+                } = i.position(parent_transform);
+
+                let mut raw_image = Cursor::new(vec![]);
+                i.image.write_to(&mut raw_image, ImageFormat::Png).unwrap();
+
+                let data = data_encoding::BASE64URL.encode(&raw_image.into_inner());
+
+                write!(
+                    w,
+                    r#"<image width="{width}" height="{height}" x="{x}" y="{y}" transform="rotate({rotation}rad)" href="data:image/png;base64,{data}" xlink:href="data:image/png;base64,{data}"/>"#,
+                    x = center.x,
+                    y = center.y,
+                )?;
+            } // _x => {
+              //     todo!("{_x:?}")
+              // }
         }
 
         Ok(())

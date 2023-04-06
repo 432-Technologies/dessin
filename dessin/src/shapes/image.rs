@@ -9,6 +9,7 @@ pub struct ImagePosition {
     pub top_right: Point2<f32>,
     pub bottom_right: Point2<f32>,
     pub bottom_left: Point2<f32>,
+    pub center: Point2<f32>,
 
     pub width: f32,
     pub height: f32,
@@ -28,7 +29,7 @@ impl Image {
     }
 
     #[inline]
-    pub fn aspect_ration(&self) -> f32 {
+    pub fn aspect_ratio(&self) -> f32 {
         let (w, h) = self.image_size_pixel();
         w as f32 / h as f32
     }
@@ -44,7 +45,7 @@ impl Image {
     }
 
     pub fn keep_aspect_ratio(&mut self) -> &mut Self {
-        self.scale(Scale2::new(self.aspect_ration(), 1.));
+        self.scale(Scale2::new(self.aspect_ratio(), 1.));
         self
     }
     #[inline]
@@ -60,11 +61,13 @@ impl Image {
         let top_right = transform * Point2::new(0.5, 0.5);
         let bottom_right = transform * Point2::new(0.5, -0.5);
         let bottom_left = transform * Point2::new(-0.5, -0.5);
+        let center = transform * Point2::origin();
 
         let rot_dir = Unit::new_normalize(transform * Vector2::x());
         let rotation = rot_dir.angle(&Vector2::x());
 
         ImagePosition {
+            center,
             top_left,
             top_right,
             bottom_right,
@@ -103,6 +106,7 @@ impl ShapeBoundingBox for Image {
             top_right,
             bottom_right,
             bottom_left,
+            center: _,
             width: _,
             height: _,
             rotation: _,
@@ -132,6 +136,7 @@ mod tests {
         assert_eq!(
             img.position(&Transform2::default()),
             ImagePosition {
+                center: Point2::origin(),
                 top_left: Point2::new(-0.5, 0.5),
                 top_right: Point2::new(0.5, 0.5),
                 bottom_right: Point2::new(0.5, -0.5),
@@ -203,6 +208,7 @@ mod tests {
         assert_eq!(
             img_pos,
             ImagePosition {
+                center: Point2::origin(),
                 top_left: Point2::new(-0.5, 0.5),
                 top_right: Point2::new(0.5, 0.5),
                 bottom_right: Point2::new(0.5, -0.5),
