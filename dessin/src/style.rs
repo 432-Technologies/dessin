@@ -130,6 +130,7 @@ pub struct Style<T> {
     pub stroke: Option<Stroke>,
 }
 impl<T> Style<T> {
+    #[inline]
     pub fn new(shape: T) -> Self {
         Style {
             shape,
@@ -164,12 +165,14 @@ impl<T> Style<T> {
 impl<T> Deref for Style<T> {
     type Target = T;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.shape
     }
 }
 
 impl<T> DerefMut for Style<T> {
+    #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.shape
     }

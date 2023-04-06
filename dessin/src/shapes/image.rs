@@ -1,3 +1,4 @@
+use super::{BoundingBox, ShapeBoundingBox, UnParticular};
 use crate::shapes::{Shape, ShapeOp};
 use image::DynamicImage;
 use nalgebra::{Point2, Scale2, Transform2, Unit, Vector2};
@@ -92,6 +93,26 @@ impl ShapeOp for Image {
     #[inline]
     fn local_transform(&self) -> &Transform2<f32> {
         &self.local_transform
+    }
+}
+
+impl ShapeBoundingBox for Image {
+    fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
+        let ImagePosition {
+            top_left,
+            top_right,
+            bottom_right,
+            bottom_left,
+            width: _,
+            height: _,
+            rotation: _,
+        } = self.position(&Transform2::default());
+        Some(BoundingBox::new(
+            top_left,
+            top_right,
+            bottom_right,
+            bottom_left,
+        ))
     }
 }
 

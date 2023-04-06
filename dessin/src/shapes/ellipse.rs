@@ -1,7 +1,7 @@
 use crate::shapes::{Shape, ShapeOp};
 use nalgebra::{Point2, Scale2, Transform2, Unit, Vector2};
 
-use super::{BoundingBox, Curve, ShapeBoundingBox};
+use super::{BoundingBox, Curve, ShapeBoundingBox, UnParticular};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct EllipsePosition {
@@ -97,14 +97,12 @@ impl ShapeOp for Ellipse {
 }
 
 impl ShapeBoundingBox for Ellipse {
-    fn local_bounding_box(&self) -> BoundingBox<super::UnParticular> {
-        let mut bb = BoundingBox::new();
-
-        bb.top_left = self.local_transform() * Point2::new(-0.5, 0.5);
-        bb.top_right = self.local_transform() * Point2::new(0.5, 0.5);
-        bb.bottom_right = self.local_transform() * Point2::new(0.5, -0.5);
-        bb.bottom_left = self.local_transform() * Point2::new(-0.5, -0.5);
-
-        bb.as_unparticular()
+    fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
+        Some(BoundingBox::new(
+            self.local_transform() * Point2::new(-0.5, 0.5),
+            self.local_transform() * Point2::new(0.5, 0.5),
+            self.local_transform() * Point2::new(0.5, -0.5),
+            self.local_transform() * Point2::new(-0.5, -0.5),
+        ))
     }
 }

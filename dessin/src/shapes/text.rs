@@ -2,7 +2,7 @@ use crate::shapes::{Shape, ShapeOp};
 use na::{Scale2, Vector2};
 use nalgebra::{self as na, Transform2};
 
-use super::{Curve, CurvePosition};
+use super::{BoundingBox, Curve, CurvePosition, ShapeBoundingBox, UnParticular};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum FontWeight {
@@ -115,5 +115,11 @@ impl ShapeOp for Text {
     #[inline]
     fn local_transform(&self) -> &Transform2<f32> {
         &self.local_transform
+    }
+}
+
+impl ShapeBoundingBox for Text {
+    fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
+        todo!()
     }
 }

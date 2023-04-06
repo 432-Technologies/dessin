@@ -3,14 +3,13 @@ mod ellipse;
 mod image;
 mod text;
 
-use std::marker::PhantomData;
-
 pub use self::image::*;
 pub use curve::*;
 pub use ellipse::*;
+use std::marker::PhantomData;
 pub use text::*;
 
-use na::{Point2, Rotation2, Scale2, Vector2};
+use na::{Point2, Rotation2, Scale2};
 use nalgebra::{self as na, Transform2, Translation2};
 
 pub trait ShapeOp: Into<Shape> + Clone {
@@ -70,12 +69,25 @@ pub struct Straight;
 #[derive(Debug, Clone, PartialEq)]
 pub struct BoundingBox<Type> {
     _ty: PhantomData<Type>,
-    pub top_left: Point2<f32>,
-    pub top_right: Point2<f32>,
-    pub bottom_right: Point2<f32>,
-    pub bottom_left: Point2<f32>,
+    top_left: Point2<f32>,
+    top_right: Point2<f32>,
+    bottom_right: Point2<f32>,
+    bottom_left: Point2<f32>,
 }
 impl<T> BoundingBox<T> {
+    pub fn top_left(&self) -> Point2<f32> {
+        self.top_left
+    }
+    pub fn top_right(&self) -> Point2<f32> {
+        self.top_right
+    }
+    pub fn bottom_right(&self) -> Point2<f32> {
+        self.bottom_right
+    }
+    pub fn bottom_left(&self) -> Point2<f32> {
+        self.bottom_left
+    }
+
     pub fn straigthen(&self) -> BoundingBox<Straight> {
         let top = self
             .top_left
@@ -131,17 +143,24 @@ impl<T> BoundingBox<T> {
     }
 }
 
-impl BoundingBox<Straight> {
-    pub fn new() -> BoundingBox<Straight> {
+impl BoundingBox<UnParticular> {
+    pub fn new(
+        top_left: Point2<f32>,
+        top_right: Point2<f32>,
+        bottom_right: Point2<f32>,
+        bottom_left: Point2<f32>,
+    ) -> Self {
         BoundingBox {
             _ty: PhantomData,
-            top_left: Point2::origin(),
-            top_right: Point2::origin(),
-            bottom_right: Point2::origin(),
-            bottom_left: Point2::origin(),
+            top_left,
+            top_right,
+            bottom_right,
+            bottom_left,
         }
     }
+}
 
+impl BoundingBox<Straight> {
     pub fn as_unparticular(self) -> BoundingBox<UnParticular> {
         BoundingBox {
             _ty: PhantomData,
@@ -167,10 +186,13 @@ impl BoundingBox<Straight> {
 }
 
 pub trait ShapeBoundingBox: ShapeOp {
-    fn local_bounding_box(&self) -> BoundingBox<UnParticular>;
-    fn global_bounding_box(&self, parent_transform: &Transform2<f32>) -> BoundingBox<UnParticular> {
+    fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>>;
+    fn global_bounding_box(
+        &self,
+        parent_transform: &Transform2<f32>,
+    ) -> Option<BoundingBox<UnParticular>> {
         self.local_bounding_box()
-            .transform(&self.global_transform(parent_transform))
+            .map(|v| v.transform(&self.global_transform(parent_transform)))
     }
 }
 
@@ -242,21 +264,22 @@ impl ShapeOp for Shape {
 }
 
 impl ShapeBoundingBox for Shape {
-    fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
+    fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
         match self {
             Shape::Group {
                 local_transform,
                 shapes,
             } => shapes
                 .iter()
-                .map(|v| v.local_bounding_box())
-                .fold(BoundingBox::new(), |acc, curr| {
-                    BoundingBox::join(acc, curr.straigthen())
-                })
-                .transform(local_transform),
+                .filter_map(|v| v.local_bounding_box())
+                .map(|v| v.straigthen())
+                .reduce(|acc, curr| BoundingBox::join(acc, curr))
+                .map(|v| v.transform(local_transform)),
             Shape::Style { shape, .. } => shape.local_bounding_box(),
             Shape::Ellipse(e) => e.local_bounding_box(),
-            x => todo!("{x:?}"),
+            Shape::Image(i) => i.local_bounding_box(),
+            Shape::Text(t) => t.local_bounding_box(),
+            Shape::Curve(c) => c.local_bounding_box(),
         }
     }
 }

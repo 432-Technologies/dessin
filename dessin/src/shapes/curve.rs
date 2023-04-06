@@ -1,5 +1,6 @@
 mod keypoint;
 
+use super::{BoundingBox, ShapeBoundingBox, UnParticular};
 use crate::shapes::{Shape, ShapeOp};
 pub use keypoint::*;
 use nalgebra::{Point2, Transform2};
@@ -185,5 +186,11 @@ impl ShapeOp for Curve {
 impl From<Curve> for Shape {
     fn from(v: Curve) -> Self {
         Shape::Curve(v)
+    }
+}
+
+impl ShapeBoundingBox for Curve {
+    fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
+        todo!()
     }
 }
