@@ -11,12 +11,18 @@ const ARIAL_BOLD_ITALIC: &[u8] = include_bytes!("Arial Bold Italic.ttf");
 
 #[derive(Debug)]
 pub enum PDFError {
+    PrintPDF(printpdf::Error),
     WriteError(io::Error),
     CurveHasNoStartingPoint(Curve),
 }
 impl From<io::Error> for PDFError {
     fn from(e: io::Error) -> Self {
         PDFError::WriteError(e)
+    }
+}
+impl From<printpdf::Error> for PDFError {
+    fn from(e: printpdf::Error) -> Self {
+        PDFError::PrintPDF(e)
     }
 }
 
@@ -80,16 +86,24 @@ pub trait ToPDF {
         parent_transform: &Transform2<f32>,
     ) -> Result<(), PDFError>;
 
-    // fn to_pdf(&self) -> Result<Vec<u8>, PDFError> {
-    //     let mut res = Cursor::new(vec![]);
-    //     let (doc, page1, layer1) =
-    //         PdfDocument::new("printpdf graphics test", Mm(297.0), Mm(210.0), "Layer 1");
-    //     let current_layer = doc.get_page(page1).get_layer(layer1);
+    fn to_pdf(&self, width: f32, height: f32) -> Result<PdfDocumentReference, PDFError> {
+        let (doc, page, layer) = PdfDocument::new(
+            "",
+            printpdf::Mm(width as f64),
+            printpdf::Mm(height as f64),
+            "Layer",
+        );
+        let current_layer = doc.get_page(page).get_layer(layer);
 
-    //     self.write_pdf(&mut res)?;
-    //     let mut pdf = PdfDocument::new("");
-    //     Ok(unsafe { String::from_utf8_unchecked(res.into_inner()) })
-    // }
+        self.draw_on_layer(&current_layer, width, height)?;
+        Ok(doc)
+    }
+
+    #[inline]
+    fn to_pdf_bytes(&self, width: f32, height: f32) -> Result<Vec<u8>, PDFError> {
+        let pdf = self.to_pdf(width, height)?;
+        Ok(pdf.save_to_bytes()?)
+    }
 }
 
 impl ToPDF for Shape {
@@ -304,11 +318,11 @@ impl ToPDF for Image {
         parent_transform: &Transform2<f32>,
     ) -> Result<(), PDFError> {
         let ImagePosition {
-            center,
+            center: _,
             top_left: _,
             top_right: _,
             bottom_right: _,
-            bottom_left: _,
+            bottom_left,
             width,
             height,
             rotation,
@@ -333,8 +347,8 @@ impl ToPDF for Image {
         printpdf::Image::from_dynamic_image(image).add_to_layer(
             layer.clone(),
             printpdf::ImageTransform {
-                translate_x: Some(printpdf::Mm(center.x as f64)),
-                translate_y: Some(printpdf::Mm(center.y as f64)),
+                translate_x: Some(printpdf::Mm(bottom_left.x as f64)),
+                translate_y: Some(printpdf::Mm(bottom_left.y as f64)),
                 rotate: Some(printpdf::ImageRotation {
                     angle_ccw_degrees: rotation.to_degrees() as f64,
                     rotation_center_x: printpdf::Px((width_px / 2) as usize),
