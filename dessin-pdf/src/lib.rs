@@ -1,19 +1,21 @@
 use dessin::prelude::*;
 use nalgebra::{Transform2, Translation2};
-use printpdf::{PdfDocument, PdfDocumentReference, PdfLayerReference};
-use std::io::{self, Cursor, Write};
+use once_cell::sync::OnceCell;
+use printpdf::{Mm, PdfDocument, PdfDocumentReference, PdfLayerReference};
+use std::{
+    io::{self},
+    sync::{Arc, RwLock},
+};
 
-const DPI: f64 = 96.;
-const ARIAL_REGULAR: &[u8] = include_bytes!("Arial.ttf");
-const ARIAL_BOLD: &[u8] = include_bytes!("Arial Bold.ttf");
-const ARIAL_ITALIC: &[u8] = include_bytes!("Arial Italic.ttf");
-const ARIAL_BOLD_ITALIC: &[u8] = include_bytes!("Arial Bold Italic.ttf");
+static FONT_HOLDER: OnceCell<Arc<RwLock<Vec<dessin::font::FontGroup<printpdf::IndirectFontRef>>>>> =
+    OnceCell::new();
 
 #[derive(Debug)]
 pub enum PDFError {
     PrintPDF(printpdf::Error),
     WriteError(io::Error),
     CurveHasNoStartingPoint(Curve),
+    UnknownBuiltinFont(String),
 }
 impl From<io::Error> for PDFError {
     fn from(e: io::Error) -> Self {
@@ -87,14 +89,74 @@ pub trait ToPDF {
     ) -> Result<(), PDFError>;
 
     fn to_pdf(&self, width: f32, height: f32) -> Result<PdfDocumentReference, PDFError> {
-        let (doc, page, layer) = PdfDocument::new(
-            "",
-            printpdf::Mm(width as f64),
-            printpdf::Mm(height as f64),
-            "Layer",
-        );
-        let current_layer = doc.get_page(page).get_layer(layer);
+        let (doc, page, layer) = PdfDocument::new("", Mm(width as f64), Mm(height as f64), "Layer");
 
+        for dessin::font::FontGroup {
+            regular,
+            bold,
+            italic,
+            bold_italic,
+        } in dessin::font::fonts()
+        {
+            fn find_builtin_font(f: &str) -> Result<printpdf::BuiltinFont, PDFError> {
+                match f {
+                    "TimesRoman" => Ok(printpdf::BuiltinFont::TimesRoman),
+                    "TimesBold" => Ok(printpdf::BuiltinFont::TimesBold),
+                    "TimesItalic" => Ok(printpdf::BuiltinFont::TimesItalic),
+                    "TimesBoldItalic" => Ok(printpdf::BuiltinFont::TimesBoldItalic),
+                    "Helvetica" => Ok(printpdf::BuiltinFont::Helvetica),
+                    "HelveticaBold" => Ok(printpdf::BuiltinFont::HelveticaBold),
+                    "HelveticaOblique" => Ok(printpdf::BuiltinFont::HelveticaOblique),
+                    "HelveticaBoldOblique" => Ok(printpdf::BuiltinFont::HelveticaBoldOblique),
+                    "Courier" => Ok(printpdf::BuiltinFont::Courier),
+                    "CourierOblique" => Ok(printpdf::BuiltinFont::CourierOblique),
+                    "CourierBold" => Ok(printpdf::BuiltinFont::CourierBold),
+                    "CourierBoldOblique" => Ok(printpdf::BuiltinFont::CourierBoldOblique),
+                    "Symbol" => Ok(printpdf::BuiltinFont::Symbol),
+                    "ZapfDingbats" => Ok(printpdf::BuiltinFont::ZapfDingbats),
+                    _ => Err(PDFError::UnknownBuiltinFont(f.to_string())),
+                }
+            }
+
+            let regular = match regular {
+                dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
+                dessin::font::Font::Bytes(b) => doc.add_external_font(b.as_slice())?,
+            };
+
+            let bold = match bold {
+                Some(dessin::font::Font::ByName(n)) => {
+                    Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
+                }
+                Some(dessin::font::Font::Bytes(b)) => Some(doc.add_external_font(b.as_slice())?),
+                None => None,
+            };
+
+            let italic = match italic {
+                Some(dessin::font::Font::ByName(n)) => {
+                    Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
+                }
+                Some(dessin::font::Font::Bytes(b)) => Some(doc.add_external_font(b.as_slice())?),
+                None => None,
+            };
+
+            let bold_italic = match bold_italic {
+                Some(dessin::font::Font::ByName(n)) => {
+                    Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
+                }
+                Some(dessin::font::Font::Bytes(b)) => Some(doc.add_external_font(b.as_slice())?),
+                None => None,
+            };
+
+            let fh = FONT_HOLDER.get_or_init(|| Arc::new(RwLock::new(vec![])));
+            fh.write().unwrap().push(dessin::font::FontGroup {
+                regular,
+                bold,
+                bold_italic,
+                italic,
+            });
+        }
+
+        let current_layer = doc.get_page(page).get_layer(layer);
         self.draw_on_layer(&current_layer, width, height)?;
         Ok(doc)
     }
@@ -113,14 +175,27 @@ impl ToPDF for Shape {
         parent_transform: &Transform2<f32>,
     ) -> Result<(), PDFError> {
         match self {
-            Shape::Image(i) => i.draw_on_layer_with_parent_transform(layer, parent_transform),
-            Shape::Text(t) => t.draw_on_layer_with_parent_transform(layer, parent_transform),
-            Shape::Ellipse(e) => e.draw_on_layer_with_parent_transform(layer, parent_transform),
-            Shape::Curve(c) => c.draw_on_layer_with_parent_transform(layer, parent_transform),
+            Shape::Image(i) => {
+                println!("Image");
+                i.draw_on_layer_with_parent_transform(layer, parent_transform)
+            }
+            Shape::Text(t) => {
+                println!("Text");
+                t.draw_on_layer_with_parent_transform(layer, parent_transform)
+            }
+            Shape::Ellipse(e) => {
+                println!("Ellip");
+                e.draw_on_layer_with_parent_transform(layer, parent_transform)
+            }
+            Shape::Curve(c) => {
+                println!("Curve");
+                c.draw_on_layer_with_parent_transform(layer, parent_transform)
+            }
             Shape::Group {
                 local_transform: _,
                 shapes,
             } => {
+                println!("Group");
                 let transform = self.global_transform(parent_transform);
 
                 for s in shapes {
@@ -134,6 +209,9 @@ impl ToPDF for Shape {
                 stroke,
                 shape,
             } => {
+                println!("3 - Style");
+                dbg!(self);
+
                 if let Some(fill) = fill {
                     let (r, g, b) = match fill {
                         Fill::Color(c) => c.as_rgb_f64(),
@@ -145,8 +223,6 @@ impl ToPDF for Shape {
                         b,
                         icc_profile: None,
                     }));
-
-                    // layer.fil
                 }
 
                 if let Some(stroke) = stroke {
@@ -233,37 +309,28 @@ impl ToPDF for Curve {
                 }) => {
                     if let Some(start) = start {
                         points.push((
-                            printpdf::Point::new(
-                                printpdf::Mm(start.x as f64),
-                                printpdf::Mm(start.y as f64),
-                            ),
+                            printpdf::Point::new(Mm(start.x as f64), Mm(start.y as f64)),
                             true,
                         ));
                     }
                     points.push((
                         printpdf::Point::new(
-                            printpdf::Mm(start_control.x as f64),
-                            printpdf::Mm(start_control.y as f64),
+                            Mm(start_control.x as f64),
+                            Mm(start_control.y as f64),
                         ),
                         true,
                     ));
                     points.push((
-                        printpdf::Point::new(
-                            printpdf::Mm(end_control.x as f64),
-                            printpdf::Mm(end_control.y as f64),
-                        ),
+                        printpdf::Point::new(Mm(end_control.x as f64), Mm(end_control.y as f64)),
                         true,
                     ));
                     points.push((
-                        printpdf::Point::new(
-                            printpdf::Mm(end.x as f64),
-                            printpdf::Mm(end.y as f64),
-                        ),
+                        printpdf::Point::new(Mm(end.x as f64), Mm(end.y as f64)),
                         next_is_bezier,
                     ));
                 }
                 Keypoint::Point(p) => points.push((
-                    printpdf::Point::new(printpdf::Mm(p.x as f64), printpdf::Mm(p.y as f64)),
+                    printpdf::Point::new(Mm(p.x as f64), Mm(p.y as f64)),
                     next_is_bezier,
                 )),
             }
@@ -301,10 +368,33 @@ impl ToPDF for Text {
         layer: &PdfLayerReference,
         parent_transform: &Transform2<f32>,
     ) -> Result<(), PDFError> {
-        let pos = self.position(parent_transform);
+        let TextPosition {
+            text,
+            align,
+            font_weight,
+            on_curve,
+            font_size,
+            reference_start: bottom_left,
+        } = self.position(parent_transform);
+
+        let fonts = &FONT_HOLDER.get().unwrap().read().unwrap()[self.font.unwrap_or(0)];
+        let font = match font_weight {
+            FontWeight::Regular => &fonts.regular,
+            FontWeight::Bold => fonts.bold.as_ref().unwrap_or_else(|| &fonts.regular),
+            FontWeight::BoldItalic => fonts.bold_italic.as_ref().unwrap_or_else(|| &fonts.regular),
+            FontWeight::Italic => fonts.italic.as_ref().unwrap_or_else(|| &fonts.regular),
+        };
 
         if let Some(curve) = &self.on_curve {
+            todo!()
         } else {
+            layer.use_text(
+                text,
+                font_size as f64,
+                Mm(bottom_left.x as f64),
+                Mm(bottom_left.y as f64),
+                font,
+            );
         }
 
         Ok(())
@@ -347,8 +437,8 @@ impl ToPDF for Image {
         printpdf::Image::from_dynamic_image(image).add_to_layer(
             layer.clone(),
             printpdf::ImageTransform {
-                translate_x: Some(printpdf::Mm(bottom_left.x as f64)),
-                translate_y: Some(printpdf::Mm(bottom_left.y as f64)),
+                translate_x: Some(Mm(bottom_left.x as f64)),
+                translate_y: Some(Mm(bottom_left.y as f64)),
                 rotate: Some(printpdf::ImageRotation {
                     angle_ccw_degrees: rotation.to_degrees() as f64,
                     rotation_center_x: printpdf::Px((width_px / 2) as usize),
@@ -363,51 +453,3 @@ impl ToPDF for Image {
         Ok(())
     }
 }
-// impl ToPDF for d
-
-// pub struct PDF(pub PdfDocumentReference);
-// impl PDF {
-//     pub fn into_bytes(self) -> Result<Vec<u8>, Box<dyn Error>> {
-//         let mut buff = BufWriter::new(vec![]);
-//         self.0.save(&mut buff)?;
-//         Ok(buff.into_inner()?)
-//     }
-// }
-
-// pub trait ToPDF {
-//     fn to_pdf(&self) -> Result<PDF, Box<dyn Error>>;
-// }
-
-// impl ToPDF for Drawing {
-//     fn to_pdf(&self) -> Result<PDF, Box<dyn Error>> {
-//         let Vec2 {
-//             x: width,
-//             y: height,
-//         } = self.canvas_size();
-
-//         let (doc, page1, layer1) =
-//             PdfDocument::new("PDF", Mm(width as f64), Mm(height as f64), "Layer1");
-
-//         let font = doc.add_external_font(ARIAL_REGULAR)?;
-//         let current_layer = doc.get_page(page1).get_layer(layer1);
-
-//         let offset = vec2(self.canvas_size().x / 2., self.canvas_size().x / 2.);
-
-//         self.shapes()
-//             .iter()
-//             .map(|v| v.to_pdf_part(DPI, offset, &font, &current_layer))
-//             .collect::<Result<(), Box<dyn std::error::Error>>>()?;
-
-//         Ok(PDF(doc))
-//     }
-// }
-
-// trait ToPDFPart {
-//     fn to_pdf_part(
-//         &self,
-//         dpi: f64,
-//         offset: Vec2,
-//         font: &IndirectFontRef,
-//         layer: &PdfLayerReference,
-//     ) -> Result<(), Box<dyn Error>>;
-// }

@@ -58,6 +58,16 @@ macro_rules! dessin {
 			shape
 		}
 	};
+	(if ($e:expr) { $($rest:tt)* } else { $($else_rest:tt)* }) => {
+		{
+			if $e { Shape::from(dessin! ($($rest)*)) } else { Shape::from(dessin! ($($else_rest)*)) }
+		}
+	};
+	(if ($e:expr) { $($rest:tt)* }) => {
+		{
+			Shape::from(if $e { Shape::from(dessin! ($($rest)*)) } else { dessin! () })
+		}
+	};
 	(var |$v:ident|: #($($fn_name:ident={$value:expr})*)) => {
 		{
 			#[allow(unused_mut)]

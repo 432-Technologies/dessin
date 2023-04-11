@@ -1,5 +1,5 @@
+use ::image::ImageFormat;
 use dessin::prelude::*;
-use image::ImageFormat;
 use nalgebra::Transform2;
 use std::io::{self, Cursor, Write};
 
@@ -136,6 +136,7 @@ impl ToSVG for Shape {
                     font_weight,
                     on_curve,
                     font_size,
+                    reference_start: bottom_left,
                 } = t.position(parent_transform);
 
                 let id = rand::random::<u64>().to_string();

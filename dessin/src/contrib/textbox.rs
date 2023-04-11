@@ -8,6 +8,7 @@
 
 use crate::prelude::{FontWeight, Shape, ShapeOp, Text, TextAlign};
 use fontdue::{Font, FontSettings};
+use image::EncodableLayout;
 use nalgebra::Transform2;
 
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -56,12 +57,12 @@ impl From<TextBox> for Shape {
             height,
         }: TextBox,
     ) -> Self {
-        const ARIAL_REGULAR: &[u8] = include_bytes!("Arial.ttf");
-        // const ARIAL_BOLD: &[u8] = include_bytes!("Arial Bold.ttf");
-        // const ARIAL_ITALIC: &[u8] = include_bytes!("Arial Italic.ttf");
-        // const ARIAL_BOLD_ITALIC: &[u8] = include_bytes!("Arial Bold Italic.ttf");
+        let fonts = crate::font::get(0);
+        let crate::font::Font::Bytes(raw_font) = fonts.get(FontWeight::Regular) else {
+			todo!()
+		};
 
-        let font = Font::from_bytes(ARIAL_REGULAR, FontSettings::default()).unwrap();
+        let font = Font::from_bytes(raw_font.as_bytes(), FontSettings::default()).unwrap();
 
         fn size_of(font: &Font, s: &str, font_size: f32) -> Option<f32> {
             s.chars()
@@ -122,6 +123,7 @@ impl From<TextBox> for Shape {
                     font_weight: FontWeight::Regular,
                     on_curve: None,
                     font_size,
+                    font: None,
                 })
             })
             .collect();

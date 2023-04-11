@@ -1,7 +1,7 @@
-mod curve;
-mod ellipse;
-mod image;
-mod text;
+pub(crate) mod curve;
+pub(crate) mod ellipse;
+pub(crate) mod image;
+pub(crate) mod text;
 
 pub use self::image::*;
 pub use curve::*;

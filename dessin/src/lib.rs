@@ -9,3 +9,7 @@ pub mod prelude {
     pub use crate::shapes::*;
     pub use crate::style::*;
 }
+
+pub mod font {
+    pub use crate::shapes::text::font::*;
+}
