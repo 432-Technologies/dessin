@@ -279,66 +279,82 @@ impl ToPDF for Curve {
         layer: &PdfLayerReference,
         parent_transform: &Transform2<f32>,
     ) -> Result<(), PDFError> {
-        let CurvePosition { keypoints, closed } = self.position(parent_transform);
+        fn place_keypoints(
+            curve: &Curve,
+            parent_transform: &Transform2<f32>,
+        ) -> Result<Vec<(printpdf::Point, bool)>, PDFError> {
+            let CurvePosition {
+                keypoints,
+                closed: _,
+            } = curve.position(parent_transform);
 
-        let mut points = Vec::with_capacity(self.keypoints.len());
+            let mut points = Vec::with_capacity(curve.keypoints.len());
 
-        for idx in 0..keypoints.len() {
-            let k = &keypoints[idx];
-            let next_is_bezier = keypoints
-                .get(idx)
-                .map(|v| {
-                    if let Keypoint::Bezier(Bezier { start, .. }) = v {
-                        // start.is_none()
-                        true
-                    } else {
-                        false
+            for idx in 0..keypoints.len() {
+                let k = &keypoints[idx];
+                let next_is_bezier = keypoints
+                    .get(idx)
+                    .map(|v| {
+                        if let Keypoint::Bezier(Bezier { start: _, .. }) = v {
+                            // start.is_none()
+                            true
+                        } else {
+                            false
+                        }
+                    })
+                    .unwrap_or(false);
+
+                match k {
+                    Keypoint::Curve(c) => {
+                        let parent_transform = curve.global_transform(parent_transform);
+                        points.extend(place_keypoints(c, &parent_transform)?);
                     }
-                })
-                .unwrap_or(false);
-
-            match k {
-                Keypoint::Curve(c) => {
-                    todo!()
-                }
-                Keypoint::Bezier(Bezier {
-                    start,
-                    start_control,
-                    end_control,
-                    end,
-                }) => {
-                    if let Some(start) = start {
+                    Keypoint::Bezier(Bezier {
+                        start,
+                        start_control,
+                        end_control,
+                        end,
+                    }) => {
+                        if let Some(start) = start {
+                            points.push((
+                                printpdf::Point::new(Mm(start.x as f64), Mm(start.y as f64)),
+                                true,
+                            ));
+                        }
                         points.push((
-                            printpdf::Point::new(Mm(start.x as f64), Mm(start.y as f64)),
+                            printpdf::Point::new(
+                                Mm(start_control.x as f64),
+                                Mm(start_control.y as f64),
+                            ),
                             true,
                         ));
+                        points.push((
+                            printpdf::Point::new(
+                                Mm(end_control.x as f64),
+                                Mm(end_control.y as f64),
+                            ),
+                            true,
+                        ));
+                        points.push((
+                            printpdf::Point::new(Mm(end.x as f64), Mm(end.y as f64)),
+                            next_is_bezier,
+                        ));
                     }
-                    points.push((
-                        printpdf::Point::new(
-                            Mm(start_control.x as f64),
-                            Mm(start_control.y as f64),
-                        ),
-                        true,
-                    ));
-                    points.push((
-                        printpdf::Point::new(Mm(end_control.x as f64), Mm(end_control.y as f64)),
-                        true,
-                    ));
-                    points.push((
-                        printpdf::Point::new(Mm(end.x as f64), Mm(end.y as f64)),
+                    Keypoint::Point(p) => points.push((
+                        printpdf::Point::new(Mm(p.x as f64), Mm(p.y as f64)),
                         next_is_bezier,
-                    ));
+                    )),
                 }
-                Keypoint::Point(p) => points.push((
-                    printpdf::Point::new(Mm(p.x as f64), Mm(p.y as f64)),
-                    next_is_bezier,
-                )),
             }
+
+            Ok(points)
         }
+
+        let points = place_keypoints(self, parent_transform)?;
 
         let l = printpdf::Line {
             points,
-            is_closed: closed,
+            is_closed: self.closed,
             has_fill: false,
             has_stroke: true,
             is_clipping_path: false,
@@ -357,8 +373,7 @@ impl ToPDF for Ellipse {
         layer: &PdfLayerReference,
         parent_transform: &Transform2<f32>,
     ) -> Result<(), PDFError> {
-        self.as_curve()
-            .draw_on_layer_with_parent_transform(layer, parent_transform)
+        Curve::from(self.clone()).draw_on_layer_with_parent_transform(layer, parent_transform)
     }
 }
 

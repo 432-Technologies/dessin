@@ -1,4 +1,7 @@
-use crate::shapes::{Shape, ShapeOp};
+use crate::{
+    prelude::Circle,
+    shapes::{Shape, ShapeOp},
+};
 use nalgebra::{Point2, Scale2, Transform2, Unit, Vector2};
 
 use super::{BoundingBox, Curve, ShapeBoundingBox, UnParticular};
@@ -52,11 +55,6 @@ impl Ellipse {
         self
     }
 
-    #[inline]
-    pub fn as_curve(&self) -> Curve {
-        crate::contrib::Circle::from(self.clone()).as_curve()
-    }
-
     pub fn position(&self, parent_transform: &Transform2<f32>) -> EllipsePosition {
         let transform = self.global_transform(parent_transform);
 
@@ -73,6 +71,13 @@ impl Ellipse {
             semi_minor_axis: semi_minor_axis.magnitude(),
             rotation,
         }
+    }
+}
+
+impl From<Ellipse> for Curve {
+    #[inline]
+    fn from(e: Ellipse) -> Self {
+        Circle::from(e).into()
     }
 }
 

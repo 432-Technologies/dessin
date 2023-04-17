@@ -143,9 +143,6 @@ impl Curve {
                         panic!("")
                     }
                 }
-                _ => {
-                    todo!()
-                }
             }
         }
 
@@ -191,6 +188,11 @@ impl From<Curve> for Shape {
 
 impl ShapeBoundingBox for Curve {
     fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
-        todo!()
+        self.keypoints
+            .iter()
+            .filter_map(|v| v.bounding_box())
+            .map(|v| v.straigthen())
+            .reduce(|acc, curr| acc.join(curr))
+            .map(|v| v.as_unparticular())
     }
 }

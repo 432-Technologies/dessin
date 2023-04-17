@@ -116,8 +116,9 @@ impl ToSVG for Shape {
                 write!(w, "<g ")?;
                 write_fill(w, fill)?;
                 if let Some(stroke) = stroke {
+                    let stroke = *parent_transform * *stroke;
                     write!(w, " ")?;
-                    write_stroke(w, stroke)?;
+                    write_stroke(w, &stroke)?;
                 }
                 write!(w, ">")?;
                 shape.write_raw_svg(w, parent_transform)?;
@@ -132,11 +133,20 @@ impl ToSVG for Shape {
                 } = e.position(parent_transform);
                 write!(
                     w,
-                    r#"<ellipse cx="{cx}" cy="{cy}" rx="{semi_major_axis}" ry="{semi_minor_axis}" transform="rotate({rot}rad)"/>"#,
+                    r#"<ellipse cx="{cx}" cy="{cy}" rx="{semi_major_axis}" ry="{semi_minor_axis}""#,
                     cx = center.x,
-                    cy = center.y,
-                    rot = -rotation.to_degrees()
+                    cy = center.y
                 )?;
+
+                if rotation != 0. {
+                    write!(
+                        w,
+                        r#" transform="rotate({rot}rad)""#,
+                        rot = -rotation.to_degrees()
+                    )?;
+                }
+
+                write!(w, "/>")?;
             }
             Shape::Text(t) => {
                 let TextPosition {
@@ -221,9 +231,7 @@ impl ToSVG for Shape {
                     x = center.x,
                     y = center.y,
                 )?;
-            } // _x => {
-              //     todo!("{_x:?}")
-              // }
+            }
         }
 
         Ok(())

@@ -50,6 +50,13 @@ impl ShapeOp for Line {
 
 impl From<Line> for Shape {
     #[inline]
+    fn from(l: Line) -> Self {
+        Shape::Curve(Curve::from(l))
+    }
+}
+
+impl From<Line> for Curve {
+    #[inline]
     fn from(
         Line {
             local_transform,
@@ -57,10 +64,10 @@ impl From<Line> for Shape {
             to,
         }: Line,
     ) -> Self {
-        Shape::Curve(Curve {
+        Curve {
             local_transform,
             closed: false,
             keypoints: vec![Keypoint::Point(from), Keypoint::Point(to)],
-        })
+        }
     }
 }

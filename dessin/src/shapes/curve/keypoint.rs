@@ -1,4 +1,7 @@
-use crate::shapes::ShapeOpWith;
+use crate::{
+    prelude::{BoundingBox, ShapeBoundingBox, UnParticular},
+    shapes::ShapeOpWith,
+};
 
 use super::Curve;
 use nalgebra::{Point, Point2, Transform2, Translation, Vector2};
@@ -15,6 +18,24 @@ impl Keypoint {
             Keypoint::Point(p) => Keypoint::Point(parent_transform * p),
             Keypoint::Bezier(b) => Keypoint::Bezier(b.transform(parent_transform)),
             Keypoint::Curve(c) => Keypoint::Curve(c.clone().with_transform(*parent_transform)),
+        }
+    }
+
+    pub fn bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
+        match self {
+            Keypoint::Curve(c) => c.local_bounding_box(),
+            Keypoint::Point(p) => Some(BoundingBox::at(*p).as_unparticular()),
+            Keypoint::Bezier(b) => {
+                let mut bb = BoundingBox::at(b.start_control)
+                    .join(BoundingBox::at(b.end_control))
+                    .join(BoundingBox::at(b.end));
+
+                if let Some(start) = b.start {
+                    bb = bb.join(BoundingBox::at(start))
+                }
+
+                Some(bb.as_unparticular())
+            }
         }
     }
 }

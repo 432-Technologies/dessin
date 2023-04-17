@@ -1,8 +1,9 @@
 use crate::shapes::{Shape, ShapeOp};
-use nalgebra::{Rotation2, Scale2, Transform2, Translation2};
+use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
 use std::{
+    f32::consts::SQRT_2,
     fmt,
-    ops::{Deref, DerefMut},
+    ops::{Deref, DerefMut, Mul},
 };
 
 pub const fn rbg(r: u8, g: u8, b: u8) -> Color {
@@ -109,6 +110,12 @@ pub enum Fill {
     Color(Color),
 }
 
+impl From<Color> for Fill {
+    fn from(c: Color) -> Self {
+        Fill::Color(c)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Stroke {
     Full {
@@ -121,6 +128,39 @@ pub enum Stroke {
         on: f32,
         off: f32,
     },
+}
+
+impl From<(Color, f32)> for Stroke {
+    fn from((color, width): (Color, f32)) -> Self {
+        Stroke::Full { color, width }
+    }
+}
+
+impl Mul<Stroke> for Transform2<f32> {
+    type Output = Stroke;
+    fn mul(self, rhs: Stroke) -> Self::Output {
+        match rhs {
+            Stroke::Full { color, width } => Stroke::Full {
+                color,
+                width: (self * Vector2::new(SQRT_2, SQRT_2)).magnitude() * width,
+            },
+            Stroke::Dashed {
+                color,
+                width,
+                on,
+                off,
+            } => {
+                let factor = (self * Vector2::new(SQRT_2, SQRT_2)).magnitude();
+
+                Stroke::Dashed {
+                    color,
+                    width: width * factor,
+                    on: on * factor,
+                    off: off * factor,
+                }
+            }
+        }
+    }
 }
 
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -151,8 +191,8 @@ impl<T> Style<T> {
     }
 
     #[inline]
-    pub fn fill(&mut self, fill: Fill) -> &mut Self {
-        self.fill = Some(fill);
+    pub fn fill<F: Into<Fill>>(&mut self, fill: F) -> &mut Self {
+        self.fill = Some(fill.into());
         self
     }
     #[inline]

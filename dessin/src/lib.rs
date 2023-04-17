@@ -3,6 +3,9 @@ mod macros;
 pub mod shapes;
 pub mod style;
 
+pub use ::image;
+pub use ::nalgebra;
+
 pub mod prelude {
     pub use crate::contrib::*;
     pub use crate::dessin;

@@ -170,6 +170,16 @@ impl BoundingBox<Straight> {
         }
     }
 
+    pub fn at(p: Point2<f32>) -> Self {
+        BoundingBox {
+            _ty: PhantomData,
+            top_left: p,
+            top_right: p,
+            bottom_right: p,
+            bottom_left: p,
+        }
+    }
+
     pub fn as_unparticular(self) -> BoundingBox<UnParticular> {
         BoundingBox {
             _ty: PhantomData,
@@ -181,6 +191,19 @@ impl BoundingBox<Straight> {
     }
 
     pub fn join(mut self, other: BoundingBox<Straight>) -> BoundingBox<Straight> {
+        self.top_left.x = self.top_left.x.max(other.top_left.x);
+        self.top_left.y = self.top_left.y.min(other.top_left.y);
+        self.top_right.x = self.top_right.x.min(other.top_right.x);
+        self.top_right.y = self.top_right.y.min(other.top_right.y);
+        self.bottom_right.x = self.bottom_right.x.min(other.bottom_right.x);
+        self.bottom_right.y = self.bottom_right.y.max(other.bottom_right.y);
+        self.bottom_left.x = self.bottom_left.x.max(other.bottom_left.x);
+        self.bottom_left.y = self.bottom_left.y.max(other.bottom_left.y);
+
+        self
+    }
+
+    pub fn intersect(mut self, other: BoundingBox<Straight>) -> BoundingBox<Straight> {
         self.top_left.x = self.top_left.x.min(other.top_left.x);
         self.top_left.y = self.top_left.y.max(other.top_left.y);
         self.top_right.x = self.top_right.x.max(other.top_right.x);
@@ -251,7 +274,9 @@ impl ShapeOp for Shape {
             Shape::Text(v) => {
                 v.transform(transform_matrix);
             }
-            _ => todo!(),
+            Shape::Curve(v) => {
+                v.transform(transform_matrix);
+            }
         };
 
         self
@@ -267,7 +292,7 @@ impl ShapeOp for Shape {
             Shape::Ellipse(v) => v.local_transform(),
             Shape::Image(v) => v.local_transform(),
             Shape::Text(v) => v.local_transform(),
-            _ => todo!(),
+            Shape::Curve(v) => v.local_transform(),
         }
     }
 }
@@ -282,7 +307,7 @@ impl ShapeBoundingBox for Shape {
                 .iter()
                 .filter_map(|v| v.global_bounding_box(local_transform))
                 .map(|v| v.straigthen())
-                .reduce(|acc, curr| BoundingBox::join(acc, curr))
+                .reduce(|acc, curr| BoundingBox::intersect(acc, curr))
                 .map(|v| v.transform(local_transform)),
             Shape::Style { shape, .. } => shape.local_bounding_box(),
             Shape::Ellipse(e) => e.local_bounding_box(),
