@@ -1,7 +1,10 @@
 use ::image::ImageFormat;
 use dessin::prelude::*;
 use nalgebra::Transform2;
-use std::io::{self, Cursor, Write};
+use std::{
+    fmt,
+    io::{self, Cursor, Write},
+};
 
 #[derive(Debug)]
 pub enum SvgError {
@@ -13,6 +16,12 @@ impl From<io::Error> for SvgError {
         SvgError::WriteError(e)
     }
 }
+impl fmt::Display for SvgError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{self:?}")
+    }
+}
+impl std::error::Error for SvgError {}
 
 #[derive(Default)]
 pub struct SVGOptions {

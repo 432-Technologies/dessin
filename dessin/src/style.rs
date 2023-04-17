@@ -89,7 +89,7 @@ impl Color {
 
     pub fn as_rgb_f64(&self) -> (f64, f64, f64) {
         let (r, g, b) = self.as_rgb();
-        (r as f64, g as f64, b as f64)
+        (r as f64 / 255., g as f64 / 255., b as f64 / 255.)
     }
 }
 
