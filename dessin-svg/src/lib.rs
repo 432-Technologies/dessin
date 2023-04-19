@@ -1,6 +1,6 @@
 use ::image::ImageFormat;
 use dessin::prelude::*;
-use nalgebra::Transform2;
+use nalgebra::{Scale2, Transform2};
 use std::{
     fmt,
     io::{self, Cursor, Write},
@@ -53,7 +53,9 @@ pub trait ToSVG: ShapeBoundingBox {
             offset_y = -max_y / 2.,
         )?;
 
-        self.write_raw_svg(w, &Transform2::default())?;
+        let parent_transform = nalgebra::convert(Scale2::new(1., -1.));
+
+        self.write_raw_svg(w, &parent_transform)?;
 
         write!(w, "</svg>")?;
 
@@ -155,7 +157,7 @@ impl ToSVG for Shape {
                     font_weight,
                     on_curve,
                     font_size,
-                    reference_start: bottom_left,
+                    reference_start,
                 } = t.position(parent_transform);
 
                 let id = rand::random::<u64>().to_string();
@@ -168,10 +170,17 @@ impl ToSVG for Shape {
                     FontWeight::Italic | FontWeight::BoldItalic => "italic",
                     _ => "normal",
                 };
+                let align = match align {
+                    TextAlign::Center => "middle",
+                    TextAlign::Left => "start",
+                    TextAlign::Right => "end",
+                };
 
                 write!(
                     w,
-                    r#"<text font-size="{font_size}px" font-weight="{weight}" text-style="{text_style}">"#
+                    r#"<text x="{x}" y="{y}" text-anchor="{align}" font-size="{font_size}px" font-weight="{weight}" text-style="{text_style}">"#,
+                    x = reference_start.x,
+                    y = reference_start.y,
                 )?;
                 if let Some(CurvePosition { keypoints, closed }) = on_curve {
                     write!(w, r#"<path id="{id}" d=""#)?;

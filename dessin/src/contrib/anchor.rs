@@ -70,17 +70,17 @@ impl<T: ShapeOp> ShapeOp for Anchor<T> {
     }
 
     #[inline]
-    fn translate(&mut self, translation: Translation2<f32>) -> &mut Self {
+    fn translate<U: Into<Translation2<f32>>>(&mut self, translation: U) -> &mut Self {
         self.shape.translate(translation);
         self
     }
     #[inline]
-    fn scale(&mut self, scale: Scale2<f32>) -> &mut Self {
+    fn scale<S: Into<Scale2<f32>>>(&mut self, scale: S) -> &mut Self {
         self.shape.scale(scale);
         self
     }
     #[inline]
-    fn rotate(&mut self, rotation: Rotation2<f32>) -> &mut Self {
+    fn rotate<R: Into<Rotation2<f32>>>(&mut self, rotation: R) -> &mut Self {
         self.shape.rotate(rotation);
         self
     }

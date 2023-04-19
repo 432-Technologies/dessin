@@ -180,12 +180,12 @@ impl<T> Style<T> {
     }
 
     #[inline]
-    pub fn stroke(&mut self, stroke: Stroke) -> &mut Self {
-        self.stroke = Some(stroke);
+    pub fn stroke<S: Into<Stroke>>(&mut self, stroke: S) -> &mut Self {
+        self.stroke = Some(stroke.into());
         self
     }
     #[inline]
-    pub fn with_stroke(mut self, stroke: Stroke) -> Self {
+    pub fn with_stroke<S: Into<Stroke>>(mut self, stroke: S) -> Self {
         self.stroke(stroke);
         self
     }
@@ -196,7 +196,7 @@ impl<T> Style<T> {
         self
     }
     #[inline]
-    pub fn with_fill(mut self, fill: Fill) -> Self {
+    pub fn with_fill<F: Into<Fill>>(mut self, fill: F) -> Self {
         self.fill(fill);
         self
     }
@@ -243,17 +243,17 @@ impl<T: ShapeOp> ShapeOp for Style<T> {
     }
 
     #[inline]
-    fn translate(&mut self, translation: Translation2<f32>) -> &mut Self {
+    fn translate<U: Into<Translation2<f32>>>(&mut self, translation: U) -> &mut Self {
         self.shape.translate(translation);
         self
     }
     #[inline]
-    fn scale(&mut self, scale: Scale2<f32>) -> &mut Self {
+    fn scale<S: Into<Scale2<f32>>>(&mut self, scale: S) -> &mut Self {
         self.shape.scale(scale);
         self
     }
     #[inline]
-    fn rotate(&mut self, rotation: Rotation2<f32>) -> &mut Self {
+    fn rotate<R: Into<Rotation2<f32>>>(&mut self, rotation: R) -> &mut Self {
         self.shape.rotate(rotation);
         self
     }

@@ -22,6 +22,14 @@ pub enum TextAlign {
     Right,
 }
 
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
+pub enum TextVerticalAlign {
+    #[default]
+    Bottom,
+    Center,
+    Top,
+}
+
 pub struct TextPosition<'a> {
     pub text: &'a str,
     pub align: TextAlign,
@@ -36,6 +44,7 @@ pub struct Text {
     pub text: String,
     pub local_transform: Transform2<f32>,
     pub align: TextAlign,
+    pub vertical_align: TextVerticalAlign,
     pub font_weight: FontWeight,
     pub on_curve: Option<Curve>,
     pub font_size: f32,
@@ -70,6 +79,17 @@ impl Text {
     }
 
     #[inline]
+    pub fn vertical_align(&mut self, vertical_align: TextVerticalAlign) -> &mut Self {
+        self.vertical_align = vertical_align;
+        self
+    }
+    #[inline]
+    pub fn with_vertical_align(mut self, vertical_align: TextVerticalAlign) -> Self {
+        self.vertical_align(vertical_align);
+        self
+    }
+
+    #[inline]
     pub fn font_weight(&mut self, font_weight: FontWeight) -> &mut Self {
         self.font_weight = font_weight;
         self
@@ -100,7 +120,15 @@ impl Text {
         let transform = self.global_transform(parent_transform);
 
         let font_size = self.font_size * (transform * Vector2::new(0., 1.)).magnitude();
-        let bottom_left = transform * Point2::new(0., font_size / 2.);
+        let reference_start = transform
+            * Point2::new(
+                0.,
+                match self.vertical_align {
+                    TextVerticalAlign::Bottom => font_size / 2.,
+                    TextVerticalAlign::Center => 0.,
+                    TextVerticalAlign::Top => -font_size / 2.,
+                },
+            );
 
         TextPosition {
             text: &self.text,
@@ -108,7 +136,7 @@ impl Text {
             font_weight: self.font_weight,
             on_curve: self.on_curve.as_ref().map(|v| v.position(&transform)),
             font_size,
-            reference_start: bottom_left,
+            reference_start,
         }
     }
 }

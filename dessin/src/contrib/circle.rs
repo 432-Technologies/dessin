@@ -49,15 +49,15 @@ impl From<Circle> for Curve {
     fn from(Circle { local_transform }: Circle) -> Self {
         let mut q1 = Bezier {
             start: None,
-            start_control: Point2::new(1., 0.552284749831),
-            end_control: Point2::new(0.552284749831, 1.),
-            end: Point2::new(0., 1.),
+            start_control: Point2::new(0.5, 0.552284749831 / 2.),
+            end_control: Point2::new(0.552284749831 / 2., 0.5),
+            end: Point2::new(0., 0.5),
         };
         let q2 = q1.transform(&na::convert(Rotation2::new(FRAC_PI_2)));
         let q3 = q2.transform(&na::convert(Rotation2::new(FRAC_PI_2)));
         let q4 = q3.transform(&na::convert(Rotation2::new(FRAC_PI_2)));
 
-        q1.start = Some(Point2::new(1., 0.));
+        q1.start = Some(Point2::new(0.5, 0.));
 
         Curve {
             keypoints: vec![

@@ -120,6 +120,7 @@ impl From<TextBox> for Shape {
                     text: v,
                     local_transform,
                     align: TextAlign::Left,
+                    vertical_align: crate::prelude::TextVerticalAlign::Bottom,
                     font_weight: FontWeight::Regular,
                     on_curve: None,
                     font_size,

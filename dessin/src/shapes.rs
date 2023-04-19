@@ -15,18 +15,18 @@ pub trait ShapeOp: Into<Shape> + Clone {
     fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self;
 
     #[inline]
-    fn translate(&mut self, translation: Translation2<f32>) -> &mut Self {
-        self.transform(na::convert::<_, Transform2<f32>>(translation));
+    fn translate<T: Into<Translation2<f32>>>(&mut self, translation: T) -> &mut Self {
+        self.transform(na::convert::<_, Transform2<f32>>(translation.into()));
         self
     }
     #[inline]
-    fn scale(&mut self, scale: Scale2<f32>) -> &mut Self {
-        self.transform(na::convert::<_, Transform2<f32>>(scale));
+    fn scale<S: Into<Scale2<f32>>>(&mut self, scale: S) -> &mut Self {
+        self.transform(na::convert::<_, Transform2<f32>>(scale.into()));
         self
     }
     #[inline]
-    fn rotate(&mut self, rotation: Rotation2<f32>) -> &mut Self {
-        self.transform(na::convert::<_, Transform2<f32>>(rotation));
+    fn rotate<R: Into<Rotation2<f32>>>(&mut self, rotation: R) -> &mut Self {
+        self.transform(na::convert::<_, Transform2<f32>>(rotation.into()));
         self
     }
 

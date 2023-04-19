@@ -58,18 +58,20 @@ impl From<Arc> for Curve {
         } else {
             let mut arcs = vec![];
             let mut start = start_rad;
-            while span > 0. {
-                let s = span.max(FRAC_PI_2);
-
-                let start_rot = Rotation2::new(start);
-                let end_rot = Rotation2::new(start + s);
+            while span > 1e-6 {
+                let rot = Rotation2::new(start);
+                let end_rot = Rotation2::new(start + (FRAC_PI_2 - span.min(FRAC_PI_2)));
 
                 arcs.push(
                     Bezier {
-                        start: Some(start_rot * Point2::new(1., 0.)),
-                        start_control: start_rot * Point2::new(1., 0.552284749831),
-                        end_control: end_rot * Point2::new(0.552284749831, 1.),
-                        end: end_rot * Point2::new(0., 1.),
+                        start: if arcs.is_empty() {
+                            Some(rot * Point2::new(0.5, 0.))
+                        } else {
+                            None
+                        },
+                        start_control: rot * Point2::new(0.5, 0.552284749831 / 2.),
+                        end_control: end_rot * Point2::new(0.552284749831 / 2., 0.5),
+                        end: end_rot * Point2::new(0., 0.5),
                     }
                     .into(),
                 );

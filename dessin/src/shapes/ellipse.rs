@@ -23,12 +23,12 @@ pub struct Ellipse {
 
 impl Ellipse {
     #[inline]
-    pub fn axis(&mut self, scale: Scale2<f32>) -> &mut Self {
+    pub fn axis<S: Into<Scale2<f32>>>(&mut self, scale: S) -> &mut Self {
         self.scale(scale);
         self
     }
     #[inline]
-    pub fn with_axis(mut self, scale: Scale2<f32>) -> Self {
+    pub fn with_axis<S: Into<Scale2<f32>>>(mut self, scale: S) -> Self {
         self.axis(scale);
         self
     }
