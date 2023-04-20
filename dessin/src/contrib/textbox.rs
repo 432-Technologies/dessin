@@ -17,7 +17,9 @@ pub struct TextBox {
     pub font_size: f32,
     pub line_spacing: f32,
     pub text: String,
+    /// Dimension on the x-axis
     pub width: f32,
+    /// Dimension on the y-axis
     pub height: Option<f32>,
 }
 impl TextBox {

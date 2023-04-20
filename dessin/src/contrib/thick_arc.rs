@@ -1,10 +1,13 @@
 use crate::prelude::*;
+use core::f32::consts::PI;
 use nalgebra::{Point2, Transform2};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct ThickArc {
     pub local_transform: Transform2<f32>,
+    /// start angle in radian
     pub start_angle: f32,
+    /// end angle in radian
     pub end_angle: f32,
     pub inner_radius: f32,
     pub outer_radius: f32,
@@ -40,6 +43,15 @@ impl ThickArc {
     #[inline]
     pub fn with_start_angle(mut self, start_angle: f32) -> Self {
         self.start_angle(start_angle);
+        self
+    }
+
+    pub fn span_angle(&mut self, span_angle: f32) -> &mut Self {
+        self.end_angle = (self.start_angle + span_angle) % (2. * PI);
+        self
+    }
+    pub fn with_span_angle(mut self, span_angle: f32) -> Self {
+        self.end_angle((self.start_angle + span_angle) % (2. * PI));
         self
     }
 

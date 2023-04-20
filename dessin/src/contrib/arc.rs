@@ -5,7 +5,9 @@ use std::f32::consts::{FRAC_PI_2, PI};
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Arc {
     pub local_transform: Transform2<f32>,
+    /// start angle in radian
     pub start_angle: f32,
+    /// end angle in radian
     pub end_angle: f32,
 }
 impl Arc {

@@ -175,27 +175,14 @@ impl ToPDF for Shape {
         parent_transform: &Transform2<f32>,
     ) -> Result<(), PDFError> {
         match self {
-            Shape::Image(i) => {
-                println!("Image");
-                i.draw_on_layer_with_parent_transform(layer, parent_transform)
-            }
-            Shape::Text(t) => {
-                println!("Text");
-                t.draw_on_layer_with_parent_transform(layer, parent_transform)
-            }
-            Shape::Ellipse(e) => {
-                println!("Ellip");
-                e.draw_on_layer_with_parent_transform(layer, parent_transform)
-            }
-            Shape::Curve(c) => {
-                println!("Curve");
-                c.draw_on_layer_with_parent_transform(layer, parent_transform)
-            }
+            Shape::Image(i) => i.draw_on_layer_with_parent_transform(layer, parent_transform),
+            Shape::Text(t) => t.draw_on_layer_with_parent_transform(layer, parent_transform),
+            Shape::Ellipse(e) => e.draw_on_layer_with_parent_transform(layer, parent_transform),
+            Shape::Curve(c) => c.draw_on_layer_with_parent_transform(layer, parent_transform),
             Shape::Group {
                 local_transform: _,
                 shapes,
             } => {
-                println!("Group");
                 let transform = self.global_transform(parent_transform);
 
                 for s in shapes {
@@ -209,9 +196,6 @@ impl ToPDF for Shape {
                 stroke,
                 shape,
             } => {
-                println!("3 - Style");
-                dbg!(self);
-
                 if let Some(fill) = fill {
                     let (r, g, b) = match fill {
                         Fill::Color(c) => c.as_rgb_f64(),

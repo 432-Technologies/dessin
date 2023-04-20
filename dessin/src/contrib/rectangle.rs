@@ -7,7 +7,9 @@ use nalgebra::{Point2, Transform2};
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Rectangle {
     pub local_transform: Transform2<f32>,
+    /// Dimension on the x-axis
     pub width: f32,
+    /// Dimension on the y-axis
     pub height: f32,
 }
 impl Rectangle {
