@@ -210,7 +210,7 @@ impl ToPDF for Shape {
                 }
 
                 if let Some(stroke) = stroke {
-                    let ((r, g, b), w) = match stroke {
+                    let ((r, g, b), w) = match *parent_transform * *stroke {
                         Stroke::Full { color, width } => (color.as_rgb_f64(), width),
                         Stroke::Dashed {
                             color,
@@ -227,7 +227,7 @@ impl ToPDF for Shape {
                         icc_profile: None,
                     }));
 
-                    layer.set_outline_thickness(*w as f64);
+                    layer.set_outline_thickness(printpdf::Mm(w as f64).into_pt().0);
                 }
 
                 shape.draw_on_layer_with_parent_transform(layer, parent_transform)?;

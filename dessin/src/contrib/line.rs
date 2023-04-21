@@ -13,23 +13,23 @@ pub struct Line {
 
 impl Line {
     #[inline]
-    pub fn from(&mut self, from: Point2<f32>) -> &mut Self {
-        self.from = from;
+    pub fn from<F: Into<Point2<f32>>>(&mut self, from: F) -> &mut Self {
+        self.from = from.into();
         self
     }
     #[inline]
-    pub fn with_from(mut self, from: Point2<f32>) -> Self {
+    pub fn with_from<F: Into<Point2<f32>>>(mut self, from: F) -> Self {
         self.from(from);
         self
     }
 
     #[inline]
-    pub fn to(&mut self, to: Point2<f32>) -> &mut Self {
-        self.to = to;
+    pub fn to<T: Into<Point2<f32>>>(&mut self, to: T) -> &mut Self {
+        self.to = to.into();
         self
     }
     #[inline]
-    pub fn with_to(mut self, to: Point2<f32>) -> Self {
+    pub fn with_to<T: Into<Point2<f32>>>(mut self, to: T) -> Self {
         self.to(to);
         self
     }

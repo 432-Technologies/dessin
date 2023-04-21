@@ -1,7 +1,7 @@
 use crate::shapes::{Shape, ShapeOp};
 use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
 use std::{
-    f32::consts::SQRT_2,
+    f32::consts::{FRAC_1_SQRT_2, SQRT_2},
     fmt,
     ops::{Deref, DerefMut, Mul},
 };
@@ -142,7 +142,7 @@ impl Mul<Stroke> for Transform2<f32> {
         match rhs {
             Stroke::Full { color, width } => Stroke::Full {
                 color,
-                width: (self * Vector2::new(SQRT_2, SQRT_2)).magnitude() * width,
+                width: (self * Vector2::new(FRAC_1_SQRT_2, FRAC_1_SQRT_2)).magnitude() * width,
             },
             Stroke::Dashed {
                 color,
@@ -150,7 +150,7 @@ impl Mul<Stroke> for Transform2<f32> {
                 on,
                 off,
             } => {
-                let factor = (self * Vector2::new(SQRT_2, SQRT_2)).magnitude();
+                let factor = (self * Vector2::new(FRAC_1_SQRT_2, FRAC_1_SQRT_2)).magnitude();
 
                 Stroke::Dashed {
                     color,
