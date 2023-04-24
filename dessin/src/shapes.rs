@@ -320,6 +320,52 @@ impl ShapeBoundingBox for Shape {
 
 #[cfg(test)]
 mod tests {
+    use crate::prelude::*;
+    use nalgebra::{Point2, Rotation2, Transform2};
+    use std::f32::consts::FRAC_PI_2;
+
+    const EPS: f32 = 10e-6;
+
     #[test]
-    fn f() {}
+    fn parent_rotate_child_scale() {
+        let base = dessin!(Image: (
+            scale={[2., 4.]}
+            translate={[1., 2.]}
+        ));
+
+        let base_position = base.position(&Transform2::default());
+        assert!(
+            (base_position.bottom_left - Point2::new(0., 0.)).magnitude() < EPS,
+            "left = {}, right = [0., 0.]",
+            base_position.bottom_left,
+        );
+        assert!(
+            (base_position.top_left - Point2::new(0., 4.)).magnitude() < EPS,
+            "left = {}, right = [0., 4.]",
+            base_position.top_left,
+        );
+        assert!(
+            (base_position.top_right - Point2::new(2., 4.)).magnitude() < EPS,
+            "left = {}, right = [2., 4.]",
+            base_position.top_right,
+        );
+
+        let transform = nalgebra::convert(Rotation2::new(FRAC_PI_2));
+        let transform_position = base.position(&transform);
+        assert!(
+            (transform_position.bottom_left - Point2::new(0., 0.)).magnitude() < EPS,
+            "left = {}, right = [0., 0.]",
+            transform_position.bottom_left,
+        );
+        assert!(
+            (transform_position.top_left - Point2::new(-4., 0.)).magnitude() < EPS,
+            "left = {}, right = [-4., 0.]",
+            transform_position.top_left,
+        );
+        assert!(
+            (transform_position.top_right - Point2::new(-4., 2.)).magnitude() < EPS,
+            "left = {}, right = [-4., 2.]",
+            transform_position.top_right,
+        );
+    }
 }

@@ -164,3 +164,50 @@ impl ShapeBoundingBox for Text {
         todo!()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+    use nalgebra::{Point2, Rotation2, Scale2, Transform2};
+    use std::f32::consts::FRAC_PI_2;
+
+    const EPS: f32 = 10e-6;
+
+    #[test]
+    fn parent_rotate_text_scale() {
+        let base = dessin!(Text: (
+            scale={[2., 4.]}
+            translate={[1., 2.]}
+        ));
+
+        let base_position = base.position(&Transform2::default());
+        assert!(
+            (base_position.reference_start - Point2::new(1., 2.)).magnitude() < EPS,
+            "left = {}, right = [1., 2.]",
+            base_position.reference_start,
+        );
+
+        let transform = nalgebra::convert(Rotation2::new(FRAC_PI_2));
+        let transform_position = base.position(&transform);
+        assert!(
+            (transform_position.reference_start - Point2::new(-2., 1.)).magnitude() < EPS,
+            "left = {}, right = [-2., 1.]",
+            transform_position.reference_start,
+        );
+
+        let transform = nalgebra::convert::<_, Transform2<f32>>(Rotation2::new(FRAC_PI_2))
+            * nalgebra::convert::<_, Transform2<f32>>(Scale2::new(2., 2.));
+        let transform_position = base.position(&transform);
+        assert!(
+            (transform_position.reference_start - Point2::new(-4., 2.)).magnitude() < EPS,
+            "left = {}, right = [-2., 1.]",
+            transform_position.reference_start,
+        );
+
+        // let parent: Shape = dessin!(group: (
+        //     rotate={[FRAC_PI_2]}
+        // ) [
+        //     { use {base}: () }
+        // ]);
+    }
+}

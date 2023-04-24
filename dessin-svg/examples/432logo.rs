@@ -39,7 +39,7 @@ impl From<InnerBubbleRing> for Shape {
         );
 
         let angle = PI / 14_f32;
-        dessin!(do {0..28}: |n| {
+        dessin!(for n in {0..28}: {
             dessin!(var |ring_strip|: ( rotate={Rotation2::new(n as f32 * angle)} ))
         })
     }
@@ -61,7 +61,7 @@ impl From<BinaryRing> for Shape {
             text={T}
             // on_curve={Rectangle::default().with_width(30.).with_height(30.).as_curve()}
             // on_curve={Curve::default().with_then(Point2::new(0., 0.)).with_then(Point2::new(100., 100.))}
-            on_curve={Circle::default().with_radius(radius).as_curve()}
+            on_curve={Circle::default().with_radius(radius).into()}
             font_size={1.}
             fill={Fill::Color(C)}
         ))
@@ -91,30 +91,22 @@ impl From<TimerRing> for Shape {
         ));
 
         dessin!(group: #( stroke={Stroke::Full { color: C, width: 0.2 }} ) [
-            {
-                Circle: ( radius={36.} )
-            }
-            {
-                do {0..8}: |x| {
+            { Circle: ( radius={36.} ) }
+            { for x in {0..8}: {
                     dessin!(var |long_line|: (
                         rotate={Rotation2::new(x as f32 * FRAC_PI_4)}
                     ))
-                }
-            }
-            {
-                do {0..8}: |x| {
+            } }
+            { for x in {0..8}: {
                     dessin!(var |short_line|: (
                         rotate={Rotation2::new(x as f32 * FRAC_PI_4)}
                     ))
-                }
-            }
-            {
-                 do {0..160}: |x| {
+            } }
+            { for x in {0..160}: {
                     dessin!(var |small_line|: (
                         rotate={Rotation2::new(x as f32 * PI / 160.)}
                     ))
-                }
-            }
+            } }
         ])
         .into()
     }
@@ -207,7 +199,7 @@ impl From<Squares> for Shape {
 
         let angle = 150_f32.to_radians() / 36.;
         let quarter = dessin!(
-            do {0..36}: |x| {
+            for x in {0..36}: {
                 dessin!(
                     var |square_line|: (
                         rotate={Rotation2::new(x as f32 * angle)}

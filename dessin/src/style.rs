@@ -106,6 +106,13 @@ impl fmt::Display for Color {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+
+pub struct StylePosition {
+    pub stroke: Option<Stroke>,
+    pub fill: Option<Fill>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Fill {
     Color(Color),
 }

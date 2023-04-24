@@ -81,34 +81,122 @@ impl From<Rectangle> for Shape {
         v.as_curve().into()
     }
 }
-// impl From<Rectangle> for Shape {
-//     fn from(value: Rectangle) -> Self {
-//         let min = value.pos.position_from_anchor(vec2(-1., -1.));
-//         let max = value.pos.position_from_anchor(vec2(1., 1.));
 
-//         let mut rect = Drawing::empty().with_canvas_size(value.pos.size());
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+    use nalgebra::{Point2, Rotation2, Scale2, Transform2};
+    use std::f32::consts::FRAC_PI_2;
 
-//         rect.add(
-//             Line::from(vec2(min.x, min.y))
-//                 .to(vec2(min.x, max.y))
-//                 .with_style(value.style.as_ref().map(|v| v.clone()).unwrap_or_default()),
-//         )
-//         .add(
-//             Line::from(vec2(min.x, min.y))
-//                 .to(vec2(max.x, min.y))
-//                 .with_style(value.style.as_ref().map(|v| v.clone()).unwrap_or_default()),
-//         )
-//         .add(
-//             Line::from(vec2(max.x, max.y))
-//                 .to(vec2(min.x, max.y))
-//                 .with_style(value.style.as_ref().map(|v| v.clone()).unwrap_or_default()),
-//         )
-//         .add(
-//             Line::from(vec2(max.x, max.y))
-//                 .to(vec2(max.x, min.y))
-//                 .with_style(value.style.as_ref().map(|v| v.clone()).unwrap_or_default()),
-//         );
+    const EPS: f32 = 10e-6;
 
-//         rect.into()
-//     }
-// }
+    #[test]
+    fn parent_rotate_text_scale() {
+        let base = dessin!(Rectangle: (
+            width={2.}
+            height={3.}
+            // scale={[2., 4.]}
+            translate={[1., 2.]}
+        ));
+
+        let base_position: Vec<Point2<f32>> = base
+            .clone()
+            .as_curve()
+            .position(&Transform2::default())
+            .keypoints
+            .into_iter()
+            .map(|key_point| match key_point {
+                Keypoint::Point(point) => point,
+                _ => unreachable!(),
+            })
+            .collect();
+        assert!(
+            (base_position[0] - Point2::new(0., 3.5)).magnitude() < EPS,
+            "left = {}, right = [0., 3.5]",
+            base_position[0],
+        );
+        assert!(
+            (base_position[1] - Point2::new(0., 0.5)).magnitude() < EPS,
+            "left = {}, right = [0., 0.5]",
+            base_position[1],
+        );
+        assert!(
+            (base_position[2] - Point2::new(2., 0.5)).magnitude() < EPS,
+            "left = {}, right = [2., 0.5]",
+            base_position[2],
+        );
+        assert!(
+            (base_position[3] - Point2::new(2., 3.5)).magnitude() < EPS,
+            "left = {}, right = [2., 3.5]",
+            base_position[3],
+        );
+
+        /// with a rotation
+        let transform = nalgebra::convert(Rotation2::new(FRAC_PI_2));
+        let transform_position: Vec<Point2<f32>> = base
+            .clone()
+            .as_curve()
+            .position(&transform)
+            .keypoints
+            .into_iter()
+            .map(|key_point| match key_point {
+                Keypoint::Point(point) => point,
+                _ => unreachable!(),
+            })
+            .collect();
+        assert!(
+            (transform_position[0] - Point2::new(-3.5, 0.)).magnitude() < EPS,
+            "left = {}, right = [-3.5, 0.]",
+            transform_position[0],
+        );
+        assert!(
+            (transform_position[1] - Point2::new(-0.5, 0.)).magnitude() < EPS,
+            "left = {}, right = [-0.5,0.]",
+            transform_position[1],
+        );
+        assert!(
+            (transform_position[2] - Point2::new(-0.5, 2.)).magnitude() < EPS,
+            "left = {}, right = [-0.5,2.]",
+            transform_position[2],
+        );
+        assert!(
+            (transform_position[3] - Point2::new(-3.5, 2.)).magnitude() < EPS,
+            "left = {}, right = [-3.5,2.]",
+            transform_position[3],
+        );
+
+        /// with a rotation and a scale
+        let transform = nalgebra::convert::<_, Transform2<f32>>(Rotation2::new(FRAC_PI_2))
+            * nalgebra::convert::<_, Transform2<f32>>(Scale2::new(2., 2.));
+        let transform_position: Vec<Point2<f32>> = base
+            .as_curve()
+            .position(&transform)
+            .keypoints
+            .into_iter()
+            .map(|key_point| match key_point {
+                Keypoint::Point(point) => point,
+                _ => unreachable!(),
+            })
+            .collect();
+        assert!(
+            (transform_position[0] - Point2::new(-7., 0.)).magnitude() < EPS,
+            "left = {}, right = [-7., 0.]",
+            transform_position[0],
+        );
+        assert!(
+            (transform_position[1] - Point2::new(-1., 0.)).magnitude() < EPS,
+            "left = {}, right = [-1., 0]",
+            transform_position[1],
+        );
+        assert!(
+            (transform_position[2] - Point2::new(-1., 4.)).magnitude() < EPS,
+            "left = {}, right = [-1., 4]",
+            transform_position[2],
+        );
+        assert!(
+            (transform_position[3] - Point2::new(-7., 4.)).magnitude() < EPS,
+            "left = {}, right = [-7., 4]",
+            transform_position[3],
+        );
+    }
+}

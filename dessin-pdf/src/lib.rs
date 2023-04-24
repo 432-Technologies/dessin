@@ -3,7 +3,7 @@ use nalgebra::{Transform2, Translation2};
 use once_cell::sync::OnceCell;
 use printpdf::{Mm, PdfDocument, PdfDocumentReference, PdfLayerReference};
 use std::{
-    io::{self},
+    io,
     sync::{Arc, RwLock},
 };
 
@@ -66,9 +66,9 @@ pub trait ToPDF {
     /// 	PdfDocument::new("printpdf graphics test", Mm(297.0), Mm(210.0), "Layer 1");
     /// let current_layer = doc.get_page(page1).get_layer(layer1);
     ///
-    /// dessin!( /* Shapes here */ ).draw_on_layer(&current_layer)?;
+    /// dessin!( /* Shapes here */ ).draw_on_layer(&current_layer, 297.0, 210.0)?;
     ///
-    /// # 	Ok(());
+    /// # 	Ok(())
     /// # }
     /// ```
     #[inline]

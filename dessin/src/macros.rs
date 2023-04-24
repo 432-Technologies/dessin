@@ -1,3 +1,26 @@
+/// The `dessin` macro makes it easier to build drawings.
+///
+/// Example:
+/// ```
+/// # fn main() {
+/// use dessin::prelude::*;
+///
+/// let dessin = dessin!(group: [
+/// 	{ Circle: #(
+/// 		fill={Color::RED}
+/// 		radius={10.}
+/// 		translate={[10., 10.]}
+/// 	) }
+/// 	{ for x in {0..10}: {
+/// 		dessin!(Line: #(
+/// 			stroke={(Color::BLUE, 1.)}
+/// 			from={[x as f32 * 10., 0.]}
+/// 			to={[x as f32 * 10., 10.]}
+/// 		))
+/// 	} }
+/// ]);
+/// # }
+/// ```
 #[macro_export]
 macro_rules! dessin {
 	() => {$crate::shapes::Shape::default()};
