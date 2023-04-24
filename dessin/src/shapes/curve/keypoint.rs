@@ -128,13 +128,6 @@ impl From<Point2<f32>> for Keypoint {
     }
 }
 
-impl From<Curve> for Keypoint {
-    #[inline]
-    fn from(v: Curve) -> Self {
-        Keypoint::Curve(v)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

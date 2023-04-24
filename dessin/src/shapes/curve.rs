@@ -196,3 +196,12 @@ impl ShapeBoundingBox for Curve {
             .map(|v| v.as_unparticular())
     }
 }
+
+impl<T> From<T> for Keypoint
+where
+    T: Into<Curve>,
+{
+    fn from(value: T) -> Self {
+        Keypoint::Curve(value.into())
+    }
+}

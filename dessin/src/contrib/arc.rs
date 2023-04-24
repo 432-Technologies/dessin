@@ -13,7 +13,7 @@ pub struct Arc {
 impl Arc {
     #[inline]
     pub fn radius(&mut self, radius: f32) -> &mut Self {
-        self.scale(Scale2::new(2. * radius, 2. * radius));
+        self.scale(Scale2::new(radius, radius));
         self
     }
     #[inline]
@@ -49,37 +49,52 @@ impl From<Arc> for Curve {
     fn from(
         Arc {
             local_transform,
-            start_angle: start_rad,
-            end_angle: end_rad,
+            start_angle,
+            end_angle,
         }: Arc,
     ) -> Self {
-        let mut span = (end_rad + 2. * PI - start_rad) % (2. * PI);
+        let span = (end_angle + 2. * PI - start_angle) % (2. * PI);
 
         if (span - 2. * PI).abs() < 1e-6 {
             Curve::from(Circle { local_transform })
         } else {
+            // From https://ecridge.com/bezier.pdf
+            let curves = (span / FRAC_PI_2).ceil();
+            let span_per_curve = span / curves;
+
             let mut arcs = vec![];
-            let mut start = start_rad;
-            while span > 1e-6 {
-                let rot = Rotation2::new(start);
-                let end_rot = Rotation2::new(start + (FRAC_PI_2 - span.min(FRAC_PI_2)));
+            for c in 0..(curves as u32) {
+                let start = (start_angle + (c as f32) * span_per_curve) % 360.;
+
+                let alpha = span_per_curve / 2.;
+
+                let x3 = alpha.cos(); //D
+                let y3 = alpha.sin(); //D
+
+                let x2 = (4. - x3) / 3.; //C = λx + μy
+                let y2 = y3 + 4. / 3. * (x3 - 1.) * x3 / y3;
+
+                let x1 = x2; //B
+                let y1 = -y2; //B
+
+                let x0 = x3; //A
+                let y0 = -y3; //A
+
+                let rot = Rotation2::new(alpha + start);
 
                 arcs.push(
                     Bezier {
                         start: if arcs.is_empty() {
-                            Some(rot * Point2::new(0.5, 0.))
+                            Some(rot * Point2::new(x0, y0))
                         } else {
                             None
                         },
-                        start_control: rot * Point2::new(0.5, 0.552284749831 / 2.),
-                        end_control: end_rot * Point2::new(0.552284749831 / 2., 0.5),
-                        end: end_rot * Point2::new(0., 0.5),
+                        start_control: rot * Point2::new(x1, y1),
+                        end_control: rot * Point2::new(x2, y2),
+                        end: rot * Point2::new(x3, y3),
                     }
                     .into(),
                 );
-
-                span -= FRAC_PI_2;
-                start += FRAC_PI_2;
             }
 
             Curve {
