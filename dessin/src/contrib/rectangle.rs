@@ -110,9 +110,8 @@ mod tests {
             .position(&Transform2::default())
             .keypoints
             .into_iter()
-            .filter_map(|key_point| match key_point {
-                KeypointPosition::Point(point) => Some(point),
-                KeypointPosition::Close => None,
+            .map(|key_point| match key_point {
+                KeypointPosition::Point(point) => point,
                 _ => unreachable!(),
             })
             .collect();
@@ -148,9 +147,8 @@ mod tests {
             .position(&transform)
             .keypoints
             .into_iter()
-            .filter_map(|key_point| match key_point {
-                KeypointPosition::Point(point) => Some(point),
-                KeypointPosition::Close => None,
+            .map(|key_point| match key_point {
+                KeypointPosition::Point(point) => point,
                 _ => unreachable!(),
             })
             .collect();
@@ -183,9 +181,8 @@ mod tests {
             .position(&transform)
             .keypoints
             .into_iter()
-            .filter_map(|key_point| match key_point {
-                KeypointPosition::Point(point) => Some(point),
-                KeypointPosition::Close => None,
+            .map(|key_point| match key_point {
+                KeypointPosition::Point(point) => point,
                 _ => unreachable!(),
             })
             .collect();

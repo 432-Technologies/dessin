@@ -66,51 +66,70 @@ impl Exporter for PDFExporter {
                 }));
         }
 
-        // if let Some(stroke) = stroke {
-        //     let ((r, g, b), w) = match *parent_transform * stroke {
-        //         Stroke::Full { color, width } => (color.as_rgb_f64(), width),
-        //         Stroke::Dashed {
-        //             color,
-        //             width,
-        //             on,
-        //             off,
-        //         } => (color.as_rgb_f64(), width),
-        //     };
+        if let Some(stroke) = stroke {
+            let ((r, g, b), w) = match stroke {
+                Stroke::Full { color, width } => (color.as_rgb_f64(), width),
+                Stroke::Dashed {
+                    color,
+                    width,
+                    on,
+                    off,
+                } => {
+                    self.layer.set_line_dash_pattern(printpdf::LineDashPattern {
+                        offset: 0,
+                        dash_1: Some(on as i64),
+                        gap_1: Some(off as i64),
+                        dash_2: None,
+                        gap_2: None,
+                        dash_3: None,
+                        gap_3: None,
+                    });
 
-        //     self.layer
-        //         .set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
-        //             r,
-        //             g,
-        //             b,
-        //             icc_profile: None,
-        //         }));
+                    (color.as_rgb_f64(), width)
+                }
+            };
 
-        //     self.layer
-        //         .set_outline_thickness(printpdf::Mm(w as f64).into_pt().0);
-        // }
+            self.layer
+                .set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
+                    r,
+                    g,
+                    b,
+                    icc_profile: None,
+                }));
+
+            self.layer
+                .set_outline_thickness(printpdf::Mm(w as f64).into_pt().0);
+        }
 
         Ok(())
     }
 
     fn end_style(&mut self) -> Result<(), Self::Error> {
-        //                 if stroke.is_some() {
-        //                     layer.set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
-        //                         r: 0.,
-        //                         g: 0.,
-        //                         b: 0.,
-        //                         icc_profile: None,
-        //                     }));
-        //                     layer.set_outline_thickness(0.);
-        //                 }
+        self.layer
+            .set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
+                r: 0.,
+                g: 0.,
+                b: 0.,
+                icc_profile: None,
+            }));
+        self.layer.set_outline_thickness(0.);
+        self.layer.set_line_dash_pattern(printpdf::LineDashPattern {
+            offset: 0,
+            dash_1: None,
+            gap_1: None,
+            dash_2: None,
+            gap_2: None,
+            dash_3: None,
+            gap_3: None,
+        });
 
-        //                 if fill.is_some() {
-        //                     layer.set_fill_color(printpdf::Color::Rgb(printpdf::Rgb {
-        //                         r: 0.,
-        //                         g: 0.,
-        //                         b: 0.,
-        //                         icc_profile: None,
-        //                     }));
-        //                 }
+        self.layer
+            .set_fill_color(printpdf::Color::Rgb(printpdf::Rgb {
+                r: 0.,
+                g: 0.,
+                b: 0.,
+                icc_profile: None,
+            }));
 
         Ok(())
     }

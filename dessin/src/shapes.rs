@@ -11,49 +11,69 @@ use nalgebra::{self as na, Transform2, Translation2};
 use std::marker::PhantomData;
 pub use text::*;
 
+/// Transforming operation on shapes such as:
+/// - a translation with [`translate`][ShapeOp::translate]
+/// - a scale with [`scale`][ShapeOp::scale]
+/// - a rotation with [`rotate`][ShapeOp::rotate]
+/// - any other transform with [`transform`][ShapeOp::transform]
 pub trait ShapeOp: Into<Shape> + Clone {
+    /// Apply an ordinary transform.
+    /// You don't need to implement [`translate`][ShapeOp::translate], [`scale`][ShapeOp::scale] or [`rotate`][ShapeOp::rotate]
+    /// yourself as a blanket implementation is given with this transform.
     fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self;
 
+    /// Translation
     #[inline]
     fn translate<T: Into<Translation2<f32>>>(&mut self, translation: T) -> &mut Self {
         self.transform(na::convert::<_, Transform2<f32>>(translation.into()));
         self
     }
+    /// Scale
     #[inline]
     fn scale<S: Into<Scale2<f32>>>(&mut self, scale: S) -> &mut Self {
         self.transform(na::convert::<_, Transform2<f32>>(scale.into()));
         self
     }
+    /// Rotation
     #[inline]
     fn rotate<R: Into<Rotation2<f32>>>(&mut self, rotation: R) -> &mut Self {
         self.transform(na::convert::<_, Transform2<f32>>(rotation.into()));
         self
     }
 
+    /// Get own local transform.
+    /// Required for the blanket implementation of [`global_transform`][ShapeOp::global_transform].
     fn local_transform(&self) -> &Transform2<f32>;
+    /// Absolute transform given the parent transform
     #[inline]
     fn global_transform(&self, parent_transform: &Transform2<f32>) -> Transform2<f32> {
         parent_transform * self.local_transform()
     }
 }
 
+/// Same as [`ShapeOp`] but for chaining methods.
+/// All shapes that implement [`ShapeOp`] also implement [`ShapeOpWith`] for free.
 pub trait ShapeOpWith: ShapeOp {
+    /// Transform
     #[inline]
     fn with_transform(mut self, transform_matrix: Transform2<f32>) -> Self {
         self.transform(transform_matrix);
         self
     }
 
+    /// Translate
     #[inline]
     fn with_translate(mut self, translation: Translation2<f32>) -> Self {
         self.translate(translation);
         self
     }
+    /// Resize
     #[inline]
     fn with_resize(mut self, scale: Scale2<f32>) -> Self {
         self.scale(scale);
         self
     }
+    /// Rotate
     #[inline]
     fn with_rotate(mut self, rotation: Rotation2<f32>) -> Self {
         self.rotate(rotation);
@@ -62,9 +82,15 @@ pub trait ShapeOpWith: ShapeOp {
 }
 impl<T: ShapeOp> ShapeOpWith for T {}
 
+/// Marker discribing the state of a bounding box.
+/// With this marker, the bounding box may be skew or rotated.
 pub struct UnParticular;
+/// Marker discribing the state of a bounding box.
+/// With this marker, the sides of the bounding box are guaranteed to be aligned with the X and Y axis.
 pub struct Straight;
 
+/// Bounding box used to describe max bound of an shape.
+/// Usefull to find the max size of shapes as multiple [`BoundingBox`] can be join together.
 #[derive(Debug, Clone, PartialEq)]
 pub struct BoundingBox<Type> {
     _ty: PhantomData<Type>,
@@ -74,19 +100,36 @@ pub struct BoundingBox<Type> {
     bottom_left: Point2<f32>,
 }
 impl<T> BoundingBox<T> {
+    /// Top left corner
+    ///
+    /// ⚠️ There is no guarantee that this is actually the most top and left corner.
+    /// [`straigthen`][BoundingBox::straigthen] the [`BoundingBox`] first for this guarantee.
     pub fn top_left(&self) -> Point2<f32> {
         self.top_left
     }
+    /// Top right corner
+    ///
+    /// ⚠️ There is no guarantee that this is actually the most top and right corner.
+    /// [`straigthen`][BoundingBox::straigthen] the [`BoundingBox`] first for this guarantee.
     pub fn top_right(&self) -> Point2<f32> {
         self.top_right
     }
+    /// bottom right corner
+    ///
+    /// ⚠️ There is no guarantee that this is actually the most bottom and right corner.
+    /// [`straigthen`][BoundingBox::straigthen] the [`BoundingBox`] first for this guarantee.
     pub fn bottom_right(&self) -> Point2<f32> {
         self.bottom_right
     }
+    /// Bottom left corner
+    ///
+    /// ⚠️ There is no guarantee that this is actually the most bottom and left corner.
+    /// [`straigthen`][BoundingBox::straigthen] the [`BoundingBox`] first for this guarantee.
     pub fn bottom_left(&self) -> Point2<f32> {
         self.bottom_left
     }
 
+    /// Straighen a [`BoundingBox`] and guarantee that the sides of the bounding box are aligns with the X and Y axis.
     pub fn straigthen(&self) -> BoundingBox<Straight> {
         let top = self
             .top_left
@@ -123,6 +166,7 @@ impl<T> BoundingBox<T> {
         }
     }
 
+    /// Apply a transform to a [`BoundingBox`]
     pub fn transform(self, transform: &Transform2<f32>) -> BoundingBox<UnParticular> {
         BoundingBox {
             _ty: PhantomData,
@@ -133,16 +177,19 @@ impl<T> BoundingBox<T> {
         }
     }
 
+    /// Width
     pub fn width(&self) -> f32 {
         (self.top_right - self.top_left).magnitude()
     }
 
+    /// Height
     pub fn height(&self) -> f32 {
         (self.top_right - self.bottom_right).magnitude()
     }
 }
 
 impl BoundingBox<UnParticular> {
+    /// Create a [`BoundingBox`] from each corner
     pub fn new(
         top_left: Point2<f32>,
         top_right: Point2<f32>,
@@ -160,6 +207,7 @@ impl BoundingBox<UnParticular> {
 }
 
 impl BoundingBox<Straight> {
+    /// [`BoundingBox`] center at the origin
     pub fn zero() -> Self {
         BoundingBox {
             _ty: PhantomData,
@@ -170,6 +218,7 @@ impl BoundingBox<Straight> {
         }
     }
 
+    /// [`BoundingBox`] center at the given point
     pub fn at(p: Point2<f32>) -> Self {
         BoundingBox {
             _ty: PhantomData,
@@ -180,6 +229,7 @@ impl BoundingBox<Straight> {
         }
     }
 
+    /// Convert the [`BoundingBox`] to [`UnPacticular`].
     pub fn as_unparticular(self) -> BoundingBox<UnParticular> {
         BoundingBox {
             _ty: PhantomData,
@@ -190,6 +240,9 @@ impl BoundingBox<Straight> {
         }
     }
 
+    /// A u B
+    ///
+    /// Creates a bigger [`BoundingBox`] from the union of the two.
     pub fn join(mut self, other: BoundingBox<Straight>) -> BoundingBox<Straight> {
         self.top_left.x = self.top_left.x.max(other.top_left.x);
         self.top_left.y = self.top_left.y.min(other.top_left.y);
@@ -203,6 +256,9 @@ impl BoundingBox<Straight> {
         self
     }
 
+    /// A n B
+    ///
+    /// Creates a smaller [`BoundingBox`] from the intersection of the two.
     pub fn intersect(mut self, other: BoundingBox<Straight>) -> BoundingBox<Straight> {
         self.top_left.x = self.top_left.x.min(other.top_left.x);
         self.top_left.y = self.top_left.y.max(other.top_left.y);

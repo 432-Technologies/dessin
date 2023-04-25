@@ -2,6 +2,8 @@
 
 //! **dessin is library aimed at building complex drawings, combine them, move them and export them as PDF or SVG.**
 //!
+//! ## Example
+//!
 //! ```
 //! # fn main () {
 //! use dessin::prelude::*;
@@ -11,11 +13,18 @@
 //! ```
 //!
 //! Details about the [`dessin`] macro.
+//!
+//! ## Implement own export format.
+//! Documentation can be found in the [`export`] module.
 
+/// Shapes made of basic [shapes][crate::shapes::Shape]
 pub mod contrib;
+/// Declarations to create an export format.
 pub mod export;
 mod macros;
+/// Building blocks of a dessin
 pub mod shapes;
+/// Styling of the building blocks
 pub mod style;
 
 pub use ::image;
