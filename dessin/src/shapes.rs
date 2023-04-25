@@ -229,7 +229,7 @@ impl BoundingBox<Straight> {
         }
     }
 
-    /// Convert the [`BoundingBox`] to [`UnPacticular`].
+    /// Convert the [`BoundingBox`] to [`UnParticular`].
     pub fn as_unparticular(self) -> BoundingBox<UnParticular> {
         BoundingBox {
             _ty: PhantomData,
@@ -273,8 +273,11 @@ impl BoundingBox<Straight> {
     }
 }
 
+/// Traits that defined whether a [`Shape`] can be bound by a [`BoundingBox`]
 pub trait ShapeBoundingBox: ShapeOp {
+    /// [`BoundingBox`] of a [`Shape`]
     fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>>;
+    /// Absolute [`BoundingBox`] from a transform
     fn global_bounding_box(
         &self,
         parent_transform: &Transform2<f32>,
@@ -284,20 +287,34 @@ pub trait ShapeBoundingBox: ShapeOp {
     }
 }
 
+/// Building block of a dessin
+///
+/// Every complex shape should boil down to these.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Shape {
+    /// A group of [`Shape`], locally positionned by a transform
     Group {
+        /// Transform of the whole group
         local_transform: Transform2<f32>,
+        /// List of shapes
         shapes: Vec<Shape>,
     },
+    /// Block of style
     Style {
+        /// Fill
         fill: Option<crate::style::Fill>,
+        /// Stroke
         stroke: Option<crate::style::Stroke>,
+        /// Styled shape. (Or Shapes if it is a [`Groupe`][Shape::Group])
         shape: Box<Shape>,
     },
+    /// Ellipse
     Ellipse(Ellipse),
+    /// Image
     Image(Image),
+    /// Text
     Text(Text),
+    /// Curve
     Curve(Curve),
 }
 

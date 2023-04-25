@@ -1,50 +1,86 @@
 use crate::shapes::{Shape, ShapeOp};
 use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
 use std::{
-    f32::consts::{FRAC_1_SQRT_2},
+    f32::consts::FRAC_1_SQRT_2,
     fmt,
     ops::{Deref, DerefMut, Mul},
 };
 
+/// Create a color from red, green and blue
 pub const fn rbg(r: u8, g: u8, b: u8) -> Color {
     Color::RGB { r, g, b }
 }
 
+/// Create a color from red, green, blue and alpha
 pub const fn rgba(r: u8, g: u8, b: u8, a: u8) -> Color {
     Color::RGBA { r, g, b, a }
 }
 
+/// Color
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Color {
-    RGBA { r: u8, g: u8, b: u8, a: u8 },
-    RGB { r: u8, g: u8, b: u8 },
+    /// RGB with transparency
+    RGBA {
+        /// red
+        r: u8,
+        /// green
+        g: u8,
+        /// blue
+        b: u8,
+        /// alpha
+        a: u8,
+    },
+    /// RGB
+    RGB {
+        /// red
+        r: u8,
+        /// green
+        g: u8,
+        /// blue
+        b: u8,
+    },
+    /// Raw color code
     U32(u32),
 }
 impl Color {
+    /// #FF0000
     pub const RED: Color = rbg(255, 0, 0);
+    /// #00FF00
     pub const GREEN: Color = rbg(0, 255, 0);
+    /// #0000FF
     pub const BLUE: Color = rbg(0, 0, 255);
+    /// #FFFFFF
     pub const WHITE: Color = rbg(255, 255, 255);
+    /// #000000
     pub const BLACK: Color = rbg(0, 0, 0);
+    /// #FFFF00
     pub const YELLOW: Color = rbg(255, 255, 0);
+    /// #FFA500
     pub const ORANGE: Color = rbg(255, 165, 0);
+    /// #FF00FF
     pub const MAGENTA: Color = rbg(255, 0, 255);
+    /// #00FFFF
     pub const CYAN: Color = rbg(0, 255, 255);
+    /// #808080
     pub const GRAY: Color = rbg(128, 128, 128);
+    /// #00000000
     pub const TRANSPARENT: Color = rgba(0, 0, 0, 0);
+    /// #C0C0C0
     pub const LIGHT_GRAY: Color = rbg(192, 192, 192);
+    /// #404040
     pub const DARK_GRAY: Color = rbg(64, 64, 64);
 
-    pub const fn rgba(self) -> Color {
+    /// Cast a color to (red, green, blue, alpha)
+    pub const fn rgba(self) -> (u8, u8, u8, u8) {
         match self {
-            Color::RGBA { .. } => self,
-            Color::RGB { r, g, b } => Color::RGBA { r, g, b, a: 255 },
-            Color::U32(c) => Color::RGBA {
-                r: ((c >> 16) & 0xFF) as u8,
-                g: ((c >> 8) & 0xFF) as u8,
-                b: (c & 0xFF) as u8,
-                a: 255,
-            },
+            Color::RGBA { r, g, b, a } => (r, g, b, a),
+            Color::RGB { r, g, b } => (r, g, b, 255),
+            Color::U32(c) => (
+                ((c >> 16) & 0xFF) as u8,
+                ((c >> 8) & 0xFF) as u8,
+                (c & 0xFF) as u8,
+                255,
+            ),
         }
     }
 
@@ -76,6 +112,7 @@ impl Color {
         }
     }
 
+    /// Cast a color to (red, green, blue)
     pub fn as_rgb(&self) -> (u8, u8, u8) {
         match *self {
             Color::RGBA { r, g, b, a: _ } => (r, g, b),
@@ -88,6 +125,7 @@ impl Color {
         }
     }
 
+    /// Cast a color to (red, green, blue), as f64
     pub fn as_rgb_f64(&self) -> (f64, f64, f64) {
         let (r, g, b) = self.as_rgb();
         (r as f64 / 255., g as f64 / 255., b as f64 / 255.)
@@ -96,12 +134,8 @@ impl Color {
 
 impl fmt::Display for Color {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.rgba() {
-            Color::RGBA { r, g, b, a } => {
-                write!(f, "rgba({},{},{},{})", r, g, b, a as f32 / 255.)
-            }
-            _ => unreachable!(),
-        }
+        let (r, g, b, a) = self.rgba();
+        write!(f, "rgba({},{},{},{})", r, g, b, a as f32 / 255.)
     }
 }
 

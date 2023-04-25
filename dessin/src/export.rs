@@ -1,5 +1,7 @@
 //! Documentation to export a dessin in a specific format.
 //!
+//! You should probably head to [`Exporter`][crate::export::Exporter]
+//!
 //!
 //! ## Examples
 //! Examples can be found for [PDF](https://docs.rs/dessin-pdf/) or [SVG](https://docs.rs/dessin-svg/)
@@ -160,8 +162,8 @@ pub trait Exporter {
     fn export_image(&mut self, image: ImagePosition) -> Result<(), Self::Error>;
     /// Export an [`Ellipse`][crate::shapes::ellipse::Ellipse]
     fn export_ellipse(&mut self, ellipse: EllipsePosition) -> Result<(), Self::Error>;
-    /// Export an [`Curve`][crate::shapes::curve::Curve]
+    /// Export a [`Curve`][crate::shapes::curve::Curve]
     fn export_curve(&mut self, curve: CurvePosition) -> Result<(), Self::Error>;
-    /// Export an [`Text`][crate::shapes::text::Text]
+    /// Export a [`Text`][crate::shapes::text::Text]
     fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error>;
 }
