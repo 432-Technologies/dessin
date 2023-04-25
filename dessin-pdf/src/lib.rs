@@ -1,4 +1,7 @@
-use dessin::{export::Exporter, prelude::*};
+use dessin::{
+    export::{Export, Exporter},
+    prelude::*,
+};
 use nalgebra::{Transform2, Translation2};
 use once_cell::sync::OnceCell;
 use printpdf::{Mm, PdfDocument, PdfDocumentReference, PdfLayerReference};
@@ -45,12 +48,71 @@ impl PDFExporter {
 impl Exporter for PDFExporter {
     type Error = PDFError;
 
-    fn start_style(&mut self, style: StylePosition) -> Result<(), Self::Error> {
-        todo!()
+    fn start_style(
+        &mut self,
+        StylePosition { fill, stroke }: StylePosition,
+    ) -> Result<(), Self::Error> {
+        if let Some(fill) = fill {
+            let (r, g, b) = match fill {
+                Fill::Color(c) => c.as_rgb_f64(),
+            };
+
+            self.layer
+                .set_fill_color(printpdf::Color::Rgb(printpdf::Rgb {
+                    r,
+                    g,
+                    b,
+                    icc_profile: None,
+                }));
+        }
+
+        // if let Some(stroke) = stroke {
+        //     let ((r, g, b), w) = match *parent_transform * stroke {
+        //         Stroke::Full { color, width } => (color.as_rgb_f64(), width),
+        //         Stroke::Dashed {
+        //             color,
+        //             width,
+        //             on,
+        //             off,
+        //         } => (color.as_rgb_f64(), width),
+        //     };
+
+        //     self.layer
+        //         .set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
+        //             r,
+        //             g,
+        //             b,
+        //             icc_profile: None,
+        //         }));
+
+        //     self.layer
+        //         .set_outline_thickness(printpdf::Mm(w as f64).into_pt().0);
+        // }
+
+        Ok(())
     }
 
     fn end_style(&mut self) -> Result<(), Self::Error> {
-        todo!()
+        //                 if stroke.is_some() {
+        //                     layer.set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
+        //                         r: 0.,
+        //                         g: 0.,
+        //                         b: 0.,
+        //                         icc_profile: None,
+        //                     }));
+        //                     layer.set_outline_thickness(0.);
+        //                 }
+
+        //                 if fill.is_some() {
+        //                     layer.set_fill_color(printpdf::Color::Rgb(printpdf::Rgb {
+        //                         r: 0.,
+        //                         g: 0.,
+        //                         b: 0.,
+        //                         icc_profile: None,
+        //                     }));
+        //                 }
+
+        Ok(())
     }
 
     fn export_image(
@@ -241,72 +303,6 @@ impl ToPDF for Shape {
         Ok(doc)
     }
 }
-
-//             Shape::Style {
-//                 fill,
-//                 stroke,
-//                 shape,
-//             } => {
-//                 if let Some(fill) = fill {
-//                     let (r, g, b) = match fill {
-//                         Fill::Color(c) => c.as_rgb_f64(),
-//                     };
-
-//                     layer.set_fill_color(printpdf::Color::Rgb(printpdf::Rgb {
-//                         r,
-//                         g,
-//                         b,
-//                         icc_profile: None,
-//                     }));
-//                 }
-
-//                 if let Some(stroke) = stroke {
-//                     let ((r, g, b), w) = match *parent_transform * *stroke {
-//                         Stroke::Full { color, width } => (color.as_rgb_f64(), width),
-//                         Stroke::Dashed {
-//                             color,
-//                             width,
-//                             on,
-//                             off,
-//                         } => (color.as_rgb_f64(), width),
-//                     };
-
-//                     layer.set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
-//                         r,
-//                         g,
-//                         b,
-//                         icc_profile: None,
-//                     }));
-
-//                     layer.set_outline_thickness(printpdf::Mm(w as f64).into_pt().0);
-//                 }
-
-//                 shape.draw_on_layer_with_parent_transform(layer, parent_transform)?;
-
-//                 if stroke.is_some() {
-//                     layer.set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
-//                         r: 0.,
-//                         g: 0.,
-//                         b: 0.,
-//                         icc_profile: None,
-//                     }));
-//                     layer.set_outline_thickness(0.);
-//                 }
-
-//                 if fill.is_some() {
-//                     layer.set_fill_color(printpdf::Color::Rgb(printpdf::Rgb {
-//                         r: 0.,
-//                         g: 0.,
-//                         b: 0.,
-//                         icc_profile: None,
-//                     }));
-//                 }
-
-//                 Ok(())
-//             }
-//         }
-//     }
-// }
 
 // impl ToPDF for Curve {
 //     fn draw_on_layer_with_parent_transform(

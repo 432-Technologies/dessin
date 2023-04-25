@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use core::f32::consts::PI;
-use nalgebra::{Point2, Transform2};
+use nalgebra::{Transform2};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct ThickArc {

@@ -163,7 +163,7 @@ impl Curve {
         ) -> Vec<KeypointPosition> {
             let parent_transform = curve.global_transform(parent_transform);
 
-            let mut res = curve
+            let res = curve
                 .keypoints
                 .iter()
                 .flat_map(|keypoint| match keypoint {
