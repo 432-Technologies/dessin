@@ -1,196 +1,247 @@
-// use dessin::prelude::*;
-// use nalgebra::{Transform2, Translation2};
-// use once_cell::sync::OnceCell;
-// use printpdf::{Mm, PdfDocument, PdfDocumentReference, PdfLayerReference};
-// use std::{
-//     io,
-//     sync::{Arc, RwLock},
-// };
+use dessin::{export::Exporter, prelude::*};
+use nalgebra::{Transform2, Translation2};
+use once_cell::sync::OnceCell;
+use printpdf::{Mm, PdfDocument, PdfDocumentReference, PdfLayerReference};
+use std::{
+    fmt,
+    sync::{Arc, RwLock},
+};
 
-// static FONT_HOLDER: OnceCell<Arc<RwLock<Vec<dessin::font::FontGroup<printpdf::IndirectFontRef>>>>> =
-//     OnceCell::new();
+static FONT_HOLDER: OnceCell<Arc<RwLock<Vec<dessin::font::FontGroup<printpdf::IndirectFontRef>>>>> =
+    OnceCell::new();
 
-// #[derive(Debug)]
-// pub enum PDFError {
-//     PrintPDF(printpdf::Error),
-//     WriteError(io::Error),
-//     CurveHasNoStartingPoint(Curve),
-//     UnknownBuiltinFont(String),
-// }
-// impl From<io::Error> for PDFError {
-//     fn from(e: io::Error) -> Self {
-//         PDFError::WriteError(e)
-//     }
-// }
-// impl From<printpdf::Error> for PDFError {
-//     fn from(e: printpdf::Error) -> Self {
-//         PDFError::PrintPDF(e)
-//     }
-// }
+#[derive(Debug)]
+pub enum PDFError {
+    PrintPDF(printpdf::Error),
+    WriteError(fmt::Error),
+    CurveHasNoStartingPoint(Curve),
+    UnknownBuiltinFont(String),
+}
+impl From<fmt::Error> for PDFError {
+    fn from(e: fmt::Error) -> Self {
+        PDFError::WriteError(e)
+    }
+}
+impl From<printpdf::Error> for PDFError {
+    fn from(e: printpdf::Error) -> Self {
+        PDFError::PrintPDF(e)
+    }
+}
 
-// pub trait ToPDF {
-//     // fn write_raw_pdf<W: Write>(
-//     //     &self,
-//     //     w: &mut W,
-//     //     parent_transform: &Transform2<f32>,
-//     // ) -> Result<(), PDFError>;
+#[derive(Default)]
+pub struct PDFOptions {
+    pub size: Option<(f32, f32)>,
+}
 
-//     // fn write_pdf<W: Write>(&self, w: &mut W) -> Result<(), PDFError> {
-//     //     let max_x = 150.;
-//     //     let max_y = 150.;
+pub struct PDFExporter {
+    layer: PdfLayerReference,
+}
+impl PDFExporter {
+    pub fn new(layer: PdfLayerReference) -> Self {
+        PDFExporter { layer }
+    }
+}
 
-//     //     write!(
-//     //         w,
-//     //         r#"<pdf viewBox="{offset_x} {offset_y} {max_x} {max_y}" xmlns="http://www.w3.org/2000/pdf" xmlns:xlink="http://www.w3.org/1999/xlink">"#,
-//     //         offset_x = -max_x / 2.,
-//     //         offset_y = -max_y / 2.,
-//     //     )?;
+impl Exporter for PDFExporter {
+    type Error = PDFError;
 
-//     //     self.write_raw_pdf(w, &Transform2::default())?;
+    fn start_style(&mut self, style: StylePosition) -> Result<(), Self::Error> {
+        todo!()
+    }
 
-//     //     write!(w, "</pdf>")?;
+    fn end_style(&mut self) -> Result<(), Self::Error> {
+        todo!()
+    }
 
-//     //     Ok(())
-//     // }
+    fn export_image(
+        &mut self,
+        ImagePosition {
+            top_left,
+            top_right,
+            bottom_right,
+            bottom_left,
+            center,
+            width,
+            height,
+            rotation,
+            image,
+        }: ImagePosition,
+    ) -> Result<(), Self::Error> {
+        let width_px = image.width();
+        let height_px = image.height();
 
-//     /// Draw the `Dessin` on the given layer
-//     ///
-//     /// ```
-//     /// # use printpdf::{Mm, PdfDocument};
-//     /// # use dessin_pdf::{PDFError, ToPDF};
-//     /// # use dessin::prelude::*;
-//     /// # fn main() -> Result<(), PDFError> {
-//     ///
-//     /// // See https://docs.rs/printpdf/latest/printpdf/ for more infos
-//     /// let (doc, page1, layer1) =
-//     /// 	PdfDocument::new("printpdf graphics test", Mm(297.0), Mm(210.0), "Layer 1");
-//     /// let current_layer = doc.get_page(page1).get_layer(layer1);
-//     ///
-//     /// dessin!( /* Shapes here */ ).draw_on_layer(&current_layer, 297.0, 210.0)?;
-//     ///
-//     /// # 	Ok(())
-//     /// # }
-//     /// ```
-//     #[inline]
-//     fn draw_on_layer(
-//         &self,
-//         layer: &PdfLayerReference,
-//         width: f32,
-//         height: f32,
-//     ) -> Result<(), PDFError> {
-//         let translation = Translation2::new(width / 2., height / 2.);
-//         self.draw_on_layer_with_parent_transform(layer, &nalgebra::convert(translation))
-//     }
+        let dpi = 300.;
+        let raw_width = width_px as f32 * 25.4 / dpi;
+        let raw_height = height_px as f32 * 25.4 / dpi;
 
-//     fn draw_on_layer_with_parent_transform(
-//         &self,
-//         layer: &PdfLayerReference,
-//         parent_transform: &Transform2<f32>,
-//     ) -> Result<(), PDFError>;
+        let scale_width = width / raw_width;
+        let scale_height = height / raw_height;
 
-//     fn to_pdf(&self, width: f32, height: f32) -> Result<PdfDocumentReference, PDFError> {
-//         let (doc, page, layer) = PdfDocument::new("", Mm(width as f64), Mm(height as f64), "Layer");
+        printpdf::Image::from_dynamic_image(image).add_to_layer(
+            self.layer.clone(),
+            printpdf::ImageTransform {
+                translate_x: Some(Mm(bottom_left.x as f64)),
+                translate_y: Some(Mm(bottom_left.y as f64)),
+                rotate: Some(printpdf::ImageRotation {
+                    angle_ccw_degrees: rotation.to_degrees() as f64,
+                    rotation_center_x: printpdf::Px((width_px / 2) as usize),
+                    rotation_center_y: printpdf::Px((height_px / 2) as usize),
+                }),
+                scale_x: Some(scale_width as f64),
+                scale_y: Some(scale_height as f64),
+                dpi: Some(dpi as f64),
+            },
+        );
 
-//         for dessin::font::FontGroup {
-//             regular,
-//             bold,
-//             italic,
-//             bold_italic,
-//         } in dessin::font::fonts()
-//         {
-//             fn find_builtin_font(f: &str) -> Result<printpdf::BuiltinFont, PDFError> {
-//                 match f {
-//                     "TimesRoman" => Ok(printpdf::BuiltinFont::TimesRoman),
-//                     "TimesBold" => Ok(printpdf::BuiltinFont::TimesBold),
-//                     "TimesItalic" => Ok(printpdf::BuiltinFont::TimesItalic),
-//                     "TimesBoldItalic" => Ok(printpdf::BuiltinFont::TimesBoldItalic),
-//                     "Helvetica" => Ok(printpdf::BuiltinFont::Helvetica),
-//                     "HelveticaBold" => Ok(printpdf::BuiltinFont::HelveticaBold),
-//                     "HelveticaOblique" => Ok(printpdf::BuiltinFont::HelveticaOblique),
-//                     "HelveticaBoldOblique" => Ok(printpdf::BuiltinFont::HelveticaBoldOblique),
-//                     "Courier" => Ok(printpdf::BuiltinFont::Courier),
-//                     "CourierOblique" => Ok(printpdf::BuiltinFont::CourierOblique),
-//                     "CourierBold" => Ok(printpdf::BuiltinFont::CourierBold),
-//                     "CourierBoldOblique" => Ok(printpdf::BuiltinFont::CourierBoldOblique),
-//                     "Symbol" => Ok(printpdf::BuiltinFont::Symbol),
-//                     "ZapfDingbats" => Ok(printpdf::BuiltinFont::ZapfDingbats),
-//                     _ => Err(PDFError::UnknownBuiltinFont(f.to_string())),
-//                 }
-//             }
+        Ok(())
+    }
 
-//             let regular = match regular {
-//                 dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
-//                 dessin::font::Font::Bytes(b) => doc.add_external_font(b.as_slice())?,
-//             };
+    fn export_ellipse(&mut self, ellipse: EllipsePosition) -> Result<(), Self::Error> {
+        todo!()
+    }
 
-//             let bold = match bold {
-//                 Some(dessin::font::Font::ByName(n)) => {
-//                     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-//                 }
-//                 Some(dessin::font::Font::Bytes(b)) => Some(doc.add_external_font(b.as_slice())?),
-//                 None => None,
-//             };
+    fn export_curve(&mut self, curve: CurvePosition) -> Result<(), Self::Error> {
+        todo!()
+    }
 
-//             let italic = match italic {
-//                 Some(dessin::font::Font::ByName(n)) => {
-//                     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-//                 }
-//                 Some(dessin::font::Font::Bytes(b)) => Some(doc.add_external_font(b.as_slice())?),
-//                 None => None,
-//             };
+    fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> {
+        todo!()
+    }
+}
 
-//             let bold_italic = match bold_italic {
-//                 Some(dessin::font::Font::ByName(n)) => {
-//                     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-//                 }
-//                 Some(dessin::font::Font::Bytes(b)) => Some(doc.add_external_font(b.as_slice())?),
-//                 None => None,
-//             };
+pub trait ToPDF {
+    fn write_to_pdf_with_options(
+        &self,
+        layer: PdfLayerReference,
+        options: PDFOptions,
+    ) -> Result<(), PDFError>;
+    #[inline]
+    fn write_to_pdf(&self, layer: PdfLayerReference) -> Result<(), PDFError> {
+        self.write_to_pdf_with_options(layer, PDFOptions::default())
+    }
 
-//             let fh = FONT_HOLDER.get_or_init(|| Arc::new(RwLock::new(vec![])));
-//             fh.write().unwrap().push(dessin::font::FontGroup {
-//                 regular,
-//                 bold,
-//                 bold_italic,
-//                 italic,
-//             });
-//         }
+    fn to_pdf_with_options(&self, options: PDFOptions) -> Result<PdfDocumentReference, PDFError>;
+    #[inline]
+    fn to_pdf_bytes_with_options(&self, options: PDFOptions) -> Result<Vec<u8>, PDFError> {
+        Ok(self.to_pdf_with_options(options)?.save_to_bytes()?)
+    }
 
-//         let current_layer = doc.get_page(page).get_layer(layer);
-//         self.draw_on_layer(&current_layer, width, height)?;
-//         Ok(doc)
-//     }
+    #[inline]
+    fn to_pdf(&self) -> Result<PdfDocumentReference, PDFError> {
+        self.to_pdf_with_options(PDFOptions::default())
+    }
+    #[inline]
+    fn to_pdf_bytes(&self) -> Result<Vec<u8>, PDFError> {
+        Ok(self.to_pdf()?.save_to_bytes()?)
+    }
+}
+impl ToPDF for Shape {
+    fn write_to_pdf_with_options(
+        &self,
+        layer: PdfLayerReference,
+        options: PDFOptions,
+    ) -> Result<(), PDFError> {
+        let (width, height) = options.size.unwrap_or_else(|| {
+            let bb = self
+                .local_bounding_box()
+                .unwrap_or_else(|| BoundingBox::zero().as_unparticular());
+            (bb.width(), bb.height())
+        });
 
-//     #[inline]
-//     fn to_pdf_bytes(&self, width: f32, height: f32) -> Result<Vec<u8>, PDFError> {
-//         let pdf = self.to_pdf(width, height)?;
-//         Ok(pdf.save_to_bytes()?)
-//     }
-// }
+        let mut exporter = PDFExporter::new(layer);
+        let translation = Translation2::new(width / 2., height / 2.);
+        let parent_transform = nalgebra::convert(translation);
 
-// impl ToPDF for Shape {
-//     fn draw_on_layer_with_parent_transform(
-//         &self,
-//         layer: &PdfLayerReference,
-//         parent_transform: &Transform2<f32>,
-//     ) -> Result<(), PDFError> {
-//         match self {
-//             Shape::Image(i) => i.draw_on_layer_with_parent_transform(layer, parent_transform),
-//             Shape::Text(t) => t.draw_on_layer_with_parent_transform(layer, parent_transform),
-//             Shape::Ellipse(e) => e.draw_on_layer_with_parent_transform(layer, parent_transform),
-//             Shape::Curve(c) => c.draw_on_layer_with_parent_transform(layer, parent_transform),
-//             Shape::Group {
-//                 local_transform: _,
-//                 shapes,
-//             } => {
-//                 let transform = self.global_transform(parent_transform);
+        self.write_into_exporter(&mut exporter, &parent_transform)
+    }
 
-//                 for s in shapes {
-//                     s.draw_on_layer_with_parent_transform(layer, &transform)?;
-//                 }
+    fn to_pdf_with_options(
+        &self,
+        mut options: PDFOptions,
+    ) -> Result<PdfDocumentReference, PDFError> {
+        let size = options.size.unwrap_or_else(|| {
+            let bb = self
+                .local_bounding_box()
+                .unwrap_or_else(|| BoundingBox::zero().as_unparticular());
+            (bb.width(), bb.height())
+        });
+        options.size = Some(size);
 
-//                 Ok(())
-//             }
+        let (doc, page, layer) =
+            PdfDocument::new("", Mm(size.0 as f64), Mm(size.1 as f64), "Layer 1");
+        let layer = doc.get_page(page).get_layer(layer);
+
+        for dessin::font::FontGroup {
+            regular,
+            bold,
+            italic,
+            bold_italic,
+        } in dessin::font::fonts()
+        {
+            fn find_builtin_font(f: &str) -> Result<printpdf::BuiltinFont, PDFError> {
+                match f {
+                    "TimesRoman" => Ok(printpdf::BuiltinFont::TimesRoman),
+                    "TimesBold" => Ok(printpdf::BuiltinFont::TimesBold),
+                    "TimesItalic" => Ok(printpdf::BuiltinFont::TimesItalic),
+                    "TimesBoldItalic" => Ok(printpdf::BuiltinFont::TimesBoldItalic),
+                    "Helvetica" => Ok(printpdf::BuiltinFont::Helvetica),
+                    "HelveticaBold" => Ok(printpdf::BuiltinFont::HelveticaBold),
+                    "HelveticaOblique" => Ok(printpdf::BuiltinFont::HelveticaOblique),
+                    "HelveticaBoldOblique" => Ok(printpdf::BuiltinFont::HelveticaBoldOblique),
+                    "Courier" => Ok(printpdf::BuiltinFont::Courier),
+                    "CourierOblique" => Ok(printpdf::BuiltinFont::CourierOblique),
+                    "CourierBold" => Ok(printpdf::BuiltinFont::CourierBold),
+                    "CourierBoldOblique" => Ok(printpdf::BuiltinFont::CourierBoldOblique),
+                    "Symbol" => Ok(printpdf::BuiltinFont::Symbol),
+                    "ZapfDingbats" => Ok(printpdf::BuiltinFont::ZapfDingbats),
+                    _ => Err(PDFError::UnknownBuiltinFont(f.to_string())),
+                }
+            }
+
+            let regular = match regular {
+                dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
+                dessin::font::Font::Bytes(b) => doc.add_external_font(b.as_slice())?,
+            };
+
+            let bold = match bold {
+                Some(dessin::font::Font::ByName(n)) => {
+                    Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
+                }
+                Some(dessin::font::Font::Bytes(b)) => Some(doc.add_external_font(b.as_slice())?),
+                None => None,
+            };
+
+            let italic = match italic {
+                Some(dessin::font::Font::ByName(n)) => {
+                    Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
+                }
+                Some(dessin::font::Font::Bytes(b)) => Some(doc.add_external_font(b.as_slice())?),
+                None => None,
+            };
+
+            let bold_italic = match bold_italic {
+                Some(dessin::font::Font::ByName(n)) => {
+                    Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
+                }
+                Some(dessin::font::Font::Bytes(b)) => Some(doc.add_external_font(b.as_slice())?),
+                None => None,
+            };
+
+            let fh = FONT_HOLDER.get_or_init(|| Arc::new(RwLock::new(vec![])));
+            fh.write().unwrap().push(dessin::font::FontGroup {
+                regular,
+                bold,
+                bold_italic,
+                italic,
+            });
+        }
+
+        self.write_to_pdf_with_options(layer, options)?;
+
+        Ok(doc)
+    }
+}
+
 //             Shape::Style {
 //                 fill,
 //                 stroke,
@@ -395,59 +446,6 @@
 //                 font,
 //             );
 //         }
-
-//         Ok(())
-//     }
-// }
-
-// impl ToPDF for Image {
-//     fn draw_on_layer_with_parent_transform(
-//         &self,
-//         layer: &PdfLayerReference,
-//         parent_transform: &Transform2<f32>,
-//     ) -> Result<(), PDFError> {
-//         let ImagePosition {
-//             center: _,
-//             top_left: _,
-//             top_right: _,
-//             bottom_right: _,
-//             bottom_left,
-//             width,
-//             height,
-//             rotation,
-//         } = self.position(parent_transform);
-//         let Image {
-//             image,
-//             local_transform: _,
-//         } = self;
-
-//         let width_px = image.width();
-//         let height_px = image.height();
-
-//         let dpi = 300.;
-//         let raw_width = width_px as f32 * 25.4 / dpi;
-//         let raw_height = height_px as f32 * 25.4 / dpi;
-
-//         let scale_width = width / raw_width;
-//         let scale_height = height / raw_height;
-
-//         println!("{dpi} {raw_width} {raw_height} {width_px} {height_px}");
-
-//         printpdf::Image::from_dynamic_image(image).add_to_layer(
-//             layer.clone(),
-//             printpdf::ImageTransform {
-//                 translate_x: Some(Mm(bottom_left.x as f64)),
-//                 translate_y: Some(Mm(bottom_left.y as f64)),
-//                 rotate: Some(printpdf::ImageRotation {
-//                     angle_ccw_degrees: rotation.to_degrees() as f64,
-//                     rotation_center_x: printpdf::Px((width_px / 2) as usize),
-//                     rotation_center_y: printpdf::Px((height_px / 2) as usize),
-//                 }),
-//                 scale_x: Some(scale_width as f64),
-//                 scale_y: Some(scale_height as f64),
-//                 dpi: Some(dpi as f64),
-//             },
-//         );
 
 //         Ok(())
 //     }

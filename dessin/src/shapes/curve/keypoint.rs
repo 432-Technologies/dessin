@@ -9,7 +9,6 @@ use nalgebra::{Point2, Transform2, Vector2};
 pub enum KeypointPosition {
     Point(Point2<f32>),
     Bezier(Bezier),
-    Close,
 }
 
 #[derive(Debug, Clone, PartialEq)]

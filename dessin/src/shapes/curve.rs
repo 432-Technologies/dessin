@@ -8,6 +8,7 @@ use nalgebra::{Point2, Transform2};
 #[derive(Debug, Clone, PartialEq)]
 pub struct CurvePosition {
     pub keypoints: Vec<KeypointPosition>,
+    pub closed: bool,
 }
 
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -174,15 +175,12 @@ impl Curve {
                 })
                 .collect::<Vec<_>>();
 
-            if curve.closed {
-                res.push(KeypointPosition::Close);
-            }
-
             res
         }
 
         CurvePosition {
             keypoints: flatten_curve(self, parent_transform),
+            closed: self.closed,
         }
     }
 }

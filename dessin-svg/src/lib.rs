@@ -111,16 +111,13 @@ impl SVGExporter {
                             end_y = b.end.y,
                         )?;
                 }
-                KeypointPosition::Close => {
-                    if has_start {
-                        write!(self.acc, "Z ",)?;
-                    } else {
-                        return Err(SVGError::CurveHasNoStartingPoint(curve));
-                    }
-                }
             }
 
             has_start = true;
+        }
+
+        if curve.closed {
+            write!(self.acc, "Z",)?;
         }
 
         Ok(())
