@@ -7,8 +7,7 @@ use nalgebra::{Point2, Transform2};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct CurvePosition {
-    pub keypoints: Vec<Keypoint>,
-    pub closed: bool,
+    pub keypoints: Vec<KeypointPosition>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -157,13 +156,33 @@ impl Curve {
     }
 
     pub fn position(&self, parent_transform: &Transform2<f32>) -> CurvePosition {
-        CurvePosition {
-            closed: self.closed,
-            keypoints: self
+        fn flatten_curve(
+            curve: &Curve,
+            parent_transform: &Transform2<f32>,
+        ) -> Vec<KeypointPosition> {
+            let parent_transform = curve.global_transform(parent_transform);
+
+            let mut res = curve
                 .keypoints
                 .iter()
-                .map(|e| e.transform(&self.global_transform(parent_transform)))
-                .collect(),
+                .flat_map(|keypoint| match keypoint {
+                    Keypoint::Point(p) => vec![KeypointPosition::Point(parent_transform * p)],
+                    Keypoint::Bezier(b) => {
+                        vec![KeypointPosition::Bezier(b.transform(&parent_transform))]
+                    }
+                    Keypoint::Curve(c) => flatten_curve(c, &parent_transform),
+                })
+                .collect::<Vec<_>>();
+
+            if curve.closed {
+                res.push(KeypointPosition::Close);
+            }
+
+            res
+        }
+
+        CurvePosition {
+            keypoints: flatten_curve(self, parent_transform),
         }
     }
 }

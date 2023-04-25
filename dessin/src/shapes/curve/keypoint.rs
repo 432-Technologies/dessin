@@ -1,10 +1,16 @@
+use super::Curve;
 use crate::{
     prelude::{BoundingBox, ShapeBoundingBox, UnParticular},
     shapes::ShapeOpWith,
 };
+use nalgebra::{Point2, Transform2, Vector2};
 
-use super::Curve;
-use nalgebra::{Point, Point2, Transform2, Translation, Vector2};
+#[derive(Debug, Clone, PartialEq)]
+pub enum KeypointPosition {
+    Point(Point2<f32>),
+    Bezier(Bezier),
+    Close,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Keypoint {

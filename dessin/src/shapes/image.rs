@@ -4,7 +4,7 @@ use image::DynamicImage;
 use nalgebra::{Point2, Scale2, Transform2, Unit, Vector2};
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct ImagePosition {
+pub struct ImagePosition<'a> {
     pub top_left: Point2<f32>,
     pub top_right: Point2<f32>,
     pub bottom_right: Point2<f32>,
@@ -15,6 +15,8 @@ pub struct ImagePosition {
     pub height: f32,
 
     pub rotation: f32,
+
+    pub image: &'a DynamicImage,
 }
 
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -54,7 +56,7 @@ impl Image {
         self
     }
 
-    pub fn position(&self, parent_transform: &Transform2<f32>) -> ImagePosition {
+    pub fn position<'a>(&'a self, parent_transform: &Transform2<f32>) -> ImagePosition {
         let transform = self.global_transform(parent_transform);
 
         let top_left = transform * Point2::new(-0.5, 0.5);
@@ -75,6 +77,7 @@ impl Image {
             width: (top_right - top_left).magnitude(),
             height: (top_right - bottom_right).magnitude(),
             rotation,
+            image: &self.image,
         }
     }
 }
@@ -110,6 +113,7 @@ impl ShapeBoundingBox for Image {
             width: _,
             height: _,
             rotation: _,
+            image: _,
         } = self.position(&Transform2::default());
         Some(BoundingBox::new(
             top_left,
@@ -125,6 +129,7 @@ mod tests {
     use std::f32::consts::SQRT_2;
 
     use crate::prelude::*;
+    use ::image::DynamicImage;
     use nalgebra::{ComplexField, Point2, Rotation2, Scale2, Transform2, Translation2};
 
     const EPS: f32 = 0.000001;
@@ -132,6 +137,8 @@ mod tests {
     #[test]
     fn base() {
         let img = dessin!(Image: ());
+
+        let empty_image = DynamicImage::default();
 
         assert_eq!(
             img.position(&Transform2::default()),
@@ -144,6 +151,7 @@ mod tests {
                 width: 1.,
                 height: 1.,
                 rotation: 0.,
+                image: &empty_image,
             }
         );
     }
@@ -204,6 +212,7 @@ mod tests {
     fn combined_transform() {
         let img = dessin!(Image: ());
         let img_pos = img.position(&Transform2::default());
+        let empty_image = DynamicImage::default();
         println!("Base = {img_pos:?}\n");
         assert_eq!(
             img_pos,
@@ -216,6 +225,7 @@ mod tests {
                 width: 1.,
                 height: 1.,
                 rotation: 0.,
+                image: &empty_image,
             }
         );
 
