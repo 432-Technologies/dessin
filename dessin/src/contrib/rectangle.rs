@@ -1,21 +1,14 @@
-use crate::{
-    dessin,
-    shapes::{Curve, Shape, ShapeOp},
-};
-use nalgebra::{Point2, Transform2};
+use crate::prelude::*;
+use nalgebra::{Point2, Scale2, Transform2};
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Rectangle {
     pub local_transform: Transform2<f32>,
-    /// Dimension on the x-axis
-    pub width: f32,
-    /// Dimension on the y-axis
-    pub height: f32,
 }
 impl Rectangle {
     #[inline]
     pub fn width(&mut self, width: f32) -> &mut Self {
-        self.width = width;
+        self.scale(Scale2::new(width, 1.));
         self
     }
     #[inline]
@@ -26,7 +19,7 @@ impl Rectangle {
 
     #[inline]
     pub fn height(&mut self, height: f32) -> &mut Self {
-        self.height = height;
+        self.scale(Scale2::new(1., height));
         self
     }
     #[inline]
@@ -34,23 +27,14 @@ impl Rectangle {
         self.height(height);
         self
     }
+}
 
-    pub fn as_curve(self) -> Curve {
-        use crate::prelude::*;
-
-        let Rectangle {
-            local_transform,
-            width,
-            height,
-        } = self;
-
-        let width = width / 2.;
-        let height = height / 2.;
-
-        let top_left = Point2::new(-width, height);
-        let top_right = Point2::new(width, height);
-        let bottom_right = Point2::new(width, -height);
-        let bottom_left = Point2::new(-width, -height);
+impl From<Rectangle> for Curve {
+    fn from(Rectangle { local_transform }: Rectangle) -> Self {
+        let top_left = Point2::new(-0.5, 0.5);
+        let top_right = Point2::new(0.5, 0.5);
+        let bottom_right = Point2::new(0.5, -0.5);
+        let bottom_left = Point2::new(-0.5, -0.5);
 
         dessin! {
             Curve: (
@@ -78,7 +62,7 @@ impl ShapeOp for Rectangle {
 
 impl From<Rectangle> for Shape {
     fn from(v: Rectangle) -> Self {
-        v.as_curve().into()
+        Curve::from(v).into()
     }
 }
 
@@ -91,11 +75,32 @@ mod tests {
     const EPS: f32 = 10e-6;
 
     #[test]
+    fn similar_op() {
+        let base = dessin!(Rectangle: (
+            width={2.}
+            height={3.}
+            translate={[1., 2.]}
+        ));
+
+        let base_2 = dessin!(Rectangle: (
+            scale={[2., 3.]}
+            translate={[1., 2.]}
+        ));
+
+        let base_3 = dessin!(Rectangle: (
+            translate={[1. / 2., 2. / 3.]}
+            scale={[2., 3.]}
+        ));
+
+        assert_eq!(base, base_2);
+        assert_eq!(base, base_3);
+    }
+
+    #[test]
     fn parent_rotate_text_scale() {
         let base = dessin!(Rectangle: (
             width={2.}
             height={3.}
-            // scale={[2., 4.]}
             translate={[1., 2.]}
         ));
 
@@ -111,6 +116,9 @@ mod tests {
                 _ => unreachable!(),
             })
             .collect();
+
+        dbg!(&base_position);
+
         assert!(
             (base_position[0] - Point2::new(0., 3.5)).magnitude() < EPS,
             "left = {}, right = [0., 3.5]",

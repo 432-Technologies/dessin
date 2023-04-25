@@ -48,8 +48,8 @@ impl SVGExporter {
 
     fn write_style(&mut self, style: StylePosition) -> Result<(), SVGError> {
         match style.fill {
-            Some(Fill::Color(color)) => write!(self.acc, "fill='{color}'")?,
-            None => write!(self.acc, "fill='none'")?,
+            Some(Fill::Color(color)) => write!(self.acc, "fill='{color}' ")?,
+            None => write!(self.acc, "fill='none' ")?,
         }
 
         match style.stroke {
@@ -60,10 +60,10 @@ impl SVGExporter {
                 off,
             }) => write!(
                 self.acc,
-                "stroke='{color}' stroke-width='{width}' stroke-dasharray='{on},{off}'"
+                "stroke='{color}' stroke-width='{width}' stroke-dasharray='{on},{off}' "
             )?,
             Some(Stroke::Full { color, width }) => {
-                write!(self.acc, "stroke='{color}' stroke-width='{width}'")?
+                write!(self.acc, "stroke='{color}' stroke-width='{width}' ")?
             }
 
             None => {}
@@ -187,7 +187,7 @@ impl Exporter for SVGExporter {
     ) -> Result<(), Self::Error> {
         write!(
             self.acc,
-            r#"<ellipse cx="{cx}" cy="{cy}" rx="{semi_major_axis}" ry="{semi_minor_axis}""#,
+            r#"<ellipse cx="{cx}" cy="{cy}" rx="{semi_major_axis}" ry="{semi_minor_axis}" "#,
             cx = center.x,
             cy = center.y
         )?;
@@ -195,7 +195,7 @@ impl Exporter for SVGExporter {
         if rotation != 0. {
             write!(
                 self.acc,
-                r#" transform="rotate({rot}rad)""#,
+                r#" transform="rotate({rot}rad)" "#,
                 rot = -rotation.to_degrees()
             )?;
         }

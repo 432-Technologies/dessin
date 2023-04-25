@@ -224,3 +224,16 @@ where
         Keypoint::Curve(value.into())
     }
 }
+
+pub trait CurveOp {
+    fn as_curve(&self) -> Curve;
+}
+
+impl<T> CurveOp for T
+where
+    T: Into<Curve> + Clone,
+{
+    fn as_curve(&self) -> Curve {
+        self.clone().into()
+    }
+}
