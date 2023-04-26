@@ -84,9 +84,11 @@ impl<T: ShapeOp> ShapeOpWith for T {}
 
 /// Marker discribing the state of a bounding box.
 /// With this marker, the bounding box may be skew or rotated.
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct UnParticular;
 /// Marker discribing the state of a bounding box.
 /// With this marker, the sides of the bounding box are guaranteed to be aligned with the X and Y axis.
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Straight;
 
 /// Bounding box used to describe max bound of an shape.

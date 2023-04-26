@@ -157,6 +157,25 @@ mod tests {
     }
 
     #[test]
+    fn bounding_box() {
+        let img = dessin!(Image: ());
+        let bb = img.local_bounding_box().unwrap();
+
+        assert_eq!(bb.width(), 1.);
+        assert_eq!(bb.height(), 1.);
+
+        assert_eq!(
+            bb,
+            BoundingBox::new(
+                Point2::new(-0.5, 0.5),
+                Point2::new(0.5, 0.5),
+                Point2::new(0.5, -0.5),
+                Point2::new(-0.5, -0.5),
+            )
+        );
+    }
+
+    #[test]
     fn local_transform() {
         let img = dessin!(Image: (
             rotate={Rotation2::new(-45_f32.to_radians())}

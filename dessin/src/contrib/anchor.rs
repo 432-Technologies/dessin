@@ -66,7 +66,11 @@ where
             let bb = bb.straigthen();
             let width = bb.width() / 2.;
             let height = bb.height() / 2.;
-            shape.with_translate(Translation2::new(anchor.x * width, anchor.y * height))
+
+            let translate_x = -anchor.x * width;
+            let translate_y = -anchor.y * height;
+
+            shape.with_translate(Translation2::new(translate_x, translate_y))
         } else {
             shape
         }
@@ -118,7 +122,7 @@ mod tests {
 
     #[test]
     fn base() {
-        let Shape::image(img) = Shape::from(dessin!(Anchor<Image>: ())) else {
+        let Shape::Image(img) = Shape::from(dessin!(Anchor<Image>: ())) else {
             unreachable!()
         };
 
@@ -142,7 +146,7 @@ mod tests {
 
     #[test]
     fn anchor() {
-        let Shape::image(img) = Shape::from(dessin!(Anchor<Image>: (
+        let Shape::Image(img) = Shape::from(dessin!(Anchor<Image>: (
             anchor={[1., 1.]}
         ))) else {
             unreachable!()
@@ -153,11 +157,38 @@ mod tests {
         assert_eq!(
             img.position(&Transform2::default()),
             ImagePosition {
-                center: Point2::origin(),
+                center: Point2::new(-0.5, -0.5),
                 top_left: Point2::new(-1., 0.),
                 top_right: Point2::new(0., 0.),
-                bottom_right: Point2::new(-1., 0.),
+                bottom_right: Point2::new(0., -1.),
                 bottom_left: Point2::new(-1., -1.),
+                width: 1.,
+                height: 1.,
+                rotation: 0.,
+                image: &empty_image,
+            }
+        );
+    }
+
+    #[test]
+    fn translate() {
+        let Shape::Image(img) = Shape::from(dessin!(Anchor<Image>: (
+            anchor={[1., 1.]}
+        ))) else {
+            unreachable!()
+        };
+
+        let empty_image = DynamicImage::default();
+        let translation: Transform2<f32> = nalgebra::convert(Translation2::new(15., 13.));
+
+        assert_eq!(
+            img.position(&translation),
+            ImagePosition {
+                center: Point2::new(14.5, 12.5),
+                top_left: Point2::new(14., 13.),
+                top_right: Point2::new(15., 13.),
+                bottom_right: Point2::new(15., 12.),
+                bottom_left: Point2::new(14., 12.),
                 width: 1.,
                 height: 1.,
                 rotation: 0.,
