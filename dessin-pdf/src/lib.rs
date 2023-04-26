@@ -257,7 +257,7 @@ impl ToPDF for Shape {
             bold,
             italic,
             bold_italic,
-        } in dessin::font::fonts()
+        } in dessin::font::fonts().values()
         {
             fn find_builtin_font(f: &str) -> Result<printpdf::BuiltinFont, PDFError> {
                 match f {

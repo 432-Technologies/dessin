@@ -159,16 +159,26 @@ impl Exporter for SVGExporter {
         }: ImagePosition,
     ) -> Result<(), Self::Error> {
         let mut raw_image = Cursor::new(vec![]);
-        image.write_to(&mut raw_image, ImageFormat::Png).unwrap(); // TODO: Parse Image format
+        image.write_to(&mut raw_image, ImageFormat::Png).unwrap();
 
-        let data = data_encoding::BASE64URL.encode(&raw_image.into_inner());
+        let data = data_encoding::BASE64.encode(&raw_image.into_inner());
 
         write!(
             self.acc,
-            r#"<image width="{width}" height="{height}" x="{x}" y="{y}" transform="rotate({rotation}rad)" href="data:image/png;base64,{data}" xlink:href="data:image/png;base64,{data}"/>"#,
-            x = center.x,
-            y = center.y,
+            r#"<image width="{width}" height="{height}" x="{x}" y="{y}" "#,
+            x = center.x + width / 2.,
+            y = center.y + height / 2.,
         )?;
+
+        if rotation != 0. {
+            write!(
+                self.acc,
+                r#"transform="rotate({rot}rad)" "#,
+                rot = -rotation.to_degrees()
+            )?;
+        }
+
+        write!(self.acc, r#"href="data:image/png;base64,{data}"/>"#,)?;
 
         Ok(())
     }

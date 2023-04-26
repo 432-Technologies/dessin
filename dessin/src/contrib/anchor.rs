@@ -2,10 +2,21 @@ use crate::prelude::{Shape, ShapeBoundingBox, ShapeOp, ShapeOpWith};
 use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
 use std::ops::{Deref, DerefMut};
 
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Anchor<T> {
     pub shape: T,
     pub anchor: Vector2<f32>,
+}
+impl<T> Default for Anchor<T>
+where
+    T: Default,
+{
+    fn default() -> Self {
+        Anchor {
+            shape: T::default(),
+            anchor: Vector2::zeros(),
+        }
+    }
 }
 impl<T> Anchor<T> {
     #[inline]
@@ -17,13 +28,13 @@ impl<T> Anchor<T> {
     }
 
     #[inline]
-    pub fn anchor(&mut self, anchor: Vector2<f32>) -> &mut Self {
-        self.anchor = anchor;
+    pub fn anchor<A: Into<Vector2<f32>>>(&mut self, anchor: A) -> &mut Self {
+        self.anchor = anchor.into();
         self
     }
 
     #[inline]
-    pub fn with_anchor(mut self, anchor: Vector2<f32>) -> Self {
+    pub fn with_anchor<A: Into<Vector2<f32>>>(mut self, anchor: A) -> Self {
         self.anchor(anchor);
         self
     }
@@ -55,7 +66,7 @@ where
             let bb = bb.straigthen();
             let width = bb.width() / 2.;
             let height = bb.height() / 2.;
-            shape.with_translate(Translation2::new(-anchor.x * width, -anchor.y * height))
+            shape.with_translate(Translation2::new(anchor.x * width, anchor.y * height))
         } else {
             shape
         }
@@ -92,5 +103,66 @@ impl<T: ShapeOp> ShapeOp for Anchor<T> {
     #[inline]
     fn global_transform(&self, parent_transform: &Transform2<f32>) -> Transform2<f32> {
         self.shape.global_transform(parent_transform)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::f32::consts::SQRT_2;
+
+    use crate::prelude::*;
+    use ::image::DynamicImage;
+    use nalgebra::{ComplexField, Point2, Rotation2, Scale2, Transform2, Translation2};
+
+    const EPS: f32 = 0.000001;
+
+    #[test]
+    fn base() {
+        let Shape::image(img) = Shape::from(dessin!(Anchor<Image>: ())) else {
+            unreachable!()
+        };
+
+        let empty_image = DynamicImage::default();
+
+        assert_eq!(
+            img.position(&Transform2::default()),
+            ImagePosition {
+                center: Point2::origin(),
+                top_left: Point2::new(-0.5, 0.5),
+                top_right: Point2::new(0.5, 0.5),
+                bottom_right: Point2::new(0.5, -0.5),
+                bottom_left: Point2::new(-0.5, -0.5),
+                width: 1.,
+                height: 1.,
+                rotation: 0.,
+                image: &empty_image,
+            }
+        );
+    }
+
+    #[test]
+    fn anchor() {
+        let Shape::image(img) = Shape::from(dessin!(Anchor<Image>: (
+            anchor={[1., 1.]}
+        ))) else {
+            unreachable!()
+        };
+
+        let empty_image = DynamicImage::default();
+
+        assert_eq!(
+            img.position(&Transform2::default()),
+            ImagePosition {
+                center: Point2::origin(),
+                top_left: Point2::new(-1., 0.),
+                top_right: Point2::new(0., 0.),
+                bottom_right: Point2::new(-1., 0.),
+                bottom_left: Point2::new(-1., -1.),
+                width: 1.,
+                height: 1.,
+                rotation: 0.,
+                image: &empty_image,
+            }
+        );
     }
 }

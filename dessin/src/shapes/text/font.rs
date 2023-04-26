@@ -1,7 +1,9 @@
-use once_cell::sync::OnceCell;
-use std::sync::{Arc, RwLock};
-
 use super::FontWeight;
+use once_cell::sync::OnceCell;
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+};
 
 static FONT_HOLDER: OnceCell<Arc<RwLock<FontHolder>>> = OnceCell::new();
 
@@ -20,21 +22,37 @@ fn font_holder_mut<T, F: FnOnce(&mut FontHolder) -> T>(f: F) -> T {
 }
 
 #[inline]
-pub fn get(idx: usize) -> FontGroup<Font> {
-    font_holder(|f| f.fonts[idx].clone())
+pub fn get(idx: FontRef) -> FontGroup<Font> {
+    font_holder(|f| f.fonts[&idx.0].clone())
 }
 
 #[inline]
-pub fn fonts() -> Vec<FontGroup<Font>> {
+pub fn fonts() -> HashMap<usize, FontGroup<Font>> {
     font_holder(|f| f.fonts.clone())
 }
 
 #[inline]
-pub fn add_font(font: FontGroup<Font>) -> usize {
+pub fn add_font(font: FontGroup<Font>) -> FontRef {
     font_holder_mut(move |f| {
-        f.fonts.push(font);
-        f.fonts.len()
+        let id = f.fonts.len();
+        f.fonts.insert(id, font);
+        FontRef(id)
     })
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[repr(transparent)]
+pub struct FontRef(usize);
+impl Default for FontRef {
+    fn default() -> Self {
+        FontRef(0)
+    }
+}
+
+impl From<FontGroup<Font>> for FontRef {
+    fn from(font: FontGroup<Font>) -> Self {
+        add_font(font)
+    }
 }
 
 #[derive(Clone)]
@@ -71,12 +89,12 @@ impl FontGroup<Font> {
 }
 
 pub struct FontHolder {
-    fonts: Vec<FontGroup<Font>>,
+    fonts: HashMap<usize, FontGroup<Font>>,
 }
 impl FontHolder {
     fn new() -> Self {
-        FontHolder {
-            fonts: vec![FontGroup::helvetica()],
-        }
+        let mut fonts = HashMap::new();
+        fonts.insert(0, FontGroup::helvetica());
+        FontHolder { fonts }
     }
 }

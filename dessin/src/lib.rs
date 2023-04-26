@@ -1,4 +1,4 @@
-#![warn(missing_docs)]
+// #![warn(missing_docs)]
 
 //! **dessin is library aimed at building complex drawings, combine them, move them and export them as PDF or SVG.**
 //!

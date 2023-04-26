@@ -1,6 +1,6 @@
 pub mod font;
 
-use super::{BoundingBox, Curve, CurvePosition, ShapeBoundingBox, UnParticular};
+use super::{font::FontRef, BoundingBox, Curve, CurvePosition, ShapeBoundingBox, UnParticular};
 use crate::shapes::{Shape, ShapeOp};
 use na::{Point2, Vector2};
 use nalgebra::{self as na, Transform2};
@@ -48,11 +48,17 @@ pub struct Text {
     pub font_weight: FontWeight,
     pub on_curve: Option<Curve>,
     pub font_size: f32,
-    pub font: Option<usize>,
+    pub font: Option<FontRef>,
 }
 impl Text {
-    pub fn font(&mut self, font: font::FontGroup<font::Font>) -> &mut Self {
-        self.font = Some(font::add_font(font));
+    #[inline]
+    pub fn font<F: Into<FontRef>>(&mut self, font: F) -> &mut Self {
+        self.font = Some(font.into());
+        self
+    }
+    #[inline]
+    pub fn with_font<F: Into<FontRef>>(mut self, font: F) -> Self {
+        self.font(font);
         self
     }
 
