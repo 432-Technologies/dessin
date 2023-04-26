@@ -166,8 +166,8 @@ impl Exporter for SVGExporter {
         write!(
             self.acc,
             r#"<image width="{width}" height="{height}" x="{x}" y="{y}" "#,
-            x = center.x + width / 2.,
-            y = center.y + height / 2.,
+            x = center.x - width / 2.,
+            y = center.y - height / 2.,
         )?;
 
         if rotation != 0. {

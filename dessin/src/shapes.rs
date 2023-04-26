@@ -63,19 +63,19 @@ pub trait ShapeOpWith: ShapeOp {
 
     /// Translate
     #[inline]
-    fn with_translate(mut self, translation: Translation2<f32>) -> Self {
+    fn with_translate<T: Into<Translation2<f32>>>(mut self, translation: T) -> Self {
         self.translate(translation);
         self
     }
     /// Resize
     #[inline]
-    fn with_resize(mut self, scale: Scale2<f32>) -> Self {
+    fn with_resize<S: Into<Scale2<f32>>>(mut self, scale: S) -> Self {
         self.scale(scale);
         self
     }
     /// Rotate
     #[inline]
-    fn with_rotate(mut self, rotation: Rotation2<f32>) -> Self {
+    fn with_rotate<R: Into<Rotation2<f32>>>(mut self, rotation: R) -> Self {
         self.rotate(rotation);
         self
     }
