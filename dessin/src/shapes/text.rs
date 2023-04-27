@@ -37,6 +37,7 @@ pub struct TextPosition<'a> {
     pub on_curve: Option<CurvePosition>,
     pub font_size: f32,
     pub reference_start: Point2<f32>,
+    pub font: &'a Option<FontRef>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -143,6 +144,7 @@ impl Text {
             on_curve: self.on_curve.as_ref().map(|v| v.position(&transform)),
             font_size,
             reference_start,
+            font: &self.font,
         }
     }
 }

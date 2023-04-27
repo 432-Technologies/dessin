@@ -37,13 +37,41 @@ pub struct SVGExporter {
 
 impl SVGExporter {
     fn new((max_x, max_y): (f32, f32)) -> Self {
-        SVGExporter {
-            acc: format!(
-                r#"<svg viewBox="{offset_x} {offset_y} {max_x} {max_y}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">"#,
+        const SCHEME: &str =
+            r#"xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink""#;
+
+        let fonts = dessin::font::fonts()
+            .iter()
+            .map(|(font_name, font_data)| {
+                [
+                    ("Regular", Some(&font_data.regular)),
+                    ("Bold", font_data.bold.as_ref()),
+                    ("Italic", font_data.italic.as_ref()),
+                    ("BoldItalic", font_data.bold_italic.as_ref()),
+                ]
+                .into_iter()
+                .filter_map(|(variant, data)| data.map(|v| (variant, v)))
+                .filter_map(move |(variant, data)| {
+                    let (mime, bytes) = match data {
+                        dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
+                        dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
+                        dessin::font::Font::ByName(_) => return None,
+                    };
+
+                    let font = data_encoding::BASE64.encode(&bytes);
+                    Some(format!(r#"<style>@font-face{{font-family:{font_name}{variant};src:url("data:{mime};base64,{font}");}}</style>"#))
+                })
+            })
+            .flatten()
+            .collect::<String>();
+
+        let mut acc = format!(
+            r#"<svg viewBox="{offset_x} {offset_y} {max_x} {max_y}" {SCHEME}><defs>{fonts}</defs>"#,
                 offset_x = -max_x / 2.,
                 offset_y = -max_y / 2.,
-            ),
-        }
+        );
+
+        SVGExporter { acc }
     }
 
     fn write_style(&mut self, style: StylePosition) -> Result<(), SVGError> {
@@ -229,6 +257,7 @@ impl Exporter for SVGExporter {
             on_curve,
             font_size,
             reference_start,
+            font,
         }: TextPosition,
     ) -> Result<(), Self::Error> {
         let id = rand::random::<u64>().to_string();
@@ -248,10 +277,14 @@ impl Exporter for SVGExporter {
         };
 
         let text = text.replace("<", "&lt;").replace(">", "&gt;");
+        let font = font
+            .as_ref()
+            .map(|v| v.name(font_weight))
+            .unwrap_or_else(|| dessin::font::FontRef::default().name(font_weight));
 
         write!(
             self.acc,
-            r#"<text x="{x}" y="{y}" text-anchor="{align}" font-size="{font_size}px" font-weight="{weight}" text-style="{text_style}">"#,
+            r#"<text x="{x}" y="{y}" font-family="{font}" text-anchor="{align}" font-size="{font_size}px" font-weight="{weight}" text-style="{text_style}">"#,
             x = reference_start.x,
             y = reference_start.y,
         )?;

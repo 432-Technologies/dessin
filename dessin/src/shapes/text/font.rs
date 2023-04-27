@@ -27,38 +27,54 @@ pub fn get(idx: FontRef) -> FontGroup<Font> {
 }
 
 #[inline]
-pub fn fonts() -> HashMap<usize, FontGroup<Font>> {
+pub fn fonts() -> HashMap<String, FontGroup<Font>> {
     font_holder(|f| f.fonts.clone())
 }
 
 #[inline]
-pub fn add_font(font: FontGroup<Font>) -> FontRef {
+pub fn font_names() -> Vec<String> {
+    font_holder(|f| f.fonts.keys().cloned().collect())
+}
+
+#[inline]
+pub fn add_font<S: Into<String>>(font_name: S, font: FontGroup<Font>) -> FontRef {
     font_holder_mut(move |f| {
-        let id = f.fonts.len();
-        f.fonts.insert(id, font);
-        FontRef(id)
+        let font_name = font_name.into();
+        f.fonts.insert(font_name.clone(), font);
+        FontRef(font_name)
     })
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 #[repr(transparent)]
-pub struct FontRef(usize);
+pub struct FontRef(String);
+impl FontRef {
+    pub fn name(&self, font_weight: FontWeight) -> String {
+        match font_weight {
+            FontWeight::Regular => format!("{}Regular", self.0),
+            FontWeight::Bold => format!("{}Bold", self.0),
+            FontWeight::Italic => format!("{}Italic", self.0),
+            FontWeight::BoldItalic => format!("{}BoldItalic", self.0),
+        }
+    }
+}
 impl Default for FontRef {
     fn default() -> Self {
-        FontRef(0)
+        FontRef("Helvetica".to_string())
     }
 }
 
-impl From<FontGroup<Font>> for FontRef {
-    fn from(font: FontGroup<Font>) -> Self {
-        add_font(font)
+impl<S: Into<String>> From<S> for FontRef {
+    fn from(value: S) -> Self {
+        FontRef(value.into())
     }
 }
 
 #[derive(Clone)]
 pub enum Font {
     ByName(String),
-    Bytes(Vec<u8>),
+    OTF(Vec<u8>),
+    TTF(Vec<u8>),
 }
 
 #[derive(Clone)]
@@ -82,19 +98,19 @@ impl FontGroup<Font> {
         FontGroup {
             regular: Font::ByName("Helvetica".to_string()),
             bold: Some(Font::ByName("HelveticaBold".to_string())),
-            italic: Some(Font::ByName("HelveticaOblique".to_string())),
-            bold_italic: Some(Font::ByName("HelveticaBoldOblique".to_string())),
+            italic: Some(Font::ByName("HelveticaItalic".to_string())),
+            bold_italic: Some(Font::ByName("HelveticaBoldItalic".to_string())),
         }
     }
 }
 
 pub struct FontHolder {
-    fonts: HashMap<usize, FontGroup<Font>>,
+    fonts: HashMap<String, FontGroup<Font>>,
 }
 impl FontHolder {
     fn new() -> Self {
         let mut fonts = HashMap::new();
-        fonts.insert(0, FontGroup::helvetica());
+        fonts.insert("Helvetica".to_string(), FontGroup::helvetica());
         FontHolder { fonts }
     }
 }

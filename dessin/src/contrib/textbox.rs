@@ -144,10 +144,13 @@ impl From<TextBox> for Shape {
             font,
         }: TextBox,
     ) -> Self {
+        let font_ref = font.clone();
         let fonts = crate::font::get(font.unwrap_or_default());
-        let crate::font::Font::Bytes(raw_font) = fonts.get(FontWeight::Regular) else {
-			todo!()
-		};
+        let raw_font = match fonts.get(FontWeight::Regular) {
+            crate::font::Font::OTF(bytes) => bytes,
+            crate::font::Font::TTF(bytes) => bytes,
+            crate::font::Font::ByName(_) => todo!(),
+        };
 
         let font = Font::from_bytes(raw_font.as_slice(), FontSettings::default()).unwrap();
 
@@ -214,14 +217,17 @@ impl From<TextBox> for Shape {
             let line = line as f32;
             let translation = Translation2::new(0., -(font_size + line_spacing) * line);
 
-            dessin!(Text: (
+            let mut text = dessin!(Text: (
                 transform={local_transform * translation}
                 text={text}
                 align={align}
                 vertical_align={TextVerticalAlign::Top}
                 font_weight={font_weight}
                 font_size={font_size}
-            ))
+            ));
+
+            text.font = font_ref.clone();
+            text
         })
     }
 }
