@@ -247,6 +247,8 @@ impl Exporter for SVGExporter {
             TextAlign::Right => "end",
         };
 
+        let text = text.replace("<", "&lt;").replace(">", "&gt;");
+
         write!(
             self.acc,
             r#"<text x="{x}" y="{y}" text-anchor="{align}" font-size="{font_size}px" font-weight="{weight}" text-style="{text_style}">"#,
