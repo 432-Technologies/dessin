@@ -2,7 +2,7 @@ pub mod font;
 
 use super::{font::FontRef, BoundingBox, Curve, CurvePosition, ShapeBoundingBox, UnParticular};
 use crate::shapes::{Shape, ShapeOp};
-use na::{Point2, Vector2};
+use na::{Point2, Unit, Vector2};
 use nalgebra::{self as na, Transform2};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
@@ -37,6 +37,7 @@ pub struct TextPosition<'a> {
     pub on_curve: Option<CurvePosition>,
     pub font_size: f32,
     pub reference_start: Point2<f32>,
+    pub direction: Unit<Vector2<f32>>,
     pub font: &'a Option<FontRef>,
 }
 
@@ -144,6 +145,7 @@ impl Text {
             on_curve: self.on_curve.as_ref().map(|v| v.position(&transform)),
             font_size,
             reference_start,
+            direction: Unit::new_normalize(transform * Vector2::new(1., 0.)),
             font: &self.font,
         }
     }

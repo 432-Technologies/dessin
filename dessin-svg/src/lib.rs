@@ -3,7 +3,7 @@ use dessin::{
     export::{Export, Exporter},
     prelude::*,
 };
-use nalgebra::Scale2;
+use nalgebra::{Scale2, Vector2};
 use std::{
     fmt::{self, Write},
     io::Cursor,
@@ -67,8 +67,8 @@ impl SVGExporter {
 
         let mut acc = format!(
             r#"<svg viewBox="{offset_x} {offset_y} {max_x} {max_y}" {SCHEME}><defs>{fonts}</defs>"#,
-                offset_x = -max_x / 2.,
-                offset_y = -max_y / 2.,
+            offset_x = -max_x / 2.,
+            offset_y = -max_y / 2.,
         );
 
         SVGExporter { acc }
@@ -198,10 +198,10 @@ impl Exporter for SVGExporter {
             y = center.y - height / 2.,
         )?;
 
-        if rotation != 0. {
+        if rotation.abs() > 10e-6 {
             write!(
                 self.acc,
-                r#"transform="rotate({rot}rad)" "#,
+                r#" transform="rotate({rot})" "#,
                 rot = -rotation.to_degrees()
             )?;
         }
@@ -227,10 +227,10 @@ impl Exporter for SVGExporter {
             cy = center.y
         )?;
 
-        if rotation != 0. {
+        if rotation.abs() > 10e-6 {
             write!(
                 self.acc,
-                r#" transform="rotate({rot}rad)" "#,
+                r#" transform="rotate({rot})" "#,
                 rot = -rotation.to_degrees()
             )?;
         }
@@ -257,6 +257,7 @@ impl Exporter for SVGExporter {
             on_curve,
             font_size,
             reference_start,
+            direction,
             font,
         }: TextPosition,
     ) -> Result<(), Self::Error> {
@@ -284,10 +285,22 @@ impl Exporter for SVGExporter {
 
         write!(
             self.acc,
-            r#"<text x="{x}" y="{y}" font-family="{font}" text-anchor="{align}" font-size="{font_size}px" font-weight="{weight}" text-style="{text_style}">"#,
+            r#"<text x="{x}" y="{y}" font-family="{font}" text-anchor="{align}" font-size="{font_size}px" font-weight="{weight}" text-style="{text_style}""#,
             x = reference_start.x,
             y = reference_start.y,
         )?;
+
+        let rotation = direction.angle(&Vector2::new(1., 0.));
+        if rotation.abs() > 10e-6 {
+            write!(
+                self.acc,
+                r#" transform="rotate({rot})" "#,
+                rot = -rotation.to_degrees()
+            )?;
+        }
+
+        write!(self.acc, r#">"#)?;
+
         if let Some(curve) = on_curve {
             write!(self.acc, r#"<path id="{id}" d=""#)?;
             self.write_curve(curve)?;
