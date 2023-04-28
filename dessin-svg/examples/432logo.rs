@@ -1,8 +1,7 @@
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, FRAC_PI_8, PI};
-
 use dessin::prelude::*;
 use dessin_svg::ToSVG;
 use nalgebra::{Point2, Rotation2, Translation2};
+use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, FRAC_PI_8, PI};
 
 const C: Color = rgb(0x3b, 0x54, 0x85);
 fn c(a: u8) -> Color {
@@ -40,7 +39,7 @@ impl From<InnerBubbleRing> for Shape {
 
         let angle = PI / 14_f32;
         dessin!(for n in {0..28}: {
-            dessin!(var |ring_strip|: ( rotate={Rotation2::new(n as f32 * angle)} ))
+            dessin!(var {ring_strip.clone()}: ( rotate={Rotation2::new(n as f32 * angle)} ))
         })
     }
 }
@@ -93,17 +92,17 @@ impl From<TimerRing> for Shape {
         dessin!(group: #( stroke={Stroke::Full { color: C, width: 0.2 }} ) [
             { Circle: ( radius={36.} ) }
             { for x in {0..8}: {
-                    dessin!(var |long_line|: (
+                    dessin!(var {long_line.clone()}: (
                         rotate={Rotation2::new(x as f32 * FRAC_PI_4)}
                     ))
             } }
             { for x in {0..8}: {
-                    dessin!(var |short_line|: (
+                    dessin!(var {short_line.clone()}: (
                         rotate={Rotation2::new(x as f32 * FRAC_PI_4)}
                     ))
             } }
             { for x in {0..160}: {
-                    dessin!(var |small_line|: (
+                    dessin!(var {small_line.clone()}: (
                         rotate={Rotation2::new(x as f32 * PI / 160.)}
                     ))
             } }
@@ -201,7 +200,7 @@ impl From<Squares> for Shape {
         let quarter = dessin!(
             for x in {0..36}: {
                 dessin!(
-                    var |square_line|: (
+                    var {square_line.clone()}: (
                         rotate={Rotation2::new(x as f32 * angle)}
                     )
                 )
@@ -210,10 +209,10 @@ impl From<Squares> for Shape {
 
         dessin!(group: [
             {
-                var |quarter|: ( rotate={Rotation2::new(15_f32.to_radians())} )
+                var {quarter.clone()}: ( rotate={Rotation2::new(15_f32.to_radians())} )
             }
             {
-                use |quarter|: ( rotate={Rotation2::new(195_f32.to_radians())} )
+                var |quarter|: ( rotate={Rotation2::new(195_f32.to_radians())} )
             }
         ])
     }

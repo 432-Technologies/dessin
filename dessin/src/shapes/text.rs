@@ -177,9 +177,12 @@ impl ShapeBoundingBox for Text {
 
 #[cfg(test)]
 mod tests {
-    use crate::prelude::*;
+    use crate::{
+        export::{Export, Exporter},
+        prelude::*,
+    };
     use nalgebra::{Point2, Rotation2, Scale2, Transform2};
-    use std::f32::consts::FRAC_PI_2;
+    use std::f32::consts::{FRAC_1_SQRT_2, FRAC_PI_2, FRAC_PI_4};
 
     const EPS: f32 = 10e-6;
 
@@ -213,11 +216,97 @@ mod tests {
             "left = {}, right = [-2., 1.]",
             transform_position.reference_start,
         );
+    }
 
-        // let parent: Shape = dessin!(group: (
-        //     rotate={[FRAC_PI_2]}
-        // ) [
-        //     { var {base}: () }
-        // ]);
+    #[test]
+    fn rotate_group() {
+        let dessin = dessin!(group: (
+            rotate={Rotation2::new(FRAC_PI_4)}
+        ) [
+            { Text: (
+                text={"1"}
+                font_size={30.}
+                vertical_align={TextVerticalAlign::Center}
+                translate={[0., 25.]}
+            ) }
+            { Text: (
+                text={"2"}
+                font_size={40.}
+                vertical_align={TextVerticalAlign::Center}
+                translate={[0., 0.]}
+            ) }
+            { Text: (
+                text={"3"}
+                font_size={15.}
+                vertical_align={TextVerticalAlign::Center}
+                translate={[0., -30.]}
+            ) }
+        ]);
+
+        struct Exp;
+        impl Exporter for Exp {
+            type Error = ();
+
+            fn start_style(&mut self, _style: StylePosition) -> Result<(), Self::Error> {
+                todo!()
+            }
+
+            fn end_style(&mut self) -> Result<(), Self::Error> {
+                todo!()
+            }
+
+            fn export_image(&mut self, _image: ImagePosition) -> Result<(), Self::Error> {
+                todo!()
+            }
+
+            fn export_ellipse(&mut self, _ellipse: EllipsePosition) -> Result<(), Self::Error> {
+                todo!()
+            }
+
+            fn export_curve(&mut self, _curve: CurvePosition) -> Result<(), Self::Error> {
+                todo!()
+            }
+
+            fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> {
+                match text.text {
+                    "1" => {
+                        let expected_position =
+                            Point2::new(-25. * FRAC_1_SQRT_2, 25. * FRAC_1_SQRT_2);
+                        assert!(
+                            (text.reference_start - expected_position).magnitude() < 10e-6,
+                            "left = {}, right = {}",
+                            text.reference_start,
+                            expected_position,
+                        );
+                    }
+                    "2" => {
+                        let expected_position = Point2::new(0., 0.);
+                        assert!(
+                            (text.reference_start - expected_position).magnitude() < 10e-6,
+                            "left = {}, right = {}",
+                            text.reference_start,
+                            expected_position,
+                        );
+                    }
+                    "3" => {
+                        let expected_position =
+                            Point2::new(-25. * FRAC_1_SQRT_2, 25. * FRAC_1_SQRT_2);
+                        assert!(
+                            (text.reference_start - expected_position).magnitude() < 10e-6,
+                            "left = {}, right = {}",
+                            text.reference_start,
+                            expected_position,
+                        );
+                    }
+                    _ => {}
+                }
+
+                Ok(())
+            }
+        }
+
+        dessin
+            .write_into_exporter(&mut Exp, &Default::default())
+            .unwrap();
     }
 }

@@ -8,6 +8,7 @@ pub struct TextBox {
     pub font_size: f32,
     pub line_spacing: f32,
     pub align: TextAlign,
+    pub vertical_align: TextVerticalAlign,
     pub text: String,
     pub font_weight: FontWeight,
     /// Dimension on the x-axis
@@ -69,6 +70,17 @@ impl TextBox {
     #[inline]
     pub fn with_align(mut self, align: TextAlign) -> Self {
         self.align(align);
+        self
+    }
+
+    #[inline]
+    pub fn vertical_align(&mut self, vertical_align: TextVerticalAlign) -> &mut Self {
+        self.vertical_align = vertical_align;
+        self
+    }
+    #[inline]
+    pub fn with_vertical_align(mut self, vertical_align: TextVerticalAlign) -> Self {
+        self.vertical_align(vertical_align);
         self
     }
 
@@ -140,6 +152,7 @@ impl From<TextBox> for Shape {
             width,
             height,
             align,
+            vertical_align,
             font_weight,
             font,
         }: TextBox,
@@ -215,13 +228,19 @@ impl From<TextBox> for Shape {
         dessin!(for line in {lines.into_iter().enumerate()}: {
             let (line, text) = line;
             let line = line as f32;
-            let translation = Translation2::new(0., -(font_size + line_spacing) * line);
+            let (vertical_align, growing_direction) = match vertical_align {
+                TextVerticalAlign::Bottom => (TextVerticalAlign::Top, 1.),
+                TextVerticalAlign::Center => (TextVerticalAlign::Center, -1.),
+                TextVerticalAlign::Top => (TextVerticalAlign::Bottom, 1.),
+            };
+
+            let translation = Translation2::new(0., growing_direction * (font_size + line_spacing) * line);
 
             let mut text = dessin!(Text: (
                 transform={local_transform * translation}
                 text={text}
                 align={align}
-                vertical_align={TextVerticalAlign::Top}
+                vertical_align={vertical_align}
                 font_weight={font_weight}
                 font_size={font_size}
             ));
