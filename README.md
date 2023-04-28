@@ -16,7 +16,7 @@ or if you need PDF:
 cargo add dessin dessin-pdf
 ```
 
-Documentation on [docs.rs]()
+Documentation on [docs.rs](https://docs.rs/dessin/0.8.2-pre/)
 
 ### Overview
 

@@ -10,7 +10,7 @@ Add `dessin` and `dessin-svg` to your project dependencies
 cargo add dessin dessin-svg
 ```
 
-Documentation on [docs.rs]()
+Documentation on [docs.rs](https://docs.rs/dessin/0.8.2-pre/)
 
 ### Overview
 
