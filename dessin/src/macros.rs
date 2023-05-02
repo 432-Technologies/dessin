@@ -83,18 +83,28 @@ macro_rules! dessin {
 	};
 	(if ($e:expr) { $($rest:tt)* } else { $($else_rest:tt)* }) => {
 		{
-			if $e { Shape::from(dessin! ($($rest)*)) } else { Shape::from(dessin! ($($else_rest)*)) }
+			if $e {
+				$crate::shapes::Shape::from($crate::dessin! ($($rest)*))
+			} else {
+				$crate::shapes::Shape::from($crate::dessin! ($($else_rest)*))
+			}
 		}
 	};
 	(if ($e:expr) { $($rest:tt)* }) => {
 		{
-			Shape::from(if $e { Shape::from(dessin! ($($rest)*)) } else { dessin! () })
+			Shape::from(
+				if $e {
+					$crate::shapes::Shape::from($crate::dessin! ($($rest)*))
+				} else {
+					$crate::dessin! ()
+				}
+			)
 		}
 	};
 	(var |$v:ident|: #($($fn_name:ident={$value:expr})*)) => {
 		{
 			#[allow(unused_mut)]
-			let mut shape = $crate::style::Style::new($v.clone());
+			let mut shape = $crate::style::Style::new($v);
 			$(shape.$fn_name($value);)*
 			shape
 		}
@@ -102,28 +112,12 @@ macro_rules! dessin {
 	(var |$v:ident|: ($($fn_name:ident={$value:expr})*)) => {
 		{
 			#[allow(unused_mut)]
-			let mut shape = $v.clone();
-			$(shape.$fn_name($value);)*
-			shape
-		}
-	};
-	(use |$v:ident|: #($($fn_name:ident={$value:expr})*)) => {
-		{
-			#[allow(unused_mut)]
-			let mut shape = $crate::style::Style::new($v);
-			$(shape.$fn_name($value);)*
-			shape
-		}
-	};
-	(use |$v:ident|: ($($fn_name:ident={$value:expr})*)) => {
-		{
-			#[allow(unused_mut)]
 			let mut shape = $v;
 			$(shape.$fn_name($value);)*
 			shape
 		}
 	};
-	(use {$v:expr}: #($($fn_name:ident={$value:expr})*)) => {
+	(var {$v:expr}: #($($fn_name:ident={$value:expr})*)) => {
 		{
 			#[allow(unused_mut)]
 			let mut shape = $crate::style::Style::new($v);
@@ -131,7 +125,7 @@ macro_rules! dessin {
 			shape
 		}
 	};
-	(use {$v:expr}: ($($fn_name:ident={$value:expr})*)) => {
+	(var {$v:expr}: ($($fn_name:ident={$value:expr})*)) => {
 		{
 			#[allow(unused_mut)]
 			let mut shape = $v;
@@ -147,7 +141,7 @@ macro_rules! dessin {
 			$(
 				acc.push(
 					$crate::shapes::Shape::from(
-						dessin! ($($rest)*)
+						$crate::dessin! ($($rest)*)
 					)
 				);
 			)*
@@ -166,7 +160,7 @@ macro_rules! dessin {
 			$(
 				acc.push(
 					$crate::shapes::Shape::from(
-						dessin! ($($rest)*)
+						$crate::dessin! ($($rest)*)
 					)
 				);
 			)*
@@ -189,7 +183,7 @@ macro_rules! dessin {
 			$(
 				acc.push(
 					$crate::shapes::Shape::from(
-						dessin! ($($rest)*)
+						$crate::dessin! ($($rest)*)
 					)
 				);
 			)*
@@ -204,6 +198,78 @@ macro_rules! dessin {
 			group
 		}
 	};
+	($shape:ty: !#( $($fn_name_shape:ident $( ={$value_shape:expr} )? )* )) => {
+        {
+			#[allow(unused_mut)]
+			let mut shape = $crate::style::Style::new(
+				$crate::shapes::Shape::from(<$shape>::default())
+			);
+			$(shape.$fn_name_shape($($value_shape)?);)*
+
+			shape
+		}
+    };
+	($shape:ty: !( $($fn_name_shape:ident $( ={$value_shape:expr} )? )* )) => {
+        {
+			#[allow(unused_mut)]
+			let mut shape = $crate::shapes::Shape::from(<$shape>::default());
+			$(shape.$fn_name_shape($($value_shape)?);)*
+
+			shape
+		}
+    };
+	($shape:ty: #($($fn_name:ident $( ={$value:expr} )? )*) -> !#( $($fn_name_shape:ident $( ={$value_shape:expr} )? )* )) => {
+        {
+			#[allow(unused_mut)]
+			let mut shape = $crate::style::Style::<$shape>::default();
+			$(shape.$fn_name($($value)?);)*
+
+			#[allow(unused_mut)]
+			let mut shape = $crate::style::Style::new(shape);
+			$(shape.$fn_name_shape($($value_shape)?);)*
+
+			shape
+		}
+    };
+	($shape:ty: ($($fn_name:ident $( ={$value:expr} )? )*) -> !#( $($fn_name_shape:ident $( ={$value_shape:expr} )? )* )) => {
+        {
+			#[allow(unused_mut)]
+			let mut shape = <$shape>::default();
+			$(shape.$fn_name($($value)?);)*
+
+			#[allow(unused_mut)]
+			let mut shape = $crate::style::Style::new(shape);
+			$(shape.$fn_name_shape($($value_shape)?);)*
+
+			shape
+		}
+    };
+	($shape:ty: #($($fn_name:ident $( ={$value:expr} )? )*) -> !( $($fn_name_shape:ident $( ={$value_shape:expr} )? )* )) => {
+        {
+			#[allow(unused_mut)]
+			let mut shape = $crate::style::Style::<$shape>::default();
+			$(shape.$fn_name($($value)?);)*
+
+			#[allow(unused_mut)]
+			let mut shape = $crate::style::Shape::from(shape);
+			$(shape.$fn_name_shape($($value_shape)?);)*
+
+			shape
+		}
+    };
+    ($shape:ty: ($($fn_name:ident $( ={$value:expr} )? )*) -> !( $($fn_name_shape:ident $( ={$value_shape:expr} )? )* )) => {
+        {
+			#[allow(unused_mut)]
+			let mut shape = <$shape>::default();
+			$(shape.$fn_name($($value)?);)*
+
+			#[allow(unused_mut)]
+			let mut shape = $crate::style::Shape::from(shape);
+			$(shape.$fn_name_shape($($value_shape)?);)*
+
+			shape
+		}
+    };
 	($shape:ty: #($($fn_name:ident $( ={$value:expr} )? )*)) => {
         {
 			#[allow(unused_mut)]

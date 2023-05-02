@@ -4,7 +4,7 @@ use dessin::prelude::*;
 use dessin_svg::ToSVG;
 use nalgebra::{Point2, Rotation2, Translation2};
 
-const C: Color = rbg(0x3b, 0x54, 0x85);
+const C: Color = rgb(0x3b, 0x54, 0x85);
 fn c(a: u8) -> Color {
     rgba(0x3b, 0x54, 0x85, a)
 }
@@ -119,13 +119,13 @@ impl From<ThreeColoredRing> for Shape {
         dessin!(group: [
             {
                 Circle: #(
-                    stroke={Stroke::Full { color: rbg(0x96, 0x96, 0x96), width: 0.2 }}
+                    stroke={Stroke::Full { color: rgb(0x96, 0x96, 0x96), width: 0.2 }}
                     radius={40.}
                 )
             }
             {
                 Circle: #(
-                    stroke={Stroke::Full { color: rbg(0x2e, 0x2e, 0x2e), width: 0.2 }}
+                    stroke={Stroke::Full { color: rgb(0x2e, 0x2e, 0x2e), width: 0.2 }}
                     radius={42.}
                 )
             }
@@ -219,6 +219,59 @@ impl From<Squares> for Shape {
     }
 }
 
+#[derive(Default)]
+struct Logo432;
+impl From<Logo432> for Shape {
+    fn from(_: Logo432) -> Self {
+        dessin!(group: [
+            { Curve: #(
+                stroke={(rgb(0x7F, 0x7F, 0x7F), 0.6)}
+                then={Point2::new(0., 0.)}
+                then={Point2::new(0., 20.)}
+                then={Point2::new(-9.8, 0.)}
+                then={Point2::new(-8., 0.)}
+            ) }
+            { Line: #(
+                stroke={(rgb(0x00, 0x02, 0x60), 0.6)}
+                from={[-10., 0.]}
+                to={[13., 0.]}
+            ) }
+            { Line: #(
+                stroke={(rgb(0x00, 0x02, 0x60), 0.6)}
+                from={[0., 0.]}
+                to={[0., -10.]}
+            ) }
+            { Text: #(
+                fill={rgb(0x00, 0x02, 0x60)}
+                text={"echnologies"}
+                font_size={2.5}
+                font_weight={FontWeight::Bold}
+                translate={[0.5, -10.]}
+                vertical_align={TextVerticalAlign::Center}
+                align={TextAlign::Left}
+            ) }
+            { Text: #(
+                fill={Color::BLACK}
+                text={"3"}
+                font_size={7.}
+                font_weight={FontWeight::Regular}
+                translate={[1., -2.]}
+                vertical_align={TextVerticalAlign::Bottom}
+                align={TextAlign::Left}
+            ) }
+            { Text: #(
+                fill={Color::BLACK}
+                text={"2"}
+                font_size={7.}
+                font_weight={FontWeight::Regular}
+                translate={[1., -3.]}
+                vertical_align={TextVerticalAlign::Top}
+                align={TextAlign::Left}
+            ) }
+        ])
+    }
+}
+
 fn main() {
     let logo = dessin!(
         group: [
@@ -246,13 +299,16 @@ fn main() {
             }
             {
                 Circle: #(
-                    stroke={Stroke::Full { color: rbg(0x96, 0x96, 0x96), width: 0.2 }}
+                    stroke={Stroke::Full { color: rgb(0x96, 0x96, 0x96), width: 0.2 }}
                     radius={70.}
                 )
             }
+            { Logo432: () }
         ]
     )
-    .to_svg()
+    .to_svg_with_options(dessin_svg::SVGOptions {
+        size: Some((150., 150.)),
+    })
     .unwrap();
     println!("{logo}");
 }

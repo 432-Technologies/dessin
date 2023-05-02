@@ -54,7 +54,7 @@ let dessin = dessin!(for x in {0..10}: {
 });
 
 let dessin = dessin!(group: [
-  { use { dessin }: (
+  { var { dessin }: (
     scale={[2., 2.]}
   ) }
   { MyShape: (

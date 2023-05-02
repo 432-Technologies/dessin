@@ -7,7 +7,7 @@ use std::{
 };
 
 /// Create a color from red, green and blue
-pub const fn rbg(r: u8, g: u8, b: u8) -> Color {
+pub const fn rgb(r: u8, g: u8, b: u8) -> Color {
     Color::RGB { r, g, b }
 }
 
@@ -44,31 +44,31 @@ pub enum Color {
 }
 impl Color {
     /// #FF0000
-    pub const RED: Color = rbg(255, 0, 0);
+    pub const RED: Color = rgb(255, 0, 0);
     /// #00FF00
-    pub const GREEN: Color = rbg(0, 255, 0);
+    pub const GREEN: Color = rgb(0, 255, 0);
     /// #0000FF
-    pub const BLUE: Color = rbg(0, 0, 255);
+    pub const BLUE: Color = rgb(0, 0, 255);
     /// #FFFFFF
-    pub const WHITE: Color = rbg(255, 255, 255);
+    pub const WHITE: Color = rgb(255, 255, 255);
     /// #000000
-    pub const BLACK: Color = rbg(0, 0, 0);
+    pub const BLACK: Color = rgb(0, 0, 0);
     /// #FFFF00
-    pub const YELLOW: Color = rbg(255, 255, 0);
+    pub const YELLOW: Color = rgb(255, 255, 0);
     /// #FFA500
-    pub const ORANGE: Color = rbg(255, 165, 0);
+    pub const ORANGE: Color = rgb(255, 165, 0);
     /// #FF00FF
-    pub const MAGENTA: Color = rbg(255, 0, 255);
+    pub const MAGENTA: Color = rgb(255, 0, 255);
     /// #00FFFF
-    pub const CYAN: Color = rbg(0, 255, 255);
+    pub const CYAN: Color = rgb(0, 255, 255);
     /// #808080
-    pub const GRAY: Color = rbg(128, 128, 128);
+    pub const GRAY: Color = rgb(128, 128, 128);
     /// #00000000
     pub const TRANSPARENT: Color = rgba(0, 0, 0, 0);
     /// #C0C0C0
-    pub const LIGHT_GRAY: Color = rbg(192, 192, 192);
+    pub const LIGHT_GRAY: Color = rgb(192, 192, 192);
     /// #404040
-    pub const DARK_GRAY: Color = rbg(64, 64, 64);
+    pub const DARK_GRAY: Color = rgb(64, 64, 64);
 
     /// Cast a color to (red, green, blue, alpha)
     pub const fn rgba(self) -> (u8, u8, u8, u8) {

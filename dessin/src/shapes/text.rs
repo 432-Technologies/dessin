@@ -217,7 +217,7 @@ mod tests {
         // let parent: Shape = dessin!(group: (
         //     rotate={[FRAC_PI_2]}
         // ) [
-        //     { use {base}: () }
+        //     { var {base}: () }
         // ]);
     }
 }
