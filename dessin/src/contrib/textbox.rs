@@ -225,7 +225,7 @@ impl From<TextBox> for Shape {
             }
         }
 
-        dessin!(for line in {lines.into_iter().enumerate()}: {
+        dessin!(for line in lines.into_iter().enumerate() {
             let (line, text) = line;
             let line = line as f32;
             let (vertical_align, growing_direction) = match vertical_align {
@@ -234,7 +234,8 @@ impl From<TextBox> for Shape {
                 TextVerticalAlign::Top => (TextVerticalAlign::Bottom, 1.),
             };
 
-            let translation = Translation2::new(0., growing_direction * (font_size + line_spacing) * line);
+            let translation =
+                Translation2::new(0., growing_direction * (font_size + line_spacing) * line);
 
             let mut text = dessin!(Text: (
                 transform={local_transform * translation}

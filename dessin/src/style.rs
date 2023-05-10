@@ -135,7 +135,7 @@ impl Color {
 impl fmt::Display for Color {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let (r, g, b, a) = self.rgba();
-        write!(f, "#{r:02X?}{g:02X?}{b:02X?}");
+        write!(f, "#{r:02X?}{g:02X?}{b:02X?}")?;
         if a < 255 {
             write!(f, "{a:02X?}")
         } else {
