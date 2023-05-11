@@ -247,14 +247,14 @@ impl From<DessinCloned> for TokenStream {
 }
 
 struct DessinGroup {
-    children: Punctuated<DessinType, Token![,]>,
+    children: Punctuated<Dessin, Token![,]>,
 }
 impl Parse for DessinGroup {
     fn parse(input: ParseStream) -> Result<Self> {
         let children;
         let _ = bracketed!(children in input);
 
-        let children = children.parse_terminated(DessinType::parse, Token![,])?;
+        let children = children.parse_terminated(Dessin::parse, Token![,])?;
 
         Ok(DessinGroup { children })
     }
@@ -298,7 +298,7 @@ impl From<DessinFor> for TokenStream {
         quote!(::dessin::prelude::Shape::Group {
             local_transform: ::dessin::nalgebra::Transform2::default(),
             shapes: {
-                let __current_iterator__ = #it;
+                let __current_iterator__ = #it.into_iter();
                 let mut __current_shapes__ = ::std::vec::Vec::with_capacity(__current_iterator__.size_hint().0);
                 for #variable in __current_iterator__ {
                     let __current_shape__ = ::dessin::prelude::Shape::from({#body});
@@ -394,10 +394,7 @@ impl Parse for DessinType {
 impl From<DessinType> for TokenStream {
     fn from(value: DessinType) -> Self {
         match value {
-            DessinType::Empty => quote!(::dessin::prelude::Shape::Group {
-                local_transform: ::dessin::nalgebra::Transform2::default(),
-                shapes: ::std::vec::Vec::new(),
-            }),
+            DessinType::Empty => quote!(::dessin::prelude::Shape::default()),
             DessinType::Item(i) => i.into(),
             DessinType::Var(v) => v.into(),
             DessinType::Cloned(c) => c.into(),
@@ -522,6 +519,73 @@ fn branch_if_else() {
         } else {
             Ellipse: ()
         }",
+    )
+    .unwrap();
+}
+#[test]
+fn combined_group_erased() {
+    syn::parse_str::<Dessin>(
+        "[
+			Shape: (),
+			Shape: () -> (),
+			var(shape): () -> (),
+		] -> ()",
+    )
+    .unwrap();
+}
+#[test]
+fn combined_if() {
+    syn::parse_str::<Dessin>(
+        "if test_fn() == 2 {
+            Circle: () -> ()
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn var_if() {
+    syn::parse_str::<Dessin>(
+        "if test_fn() == 2 {
+            var(circle): () -> ()
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn if_if_group() {
+    syn::parse_str::<Dessin>(
+        "[
+			cloned(circle): (),
+			if test_fn() == 2 {
+            	var(circle): () -> ()
+        	},
+			Circle: (),
+		]",
+    )
+    .unwrap();
+}
+#[test]
+fn group_in_group() {
+    syn::parse_str::<Dessin>(
+        "[
+			[
+				Circle: (),
+				var(circle): () -> (),
+				if test_fn() == 2 {
+					var(circle): () -> ()
+				},
+				var(circle): (),
+			],
+			cloned(circle): (),
+			[],
+			if test_fn() == 2 {
+            	[
+					[],
+					cloned(circle): (),
+				]
+        	},
+			Circle: (),
+		]",
     )
     .unwrap();
 }

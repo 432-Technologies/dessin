@@ -248,7 +248,7 @@ mod tests {
             }
         );
 
-        let img = dessin!(var |img|: (rotate={ Rotation2::new(-45_f32.to_radians()) }));
+        let img = dessin!(var(img): (rotate={ Rotation2::new(-45_f32.to_radians()) }));
         let img_pos = img.position(&Transform2::default());
         println!("Rot(-45deg) = {img_pos:?}\n");
         assert!(
@@ -270,7 +270,7 @@ mod tests {
             Point2::new(0., SQRT_2 / 2.),
         );
 
-        let img = dessin!(var |img|: (translate = { Translation2::new(1., 0.) }));
+        let img = dessin!(var(img): (translate = { Translation2::new(1., 0.) }));
         let img_pos = img.position(&Transform2::default());
         println!("Translate_x(1) = {img_pos:?}\n");
         assert!(
@@ -298,7 +298,7 @@ mod tests {
             Point2::new(SQRT_2 / 2. + 1., 0.),
         );
 
-        let img = dessin!(var |img|: (scale = { Scale2::new(3., 2.) }));
+        let img = dessin!(var(img): (scale = { Scale2::new(3., 2.) }));
         let img_pos = img.position(&Transform2::default());
         println!("Scale(3, 2) = {img_pos:?}\n");
         assert!(

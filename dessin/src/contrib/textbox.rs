@@ -2,7 +2,7 @@ use crate::{font::FontRef, prelude::*};
 use fontdue::{Font, FontSettings};
 use nalgebra::{Transform2, Translation2};
 
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TextBox {
     pub local_transform: Transform2<f32>,
     pub font_size: f32,
@@ -16,6 +16,22 @@ pub struct TextBox {
     /// Dimension on the y-axis
     pub height: Option<f32>,
     pub font: Option<FontRef>,
+}
+impl Default for TextBox {
+    fn default() -> Self {
+        TextBox {
+            local_transform: Default::default(),
+            font_size: Default::default(),
+            line_spacing: Default::default(),
+            align: Default::default(),
+            vertical_align: TextVerticalAlign::Top,
+            text: Default::default(),
+            font_weight: Default::default(),
+            width: Default::default(),
+            height: Default::default(),
+            font: Default::default(),
+        }
+    }
 }
 impl TextBox {
     #[inline]
@@ -167,23 +183,6 @@ impl From<TextBox> for Shape {
 
         let font = Font::from_bytes(raw_font.as_slice(), FontSettings::default()).unwrap();
 
-        fn size_of(font: &Font, s: &str, font_size: f32) -> f32 {
-            s.chars()
-                .scan(None, |last, curr| {
-                    let l = last.unwrap_or(' ');
-                    let r = if let Some(v) = font.horizontal_kern(l, curr, font_size) {
-                        v
-                    } else {
-                        font.metrics(curr, font_size).advance_width
-                    };
-
-                    *last = Some(curr);
-
-                    Some(r)
-                })
-                .sum()
-        }
-
         let mut lines = vec![];
         let mut height = height.unwrap_or(f32::MAX);
 
@@ -231,7 +230,7 @@ impl From<TextBox> for Shape {
             let (vertical_align, growing_direction) = match vertical_align {
                 TextVerticalAlign::Bottom => (TextVerticalAlign::Top, 1.),
                 TextVerticalAlign::Center => (TextVerticalAlign::Center, -1.),
-                TextVerticalAlign::Top => (TextVerticalAlign::Bottom, 1.),
+                TextVerticalAlign::Top => (TextVerticalAlign::Bottom, -1.),
             };
 
             let translation =

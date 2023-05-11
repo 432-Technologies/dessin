@@ -6,7 +6,7 @@ pub(crate) mod text;
 pub use self::image::*;
 pub use curve::*;
 pub use ellipse::*;
-use na::{Point2, Rotation2, Scale2};
+use na::{Point2, Rotation2, Scale2, Vector2};
 use nalgebra::{self as na, Transform2, Translation2};
 use std::marker::PhantomData;
 pub use text::*;
@@ -131,6 +131,12 @@ impl<T> BoundingBox<T> {
         self.bottom_left
     }
 
+    /// Same as [`straighten`] but for chaining
+    #[inline]
+    pub fn into_straight(self) -> BoundingBox<Straight> {
+        self.straigthen()
+    }
+
     /// Straighen a [`BoundingBox`] and guarantee that the sides of the bounding box are aligns with the X and Y axis.
     pub fn straigthen(&self) -> BoundingBox<Straight> {
         let top = self
@@ -231,7 +237,20 @@ impl BoundingBox<Straight> {
         }
     }
 
+    /// [`BoundingBox`] centered at (0,0) with a given size
+    pub fn centered<V: Into<Vector2<f32>>>(size: V) -> Self {
+        let size = size.into() / 2.;
+        BoundingBox {
+            _ty: PhantomData,
+            top_left: Point2::new(-size.x, size.y),
+            top_right: Point2::new(size.x, size.y),
+            bottom_right: Point2::new(size.x, -size.y),
+            bottom_left: Point2::new(-size.x, -size.y),
+        }
+    }
+
     /// Convert the [`BoundingBox`] to [`UnParticular`].
+    #[inline]
     pub fn as_unparticular(self) -> BoundingBox<UnParticular> {
         BoundingBox {
             _ty: PhantomData,

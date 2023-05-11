@@ -5,6 +5,23 @@ use crate::shapes::{Shape, ShapeOp};
 use na::{Point2, Unit, Vector2};
 use nalgebra::{self as na, Transform2};
 
+pub(crate) fn size_of(font: &fontdue::Font, s: &str, font_size: f32) -> f32 {
+    s.chars()
+        .scan(None, |last, curr| {
+            let l = last.unwrap_or(' ');
+            let r = if let Some(v) = font.horizontal_kern(l, curr, font_size) {
+                v
+            } else {
+                font.metrics(curr, font_size).advance_width
+            };
+
+            *last = Some(curr);
+
+            Some(r)
+        })
+        .sum()
+}
+
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum FontWeight {
     #[default]
@@ -41,7 +58,7 @@ pub struct TextPosition<'a> {
     pub font: &'a Option<FontRef>,
 }
 
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Text {
     pub text: String,
     pub local_transform: Transform2<f32>,
@@ -51,6 +68,20 @@ pub struct Text {
     pub on_curve: Option<Curve>,
     pub font_size: f32,
     pub font: Option<FontRef>,
+}
+impl Default for Text {
+    fn default() -> Self {
+        Text {
+            text: Default::default(),
+            local_transform: Default::default(),
+            align: Default::default(),
+            vertical_align: Default::default(),
+            font_weight: Default::default(),
+            on_curve: Default::default(),
+            font_size: 10.,
+            font: Default::default(),
+        }
+    }
 }
 impl Text {
     #[inline]
@@ -171,7 +202,19 @@ impl ShapeOp for Text {
 
 impl ShapeBoundingBox for Text {
     fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
-        todo!()
+        let fonts = crate::font::get(self.font.clone().unwrap_or_default());
+        let raw_font = match fonts.get(FontWeight::Regular) {
+            crate::font::Font::OTF(bytes) => bytes,
+            crate::font::Font::TTF(bytes) => bytes,
+            crate::font::Font::ByName(_) => todo!(),
+        };
+
+        let font = fontdue::Font::from_bytes(raw_font.as_slice(), fontdue::FontSettings::default())
+            .unwrap();
+
+        let width = size_of(&font, &self.text, self.font_size);
+
+        Some(BoundingBox::centered([width, self.font_size]).as_unparticular())
     }
 }
 
@@ -220,28 +263,28 @@ mod tests {
 
     #[test]
     fn rotate_group() {
-        let dessin = dessin!(group: (
-            rotate={Rotation2::new(FRAC_PI_4)}
-        ) [
-            { Text: (
+        let dessin = dessin!([
+            Text: (
                 text={"1"}
                 font_size={30.}
                 vertical_align={TextVerticalAlign::Center}
                 translate={[0., 25.]}
-            ) }
-            { Text: (
+            ),
+            Text: (
                 text={"2"}
                 font_size={40.}
                 vertical_align={TextVerticalAlign::Center}
                 translate={[0., 0.]}
-            ) }
-            { Text: (
+            ),
+            Text: (
                 text={"3"}
                 font_size={15.}
                 vertical_align={TextVerticalAlign::Center}
                 translate={[0., -30.]}
-            ) }
-        ]);
+            ),
+        ] -> (
+            rotate={Rotation2::new(FRAC_PI_4)}
+        ));
 
         struct Exp;
         impl Exporter for Exp {
