@@ -1,4 +1,4 @@
-use nalgebra::{Transform2, Vector2};
+use nalgebra::Transform2;
 
 use crate::prelude::*;
 
@@ -7,7 +7,7 @@ pub struct VerticalLayout {
     pub local_transform: Transform2<f32>,
     pub shapes: Vec<Shape>,
     pub start_bottom: bool,
-    pub padding: f32,
+    pub gap: f32,
 }
 impl VerticalLayout {
     #[inline]
@@ -67,13 +67,13 @@ impl VerticalLayout {
     }
 
     #[inline]
-    pub fn start_padding(&mut self, padding: f32) -> &mut Self {
-        self.padding = padding;
+    pub fn gap(&mut self, gap: f32) -> &mut Self {
+        self.gap = gap;
         self
     }
     #[inline]
-    pub fn with_start_padding(mut self, padding: f32) -> Self {
-        self.start_padding(padding);
+    pub fn with_gap(mut self, gap: f32) -> Self {
+        self.gap(gap);
         self
     }
 }
@@ -97,7 +97,7 @@ impl From<VerticalLayout> for Shape {
             local_transform,
             shapes,
             start_bottom,
-            padding,
+            gap: gap,
         }: VerticalLayout,
     ) -> Self {
         let direction = if start_bottom { 1. } else { -1. };
@@ -120,7 +120,7 @@ impl From<VerticalLayout> for Shape {
             shape.translate([0., direction * y - shape_pos_y]);
 
 
-            y += bb.height() + padding;
+            y += bb.height() + gap;
 
             shape
         } -> ( transform={local_transform} ))

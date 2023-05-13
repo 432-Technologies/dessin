@@ -1,6 +1,6 @@
 use crate::{font::FontRef, prelude::*};
 use fontdue::{Font, FontSettings};
-use nalgebra::{Transform2, Translation2};
+use nalgebra::Transform2;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TextBox {
@@ -224,29 +224,23 @@ impl From<TextBox> for Shape {
             }
         }
 
-        dessin!(for line in lines.into_iter().enumerate() {
-            let (line, text) = line;
-            let line = line as f32;
-            let (vertical_align, growing_direction) = match vertical_align {
-                TextVerticalAlign::Bottom => (TextVerticalAlign::Top, 1.),
-                TextVerticalAlign::Center => (TextVerticalAlign::Center, -1.),
-                TextVerticalAlign::Top => (TextVerticalAlign::Bottom, -1.),
-            };
+        let (vertical_align, _) = match vertical_align {
+            TextVerticalAlign::Bottom => (TextVerticalAlign::Top, 1.),
+            TextVerticalAlign::Center => (TextVerticalAlign::Center, -1.),
+            TextVerticalAlign::Top => (TextVerticalAlign::Bottom, -1.),
+        };
 
-            let translation =
-                Translation2::new(0., growing_direction * (font_size + line_spacing) * line);
-
-            let mut text = dessin!(Text: (
-                transform={local_transform * translation}
+        dessin!(VerticalLayout: (
+            extend={lines.into_iter().map(|text| dessin!(Text: (
                 text={text}
                 align={align}
                 vertical_align={vertical_align}
                 font_weight={font_weight}
                 font_size={font_size}
-            ));
-
-            text.font = font_ref.clone();
-            text
-        })
+                maybe_font={font_ref.clone()}
+            )).into())}
+            gap={line_spacing}
+        ))
+        .into()
     }
 }

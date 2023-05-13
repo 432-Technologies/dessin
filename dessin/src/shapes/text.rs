@@ -96,6 +96,17 @@ impl Text {
     }
 
     #[inline]
+    pub fn maybe_font<F: Into<FontRef>>(&mut self, font: Option<F>) -> &mut Self {
+        self.font = font.map(Into::into).into();
+        self
+    }
+    #[inline]
+    pub fn with_maybe_font<F: Into<FontRef>>(mut self, font: Option<F>) -> Self {
+        self.maybe_font(font);
+        self
+    }
+
+    #[inline]
     pub fn text<T: ToString>(&mut self, text: T) -> &mut Self {
         self.text = text.to_string();
         self
