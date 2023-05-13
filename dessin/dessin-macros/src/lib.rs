@@ -298,7 +298,7 @@ impl From<DessinFor> for TokenStream {
         quote!(::dessin::prelude::Shape::Group {
             local_transform: ::dessin::nalgebra::Transform2::default(),
             shapes: {
-                let __current_iterator__ = #it.into_iter();
+                let __current_iterator__ = (#it).into_iter();
                 let mut __current_shapes__ = ::std::vec::Vec::with_capacity(__current_iterator__.size_hint().0);
                 for #variable in __current_iterator__ {
                     let __current_shape__ = ::dessin::prelude::Shape::from({#body});

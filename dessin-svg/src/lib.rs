@@ -65,7 +65,7 @@ impl SVGExporter {
             .flatten()
             .collect::<String>();
 
-        let mut acc = format!(
+        let acc = format!(
             r#"<svg viewBox="{offset_x} {offset_y} {max_x} {max_y}" {SCHEME}><defs>{fonts}</defs>"#,
             offset_x = -max_x / 2.,
             offset_y = -max_y / 2.,

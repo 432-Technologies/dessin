@@ -139,7 +139,6 @@ mod tests {
             base_position[3],
         );
 
-        /// with a rotation
         let transform = nalgebra::convert(Rotation2::new(FRAC_PI_2));
         let transform_position: Vec<Point2<f32>> = base
             .clone()
@@ -173,7 +172,6 @@ mod tests {
             transform_position[3],
         );
 
-        /// with a rotation and a scale
         let transform = nalgebra::convert::<_, Transform2<f32>>(Rotation2::new(FRAC_PI_2))
             * nalgebra::convert::<_, Transform2<f32>>(Scale2::new(2., 2.));
         let transform_position: Vec<Point2<f32>> = base

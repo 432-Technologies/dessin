@@ -2,7 +2,7 @@ use dessin::{
     export::{Export, Exporter},
     prelude::*,
 };
-use nalgebra::{Transform2, Translation2};
+use nalgebra::{Translation2};
 use once_cell::sync::OnceCell;
 use printpdf::{Mm, PdfDocument, PdfDocumentReference, PdfLayerReference};
 use std::{
@@ -137,11 +137,11 @@ impl Exporter for PDFExporter {
     fn export_image(
         &mut self,
         ImagePosition {
-            top_left,
-            top_right,
-            bottom_right,
+            top_left: _,
+            top_right: _,
+            bottom_right: _,
             bottom_left,
-            center,
+            center: _,
             width,
             height,
             rotation,
@@ -177,15 +177,15 @@ impl Exporter for PDFExporter {
         Ok(())
     }
 
-    fn export_ellipse(&mut self, ellipse: EllipsePosition) -> Result<(), Self::Error> {
+    fn export_ellipse(&mut self, _ellipse: EllipsePosition) -> Result<(), Self::Error> {
         todo!()
     }
 
-    fn export_curve(&mut self, curve: CurvePosition) -> Result<(), Self::Error> {
+    fn export_curve(&mut self, _curve: CurvePosition) -> Result<(), Self::Error> {
         todo!()
     }
 
-    fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> {
+    fn export_text(&mut self, _text: TextPosition) -> Result<(), Self::Error> {
         todo!()
     }
 }

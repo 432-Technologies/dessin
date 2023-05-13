@@ -112,13 +112,10 @@ impl<T: ShapeOp> ShapeOp for Anchor<T> {
 
 #[cfg(test)]
 mod tests {
-    use std::f32::consts::SQRT_2;
 
     use crate::prelude::*;
     use ::image::DynamicImage;
-    use nalgebra::{ComplexField, Point2, Rotation2, Scale2, Transform2, Translation2};
-
-    const EPS: f32 = 0.000001;
+    use nalgebra::{Point2, Transform2, Translation2};
 
     #[test]
     fn base() {

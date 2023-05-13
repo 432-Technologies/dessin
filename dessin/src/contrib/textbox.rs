@@ -161,7 +161,7 @@ impl ShapeOp for TextBox {
 impl From<TextBox> for Shape {
     fn from(
         TextBox {
-            local_transform,
+            local_transform: _,
             font_size,
             line_spacing,
             text,

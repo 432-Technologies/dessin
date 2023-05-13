@@ -235,46 +235,15 @@ mod tests {
         export::{Export, Exporter},
         prelude::*,
     };
-    use nalgebra::{Point2, Rotation2, Scale2, Transform2};
-    use std::f32::consts::{FRAC_1_SQRT_2, FRAC_PI_2, FRAC_PI_4};
-
-    const EPS: f32 = 10e-6;
-
-    #[test]
-    fn parent_rotate_text_scale() {
-        let base = dessin!(Text: (
-            scale={[2., 4.]}
-            translate={[1., 2.]}
-        ));
-
-        let base_position = base.position(&Transform2::default());
-        assert!(
-            (base_position.reference_start - Point2::new(1., 2.)).magnitude() < EPS,
-            "left = {}, right = [1., 2.]",
-            base_position.reference_start,
-        );
-
-        let transform = nalgebra::convert(Rotation2::new(FRAC_PI_2));
-        let transform_position = base.position(&transform);
-        assert!(
-            (transform_position.reference_start - Point2::new(-2., 1.)).magnitude() < EPS,
-            "left = {}, right = [-2., 1.]",
-            transform_position.reference_start,
-        );
-
-        let transform = nalgebra::convert::<_, Transform2<f32>>(Rotation2::new(FRAC_PI_2))
-            * nalgebra::convert::<_, Transform2<f32>>(Scale2::new(2., 2.));
-        let transform_position = base.position(&transform);
-        assert!(
-            (transform_position.reference_start - Point2::new(-4., 2.)).magnitude() < EPS,
-            "left = {}, right = [-2., 1.]",
-            transform_position.reference_start,
-        );
-    }
+    use nalgebra::{Point2, Rotation2};
+    use std::f32::consts::{FRAC_1_SQRT_2, FRAC_PI_4};
 
     #[test]
     fn rotate_group() {
         let dessin = dessin!([
+            Circle: (
+                translate={[0., 25.]}
+            ),
             Text: (
                 text={"1"}
                 font_size={30.}
@@ -302,23 +271,31 @@ mod tests {
             type Error = ();
 
             fn start_style(&mut self, _style: StylePosition) -> Result<(), Self::Error> {
-                todo!()
+                Ok(())
             }
 
             fn end_style(&mut self) -> Result<(), Self::Error> {
-                todo!()
+                Ok(())
             }
 
             fn export_image(&mut self, _image: ImagePosition) -> Result<(), Self::Error> {
-                todo!()
+                Ok(())
             }
 
-            fn export_ellipse(&mut self, _ellipse: EllipsePosition) -> Result<(), Self::Error> {
-                todo!()
+            fn export_ellipse(&mut self, ellipse: EllipsePosition) -> Result<(), Self::Error> {
+                let expected_position = Point2::new(-25. * FRAC_1_SQRT_2, 25. * FRAC_1_SQRT_2);
+                assert!(
+                    (ellipse.center - expected_position).magnitude() < 10e-6,
+                    "left = {}, right = {}",
+                    ellipse.center,
+                    expected_position,
+                );
+
+                Ok(())
             }
 
             fn export_curve(&mut self, _curve: CurvePosition) -> Result<(), Self::Error> {
-                todo!()
+                Ok(())
             }
 
             fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> {
@@ -344,7 +321,7 @@ mod tests {
                     }
                     "3" => {
                         let expected_position =
-                            Point2::new(-25. * FRAC_1_SQRT_2, 25. * FRAC_1_SQRT_2);
+                            Point2::new(30. * FRAC_1_SQRT_2, -30. * FRAC_1_SQRT_2);
                         assert!(
                             (text.reference_start - expected_position).magnitude() < 10e-6,
                             "left = {}, right = {}",

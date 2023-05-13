@@ -130,7 +130,7 @@ mod tests {
 
     use crate::prelude::*;
     use ::image::DynamicImage;
-    use nalgebra::{ComplexField, Point2, Rotation2, Scale2, Transform2, Translation2};
+    use nalgebra::{Point2, Rotation2, Scale2, Transform2, Translation2};
 
     const EPS: f32 = 0.000001;
 

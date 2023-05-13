@@ -97,7 +97,7 @@ impl From<VerticalLayout> for Shape {
             local_transform,
             shapes,
             start_bottom,
-            gap: gap,
+            gap,
         }: VerticalLayout,
     ) -> Self {
         let direction = if start_bottom { 1. } else { -1. };
