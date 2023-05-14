@@ -1,0 +1,19 @@
+[package]
+authors = [
+	"Olivier Lemoine <olivier@le-moine.fr>",
+	"Francois Morillon <francois.morillon@yahoo.fr>",
+]
+description = "Dessin into image"
+edition = "2021"
+license = "MIT"
+name = "dessin-image"
+repository = "https://github.com/432-technologies/dessin"
+version = "0.8.3-pre"
+
+[dependencies]
+data-encoding = "^2.3.3"
+dessin = { version = "0.8.3-pre", path = "../dessin" }
+image = "^0.24.6"
+imageproc = "0.23.0"
+nalgebra = "^0.32.2"
+rand = "^0.8.5"

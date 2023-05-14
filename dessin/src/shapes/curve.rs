@@ -18,6 +18,13 @@ pub struct Curve {
     pub closed: bool,
 }
 impl Curve {
+    #[inline]
+    pub fn extend<T: IntoIterator<Item = Keypoint>>(&mut self, shapes: T) -> &mut Self {
+        self.keypoints.extend(shapes);
+        self
+    }
+
+    #[inline]
     pub fn then<K: Into<Keypoint>>(&mut self, keypoint: K) -> &mut Self {
         self.keypoints.push(keypoint.into());
         self
