@@ -2,7 +2,7 @@ use dessin::{
     export::{Export, Exporter},
     prelude::*,
 };
-use nalgebra::{Translation2};
+use nalgebra::Translation2;
 use once_cell::sync::OnceCell;
 use printpdf::{Mm, PdfDocument, PdfDocumentReference, PdfLayerReference};
 use std::{

@@ -227,13 +227,25 @@ impl BoundingBox<Straight> {
     }
 
     /// [`BoundingBox`] center at the given point
-    pub fn at(p: Point2<f32>) -> Self {
+    pub fn at<P: Into<Point2<f32>>>(p: P) -> Self {
+        let p = p.into();
         BoundingBox {
             _ty: PhantomData,
             top_left: p,
             top_right: p,
             bottom_right: p,
             bottom_left: p,
+        }
+    }
+
+    /// [`BoundingBox`] from mins and maxs
+    pub fn mins_maxs(min_x: f32, min_y: f32, max_x: f32, max_y: f32) -> Self {
+        BoundingBox {
+            _ty: PhantomData,
+            top_left: [min_x, max_y].into(),
+            top_right: [max_x, max_y].into(),
+            bottom_right: [max_x, min_y].into(),
+            bottom_left: [min_x, min_y].into(),
         }
     }
 
@@ -265,14 +277,19 @@ impl BoundingBox<Straight> {
     ///
     /// Creates a bigger [`BoundingBox`] from the union of the two.
     pub fn join(mut self, other: BoundingBox<Straight>) -> BoundingBox<Straight> {
-        self.top_left.x = self.top_left.x.max(other.top_left.x);
-        self.top_left.y = self.top_left.y.min(other.top_left.y);
-        self.top_right.x = self.top_right.x.min(other.top_right.x);
-        self.top_right.y = self.top_right.y.min(other.top_right.y);
-        self.bottom_right.x = self.bottom_right.x.min(other.bottom_right.x);
-        self.bottom_right.y = self.bottom_right.y.max(other.bottom_right.y);
-        self.bottom_left.x = self.bottom_left.x.max(other.bottom_left.x);
-        self.bottom_left.y = self.bottom_left.y.max(other.bottom_left.y);
+        let min_x = self.bottom_left.x.min(other.bottom_left.x);
+        let min_y = self.bottom_left.y.min(other.bottom_left.y);
+        let max_x = self.top_right.x.max(other.top_right.x);
+        let max_y = self.top_right.y.max(other.top_right.y);
+
+        self.top_left.x = min_x;
+        self.top_left.y = max_y;
+        self.top_right.x = max_x;
+        self.top_right.y = max_y;
+        self.bottom_right.x = max_x;
+        self.bottom_right.y = min_y;
+        self.bottom_left.x = min_x;
+        self.bottom_left.y = min_y;
 
         self
     }
@@ -281,14 +298,35 @@ impl BoundingBox<Straight> {
     ///
     /// Creates a smaller [`BoundingBox`] from the intersection of the two.
     pub fn intersect(mut self, other: BoundingBox<Straight>) -> BoundingBox<Straight> {
-        self.top_left.x = self.top_left.x.min(other.top_left.x);
-        self.top_left.y = self.top_left.y.max(other.top_left.y);
-        self.top_right.x = self.top_right.x.max(other.top_right.x);
-        self.top_right.y = self.top_right.y.max(other.top_right.y);
-        self.bottom_right.x = self.bottom_right.x.max(other.bottom_right.x);
-        self.bottom_right.y = self.bottom_right.y.min(other.bottom_right.y);
-        self.bottom_left.x = self.bottom_left.x.min(other.bottom_left.x);
-        self.bottom_left.y = self.bottom_left.y.min(other.bottom_left.y);
+        let (min_x, max_x) = if self.bottom_right.x <= other.bottom_left.x
+            || self.bottom_left.x >= other.bottom_right.x
+        {
+            (0., 0.)
+        } else {
+            (
+                self.bottom_left.x.max(other.bottom_left.x),
+                self.top_right.x.min(other.top_right.x),
+            )
+        };
+
+        let (min_y, max_y) =
+            if self.top_left.y <= other.bottom_left.y || self.bottom_right.y >= other.top_left.y {
+                (0., 0.)
+            } else {
+                (
+                    self.bottom_left.y.max(other.bottom_left.y),
+                    self.top_right.y.min(other.top_right.y),
+                )
+            };
+
+        self.top_left.x = min_x;
+        self.top_left.y = max_y;
+        self.top_right.x = max_x;
+        self.top_right.y = max_y;
+        self.bottom_right.x = max_x;
+        self.bottom_right.y = min_y;
+        self.bottom_left.x = min_x;
+        self.bottom_left.y = min_y;
 
         self
     }
