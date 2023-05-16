@@ -503,6 +503,46 @@ fn for_loop() {
     .unwrap();
 }
 #[test]
+fn for_loop_par() {
+    syn::parse_str::<Dessin>(
+        "for x in (it) {
+            let y = x as f32 * 2.;
+            dessin!(Circle: ( radius={y}) )
+        }",
+    )
+    .unwrap();
+}
+// #[test]
+// fn for_loop_var() {
+//     syn::parse_str::<Dessin>(
+//         "for x in it {
+//             let y = x as f32 * 2.;
+//             dessin!(Circle: ( radius={y}) )
+//         }",
+//     )
+//     .unwrap();
+// }
+// #[test]
+// fn for_loop_range_var() {
+//     syn::parse_str::<Dessin>(
+//         "for x in 0..n {
+//             let y = x as f32 * 2.;
+//             dessin!(Circle: ( radius={y}) )
+//         }",
+//     )
+//     .unwrap();
+// }
+#[test]
+fn for_loop_range_var_par() {
+    syn::parse_str::<Dessin>(
+        "for x in 0..(n) {
+            let y = x as f32 * 2.;
+            dessin!(Circle: ( radius={y}) )
+        }",
+    )
+    .unwrap();
+}
+#[test]
 fn branch_if() {
     syn::parse_str::<Dessin>(
         "if test_fn() == 2 {
@@ -559,6 +599,9 @@ fn if_if_group() {
 			if test_fn() == 2 {
             	var(circle): () -> ()
         	},
+            for x in 0..1 {
+                dessin!()
+            },
 			Circle: (),
 		]",
     )
@@ -577,6 +620,9 @@ fn group_in_group() {
 				var(circle): (),
 			],
 			cloned(circle): (),
+            for x in (var) {
+                dessin!()
+            },
 			[],
 			if test_fn() == 2 {
             	[

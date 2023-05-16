@@ -1,13 +1,13 @@
 [package]
 name = "dessin-pdf"
-version = "0.8.3-pre"
+version = "0.8.4-pre"
 edition = "2021"
 repository = "https://github.com/432-technologies/dessin"
 license = "MIT"
 description = "Dessin to PDF"
 
 [dependencies]
-dessin = { version = "0.8.3-pre", path = "../dessin" }
+dessin = { version = "0.8.4-pre", path = "../dessin" }
 printpdf = { git = "https://github.com/fschutt/printpdf", rev = "e78b284", features = [
 	"webp",
 	"svg",
