@@ -46,3 +46,23 @@ pub mod prelude {
 pub mod font {
     pub use crate::shapes::text::font::*;
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+
+    #[test]
+    fn erased_type() {
+        #[derive(Default)]
+        struct Component {}
+        impl From<Component> for Shape {
+            fn from(_: Component) -> Self {
+                dessin!()
+            }
+        }
+
+        dessin!(Component: () -> (
+            translate={[1., 1.]}
+        ));
+    }
+}

@@ -431,10 +431,8 @@ impl From<Dessin> for TokenStream {
     fn from(value: Dessin) -> Self {
         let base = TokenStream::from(value.dessin_type);
         if let Some(shape_actions) = value.erased_type_shape_actions {
-            TokenStream::from(DessinVar {
-                var: base,
-                shape_actions,
-            })
+            let var = quote!(::dessin::prelude::Shape::from(#base));
+            TokenStream::from(DessinVar { var, shape_actions })
         } else {
             quote!(#base)
         }
