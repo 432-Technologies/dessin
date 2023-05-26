@@ -1,6 +1,8 @@
 pub(crate) mod curve;
 pub(crate) mod ellipse;
 pub(crate) mod image;
+#[cfg(feature = "reactive")]
+pub(crate) mod reactive;
 pub(crate) mod text;
 
 pub use self::image::*;
@@ -8,6 +10,8 @@ pub use curve::*;
 pub use ellipse::*;
 use na::{Point2, Rotation2, Scale2, Vector2};
 use nalgebra::{self as na, Transform2, Translation2};
+#[cfg(feature = "reactive")]
+pub use reactive::*;
 use std::marker::PhantomData;
 pub use text::*;
 
@@ -375,6 +379,8 @@ pub enum Shape {
     Text(Text),
     /// Curve
     Curve(Curve),
+    #[cfg(feature = "reactive")]
+    Reactive(Reactive),
 }
 
 impl Default for Shape {
@@ -439,7 +445,7 @@ impl ShapeBoundingBox for Shape {
                 .iter()
                 .filter_map(|v| v.global_bounding_box(local_transform))
                 .map(|v| v.straigthen())
-                .reduce(|acc, curr| BoundingBox::intersect(acc, curr))
+                .reduce(|acc, curr| BoundingBox::join(acc, curr))
                 .map(|v| v.transform(local_transform)),
             Shape::Style { shape, .. } => shape.local_bounding_box(),
             Shape::Ellipse(e) => e.local_bounding_box(),
