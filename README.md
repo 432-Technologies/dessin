@@ -34,38 +34,38 @@ impl MyShape {
   }
 }
 impl From<MyShape> for Shape {
-  fn from(value: MyShape) -> Self {
+  fn from(MyShape { text } : MyShape) -> Self {
     dessin!(Text: #(
       fill={Color::RED}
-      text={value.text}
+      {text}
     )).into()
   }
 }
 
-let dessin = dessin!(for x in {0..10}: {
+let dessin = dessin!(for x in 0..10: {
   let radius = x as f32 * 10.;
 
-  dessin!(group: [
-    { Circle: #(
+  dessin!([
+    Circle: #(
       fill={Color::RED}
-      radius={radius}
+      {radius}
       translate={[x as f32 * 5., 10.]}
-    ) }
-    { Text: #(
+    ),
+    Text: #(
       fill={Color::BLACK}
       font_size={10.}
       text={"Hi !"}
-    ) }
+    ),
   ])
 });
 
-let dessin = dessin!(group: [
-  { var { dessin }: (
+let dessin = dessin!([
+  var(dessin): (
     scale={[2., 2.]}
-  ) }
-  { MyShape: (
+  ),
+  MyShape: (
     say_this={"Hello world"}
-  ) }
+  ),
 ]);
 
 let svg = dessin.to_svg().unwrap();
