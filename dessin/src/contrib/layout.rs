@@ -2,10 +2,12 @@ use nalgebra::Transform2;
 
 use crate::prelude::*;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Shape)]
 pub struct VerticalLayout {
+    #[local_transform]
     pub local_transform: Transform2<f32>,
     pub shapes: Vec<Shape>,
+    #[shape(skip)]
     pub start_bottom: bool,
     pub gap: f32,
 }
@@ -64,30 +66,6 @@ impl VerticalLayout {
     pub fn with_start_from_top(mut self) -> Self {
         self.start_from_top();
         self
-    }
-
-    #[inline]
-    pub fn gap(&mut self, gap: f32) -> &mut Self {
-        self.gap = gap;
-        self
-    }
-    #[inline]
-    pub fn with_gap(mut self, gap: f32) -> Self {
-        self.gap(gap);
-        self
-    }
-}
-
-impl ShapeOp for VerticalLayout {
-    #[inline]
-    fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
-        self.local_transform = transform_matrix * self.local_transform;
-        self
-    }
-
-    #[inline]
-    fn local_transform(&self) -> &Transform2<f32> {
-        &self.local_transform
     }
 }
 

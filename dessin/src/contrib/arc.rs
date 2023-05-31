@@ -2,8 +2,9 @@ use crate::prelude::*;
 use nalgebra::{Point2, Rotation2, Scale2, Transform2};
 use std::f32::consts::{FRAC_PI_2, PI};
 
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Arc {
+    #[local_transform]
     pub local_transform: Transform2<f32>,
     /// start angle in radian
     pub start_angle: f32,
@@ -19,28 +20,6 @@ impl Arc {
     #[inline]
     pub fn with_radius(mut self, radius: f32) -> Self {
         self.radius(radius);
-        self
-    }
-
-    #[inline]
-    pub fn start_angle(&mut self, start_angle: f32) -> &mut Self {
-        self.start_angle = start_angle;
-        self
-    }
-    #[inline]
-    pub fn with_start_angle(mut self, start_angle: f32) -> Self {
-        self.start_angle(start_angle);
-        self
-    }
-
-    #[inline]
-    pub fn end_angle(&mut self, end_angle: f32) -> &mut Self {
-        self.end_angle = end_angle;
-        self
-    }
-    #[inline]
-    pub fn with_end_angle(mut self, end_angle: f32) -> Self {
-        self.end_angle(end_angle);
         self
     }
 }
@@ -111,18 +90,5 @@ impl From<Arc> for Shape {
     #[inline]
     fn from(arc: Arc) -> Self {
         Curve::from(arc).into()
-    }
-}
-
-impl ShapeOp for Arc {
-    #[inline]
-    fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
-        self.local_transform = transform_matrix * self.local_transform;
-        self
-    }
-
-    #[inline]
-    fn local_transform(&self) -> &Transform2<f32> {
-        &self.local_transform
     }
 }

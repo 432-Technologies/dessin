@@ -1,8 +1,9 @@
 use crate::prelude::*;
 use nalgebra::{Point2, Scale2, Transform2};
 
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Rectangle {
+    #[local_transform]
     pub local_transform: Transform2<f32>,
 }
 impl Rectangle {
@@ -46,17 +47,6 @@ impl From<Rectangle> for Curve {
                 closed
             )
         }
-    }
-}
-
-impl ShapeOp for Rectangle {
-    fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
-        self.local_transform = transform_matrix * self.local_transform;
-        self
-    }
-
-    fn local_transform(&self) -> &Transform2<f32> {
-        &self.local_transform
     }
 }
 

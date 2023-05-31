@@ -39,7 +39,7 @@ pub mod prelude {
     pub use crate::contrib::*;
     pub use crate::shapes::*;
     pub use crate::style::*;
-    pub use ::dessin_macros::dessin;
+    pub use ::dessin_macros::{dessin, Shape};
 }
 
 /// Everything related to fonts.

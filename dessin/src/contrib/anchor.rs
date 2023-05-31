@@ -2,9 +2,10 @@ use crate::prelude::{Shape, ShapeBoundingBox, ShapeOp, ShapeOpWith};
 use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
 use std::ops::{Deref, DerefMut};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Shape)]
 pub struct Anchor<T> {
     pub shape: T,
+    #[shape(into)]
     pub anchor: Vector2<f32>,
 }
 impl<T> Default for Anchor<T>
@@ -25,18 +26,6 @@ impl<T> Anchor<T> {
             shape,
             anchor: Vector2::default(),
         }
-    }
-
-    #[inline]
-    pub fn anchor<A: Into<Vector2<f32>>>(&mut self, anchor: A) -> &mut Self {
-        self.anchor = anchor.into();
-        self
-    }
-
-    #[inline]
-    pub fn with_anchor<A: Into<Vector2<f32>>>(mut self, anchor: A) -> Self {
-        self.anchor(anchor);
-        self
     }
 }
 

@@ -2,8 +2,9 @@ use crate::{font::FontRef, prelude::*};
 use fontdue::{Font, FontSettings};
 use nalgebra::Transform2;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Shape)]
 pub struct TextBox {
+    #[local_transform]
     pub local_transform: Transform2<f32>,
     pub font_size: f32,
     pub line_spacing: f32,
@@ -14,7 +15,9 @@ pub struct TextBox {
     /// Dimension on the x-axis
     pub width: f32,
     /// Dimension on the y-axis
+    #[shape(skip)]
     pub height: Option<f32>,
+    #[shape(skip)]
     pub font: Option<FontRef>,
 }
 impl Default for TextBox {
@@ -46,83 +49,6 @@ impl TextBox {
     }
 
     #[inline]
-    pub fn font_size(&mut self, font_size: f32) -> &mut Self {
-        self.font_size = font_size;
-        self
-    }
-    #[inline]
-    pub fn with_font_size(mut self, font_size: f32) -> Self {
-        self.font_size(font_size);
-        self
-    }
-
-    #[inline]
-    pub fn text<T: ToString>(&mut self, text: T) -> &mut Self {
-        self.text = text.to_string();
-        self
-    }
-    #[inline]
-    pub fn with_text<T: ToString>(mut self, text: T) -> Self {
-        self.text(text);
-        self
-    }
-
-    #[inline]
-    pub fn line_spacing(&mut self, line_spacing: f32) -> &mut Self {
-        self.line_spacing = line_spacing;
-        self
-    }
-    #[inline]
-    pub fn with_line_spacing(mut self, line_spacing: f32) -> Self {
-        self.line_spacing(line_spacing);
-        self
-    }
-
-    #[inline]
-    pub fn align(&mut self, align: TextAlign) -> &mut Self {
-        self.align = align;
-        self
-    }
-    #[inline]
-    pub fn with_align(mut self, align: TextAlign) -> Self {
-        self.align(align);
-        self
-    }
-
-    #[inline]
-    pub fn vertical_align(&mut self, vertical_align: TextVerticalAlign) -> &mut Self {
-        self.vertical_align = vertical_align;
-        self
-    }
-    #[inline]
-    pub fn with_vertical_align(mut self, vertical_align: TextVerticalAlign) -> Self {
-        self.vertical_align(vertical_align);
-        self
-    }
-
-    #[inline]
-    pub fn font_weight(&mut self, font_weight: FontWeight) -> &mut Self {
-        self.font_weight = font_weight;
-        self
-    }
-    #[inline]
-    pub fn with_font_weight(mut self, font_weight: FontWeight) -> Self {
-        self.font_weight(font_weight);
-        self
-    }
-
-    #[inline]
-    pub fn width(&mut self, width: f32) -> &mut Self {
-        self.width = width;
-        self
-    }
-    #[inline]
-    pub fn with_width(mut self, width: f32) -> Self {
-        self.width(width);
-        self
-    }
-
-    #[inline]
     pub fn height(&mut self, height: f32) -> &mut Self {
         self.height = Some(height);
         self
@@ -142,19 +68,6 @@ impl TextBox {
     pub fn without_weight(mut self) -> Self {
         self.no_height();
         self
-    }
-}
-
-impl ShapeOp for TextBox {
-    #[inline]
-    fn transform(&mut self, transform_matrix: nalgebra::Transform2<f32>) -> &mut Self {
-        self.local_transform = transform_matrix * self.local_transform;
-        self
-    }
-
-    #[inline]
-    fn local_transform(&self) -> &nalgebra::Transform2<f32> {
-        &self.local_transform
     }
 }
 

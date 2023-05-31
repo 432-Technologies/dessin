@@ -6,8 +6,9 @@ use crate::{
 };
 use nalgebra::{self as na, Point2, Rotation2, Scale2, Transform2};
 
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Circle {
+    #[local_transform]
     pub local_transform: Transform2<f32>,
 }
 
@@ -21,19 +22,6 @@ impl Circle {
     pub fn with_radius(mut self, radius: f32) -> Self {
         self.radius(radius);
         self
-    }
-}
-
-impl ShapeOp for Circle {
-    #[inline]
-    fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
-        self.local_transform = transform_matrix * self.local_transform;
-        self
-    }
-
-    #[inline]
-    fn local_transform(&self) -> &Transform2<f32> {
-        &self.local_transform
     }
 }
 

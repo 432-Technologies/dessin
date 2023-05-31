@@ -1,14 +1,14 @@
 extern crate proc_macro;
 
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{__private::mk_ident, quote};
 use syn::{
     braced, bracketed, parenthesized,
     parse::{Parse, ParseStream},
     parse_macro_input,
     punctuated::Punctuated,
     token::{Brace, Bracket},
-    Expr, Ident, Result, Token, Type,
+    DataStruct, DeriveInput, Expr, Fields, FieldsNamed, Ident, Result, Token, Type,
 };
 
 mod kw {
@@ -632,4 +632,142 @@ fn group_in_group() {
 		]",
     )
     .unwrap();
+}
+
+#[proc_macro_derive(Shape, attributes(shape, local_transform))]
+pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+    let vis = input.vis;
+
+    let mut local_transform = None;
+
+    let fields = match input.data {
+        syn::Data::Struct(DataStruct {
+            fields: Fields::Named(FieldsNamed { named: fields, .. }),
+            ..
+        }) => fields.into_iter().map(|field| {
+            let ident = field.ident.unwrap();
+            let ty = field.ty;
+
+            let mut skip = false;
+            let mut into = false;
+            let mut boolean = false;
+            for attr in field.attrs {
+                if attr.path().is_ident("local_transform") {
+                    if local_transform.is_some() {
+                        panic!("Only one field can be a local_transform");
+                    }
+
+                    local_transform = Some(ident.clone());
+                    skip = true;
+                }
+
+                if attr.path().is_ident("shape") {
+                    attr.parse_nested_meta(|meta| {
+                        if meta.path.is_ident("skip") {
+                            skip = true;
+                        }
+
+                        if meta.path.is_ident("into") {
+                            into = true;
+                        }
+
+                        if meta.path.is_ident("bool") {
+                            boolean = true;
+                        }
+
+                        Ok(())
+                    })
+                    .unwrap()
+                }
+            }
+
+            if skip {
+                return quote!();
+            }
+
+            let with_ident = mk_ident(&format!("with_{ident}"), None);
+            if boolean {
+                quote!(
+                    #[inline]
+                    #vis fn #ident(&mut self) -> &mut Self {
+                        self.#ident = true;
+                        self
+                    }
+
+                    #[inline]
+                    #vis fn #with_ident(mut self) -> Self {
+                        self.#ident();
+                        self
+                    }
+                )
+            } else if into {
+                quote!(
+                    #[inline]
+                    #vis fn #ident<__INTO__T: Into<#ty>>(&mut self, value: __INTO__T) -> &mut Self {
+                        self.#ident = value.into();
+                        self
+                    }
+
+                    #[inline]
+                    #vis fn #with_ident<__INTO__T: Into<#ty>>(mut self, value: __INTO__T) -> Self {
+                        self.#ident(value);
+                        self
+                    }
+                )
+            } else {
+                quote!(
+                    #[inline]
+                    #vis fn #ident(&mut self, value: #ty) -> &mut Self {
+                        self.#ident = value;
+                        self
+                    }
+
+                    #[inline]
+                    #vis fn #with_ident(mut self, value: #ty) -> Self {
+                        self.#ident(value);
+                        self
+                    }
+                )
+            }
+        }).collect::<Vec<_>>(),
+        syn::Data::Struct(_) => {
+            unreachable!()
+        }
+        syn::Data::Enum(_) => {
+            unreachable!()
+        }
+        syn::Data::Union(_) => {
+            unreachable!()
+        }
+    };
+
+    let shape_op_impl = if let Some(lt) = local_transform {
+        quote!(
+            impl #impl_generics ::dessin::prelude::ShapeOp for #name #ty_generics #where_clause {
+                #[inline]
+                fn transform(&mut self, transform_matrix: ::dessin::nalgebra::Transform2<f32>) -> &mut Self {
+                    self.#lt = transform_matrix * self.#lt;
+                    self
+                }
+
+                #[inline]
+                fn local_transform(&self) -> &::dessin::nalgebra::Transform2<f32> {
+                    &self.#lt
+                }
+            }
+        )
+    } else {
+        quote!()
+    };
+
+    proc_macro::TokenStream::from(quote! {
+        impl #impl_generics #name #ty_generics #where_clause {
+            #(#fields)*
+        }
+
+        #shape_op_impl
+    })
 }
