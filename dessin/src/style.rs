@@ -264,7 +264,7 @@ impl<T> DerefMut for Style<T> {
     }
 }
 
-impl<T: ShapeOp> From<Style<T>> for Shape {
+impl<T: Into<Shape>> From<Style<T>> for Shape {
     #[inline]
     fn from(
         Style {
