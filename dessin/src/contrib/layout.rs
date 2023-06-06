@@ -2,6 +2,10 @@ use nalgebra::Transform2;
 
 use crate::prelude::*;
 
+/// Display children on top of one another
+/// 
+/// `of={ Into<Shape> }`
+/// ``
 #[derive(Debug, Default, Clone, Shape)]
 pub struct VerticalLayout {
     #[local_transform]

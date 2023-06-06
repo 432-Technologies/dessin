@@ -572,10 +572,28 @@ fn combined_group_erased() {
     .unwrap();
 }
 #[test]
+fn simple_if() {
+    syn::parse_str::<Dessin>(
+        "if my_condition {
+            Circle: ()
+        }",
+    )
+    .unwrap();
+}
+#[test]
 fn combined_if() {
     syn::parse_str::<Dessin>(
         "if test_fn() == 2 {
             Circle: () -> ()
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn mod_if() {
+    syn::parse_str::<Dessin>(
+        "if test_fn() == 2 {
+            my_mod::Circle: () -> ()
         }",
     )
     .unwrap();
