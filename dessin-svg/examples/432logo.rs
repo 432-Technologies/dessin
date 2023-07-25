@@ -256,7 +256,10 @@ fn main() {
         ]
     )
     .to_svg_with_options(dessin_svg::SVGOptions {
-        size: Some((150., 150.)),
+        viewport: dessin_svg::ViewPort::ManualCentered {
+            width: 150.,
+            height: 150.,
+        },
     })
     .unwrap();
     println!("{logo}");

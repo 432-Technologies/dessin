@@ -3,7 +3,7 @@ use dessin::{
     export::{Export, Exporter},
     prelude::*,
 };
-use nalgebra::{Scale2, Vector2};
+use nalgebra::{Scale2, Transform2, Vector2};
 use std::{
     fmt::{self, Write},
     io::Cursor,
@@ -26,9 +26,27 @@ impl From<fmt::Error> for SVGError {
 }
 impl std::error::Error for SVGError {}
 
+#[derive(Default, Clone, Copy, PartialEq)]
+pub enum ViewPort {
+    /// Create a viewport centered around (0, 0), with size (width, height)
+    ManualCentered { width: f32, height: f32 },
+    /// Create a viewport centered around (x, y), with size (width, height)
+    ManualViewport {
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+    },
+    /// Create a Viewport centered around (0, 0), with auto size that include all [Shapes][`dessin::prelude::Shape`]
+    AutoCentered,
+    #[default]
+    /// Create a Viewport centered around the centered of the shapes, with auto size that include all [Shapes][`dessin::prelude::Shape`]
+    AutoBoundingBox,
+}
+
 #[derive(Default)]
 pub struct SVGOptions {
-    pub size: Option<(f32, f32)>,
+    pub viewport: ViewPort,
 }
 
 pub struct SVGExporter {
@@ -36,7 +54,7 @@ pub struct SVGExporter {
 }
 
 impl SVGExporter {
-    fn new((max_x, max_y): (f32, f32)) -> Self {
+    fn new(min_x: f32, min_y: f32, span_x: f32, span_y: f32) -> Self {
         const SCHEME: &str =
             r#"xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink""#;
 
@@ -66,9 +84,7 @@ impl SVGExporter {
             .collect::<String>();
 
         let acc = format!(
-            r#"<svg viewBox="{offset_x} {offset_y} {max_x} {max_y}" {SCHEME}><defs>{fonts}</defs>"#,
-            offset_x = -max_x / 2.,
-            offset_y = -max_y / 2.,
+            r#"<svg viewBox="{min_x} {min_y} {span_x} {span_y}" {SCHEME}><defs>{fonts}</defs>"#,
         );
 
         SVGExporter { acc }
@@ -326,14 +342,58 @@ pub trait ToSVG {
 
 impl ToSVG for Shape {
     fn to_svg_with_options(&self, options: SVGOptions) -> Result<String, SVGError> {
-        let size = options.size.unwrap_or_else(|| {
-            let bb = self
-                .local_bounding_box()
-                .unwrap_or_else(|| BoundingBox::zero().as_unparticular());
-            (bb.width(), bb.height())
-        });
+        let (min_x, min_y, span_x, span_y) = match options.viewport {
+            ViewPort::ManualCentered { width, height } => {
+                (-width / 2., -height / 2., width, height)
+            }
+            ViewPort::ManualViewport {
+                x,
+                y,
+                width,
+                height,
+            } => (x - width / 2., y - height / 2., width, height),
+            ViewPort::AutoCentered => {
+                let bb = self
+                    .local_bounding_box()
+                    .unwrap_or_else(|| BoundingBox::zero().as_unparticular())
+                    .straigthen();
 
-        let mut exporter = SVGExporter::new(size);
+                let mirror_bb = bb
+                    .transform(&nalgebra::convert::<_, Transform2<f32>>(Scale2::new(
+                        -1., -1.,
+                    )))
+                    .into_straight();
+
+                let overall_bb = bb.join(mirror_bb);
+
+                (
+                    overall_bb.width() / 2.,
+                    overall_bb.height() / 2.,
+                    overall_bb.width(),
+                    overall_bb.height(),
+                )
+            }
+            ViewPort::AutoBoundingBox => {
+                let bb = self
+                    .local_bounding_box()
+                    .unwrap_or_else(|| BoundingBox::zero().as_unparticular())
+                    .straigthen();
+                (
+                    bb.bottom_left().x,
+                    bb.bottom_left().y,
+                    bb.width(),
+                    bb.height(),
+                )
+            }
+        };
+        // let size = options.size.unwrap_or_else(|| {
+        //     let bb = self
+        //         .local_bounding_box()
+        //         .unwrap_or_else(|| BoundingBox::zero().as_unparticular());
+        //     (bb.width(), bb.height())
+        // });
+
+        let mut exporter = SVGExporter::new(min_x, min_y, span_x, span_y);
 
         let parent_transform = nalgebra::convert(Scale2::new(1., -1.));
         self.write_into_exporter(&mut exporter, &parent_transform)?;

@@ -97,7 +97,7 @@ pub struct Straight;
 
 /// Bounding box used to describe max bound of an shape.
 /// Usefull to find the max size of shapes as multiple [`BoundingBox`] can be join together.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct BoundingBox<Type> {
     _ty: PhantomData<Type>,
     top_left: Point2<f32>,
