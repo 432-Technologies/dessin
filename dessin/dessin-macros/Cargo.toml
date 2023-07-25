@@ -1,15 +1,15 @@
 [package]
-name = "dessin-macros"
-version = "0.8.8-pre"
+description = "Build complex drawing for PDF, SVG, ..."
 edition = "2021"
 license = "MIT"
+name = "dessin-macros"
 repository = "https://github.com/432-technologies/dessin"
-description = "Build complex drawing for PDF, SVG, ..."
+version = "0.8.9-pre"
 
 [lib]
 proc-macro = true
 
 [dependencies]
-syn = { version="2.0", features=["full"] }
-quote = "1.0"
 proc-macro2 = "1.0"
+quote = "1.0"
+syn = {version = "2.0", features = ["full"]}

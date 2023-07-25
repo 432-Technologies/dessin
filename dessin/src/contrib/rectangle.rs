@@ -106,8 +106,6 @@ mod tests {
             })
             .collect();
 
-        dbg!(&base_position);
-
         assert!(
             (base_position[0] - Point2::new(0., 3.5)).magnitude() < EPS,
             "left = {}, right = [0., 3.5]",

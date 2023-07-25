@@ -1,18 +1,18 @@
 [package]
-name = "dessin-pdf"
-version = "0.8.8-pre"
-edition = "2021"
-repository = "https://github.com/432-technologies/dessin"
-license = "MIT"
 description = "Dessin to PDF"
+edition = "2021"
+license = "MIT"
+name = "dessin-pdf"
+repository = "https://github.com/432-technologies/dessin"
+version = "0.8.9-pre"
 
 [dependencies]
-dessin = { version = "0.8.8-pre", path = "../dessin" }
-printpdf = { git = "https://github.com/fschutt/printpdf", rev = "e78b284", features = [
-	"webp",
-	"svg",
-] }
+dessin = {version = "0.8.9-pre", path = "../dessin"}
 fontdue = "^0.7.3"
 image = "^0.24.6"
 nalgebra = "^0.32.2"
-once_cell = "^1.17.1"
+once_cell = "^1.18.0"
+printpdf = {git = "https://github.com/fschutt/printpdf", rev = "91ecbe4", features = [
+  "webp",
+  "svg",
+]}

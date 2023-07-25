@@ -288,10 +288,13 @@ impl BoundingBox<Straight> {
 
         self.top_left.x = min_x;
         self.top_left.y = max_y;
+
         self.top_right.x = max_x;
         self.top_right.y = max_y;
+
         self.bottom_right.x = max_x;
         self.bottom_right.y = min_y;
+
         self.bottom_left.x = min_x;
         self.bottom_left.y = min_y;
 
@@ -346,7 +349,7 @@ pub trait ShapeBoundingBox: ShapeOp {
         parent_transform: &Transform2<f32>,
     ) -> Option<BoundingBox<UnParticular>> {
         self.local_bounding_box()
-            .map(|v| v.transform(&self.global_transform(parent_transform)))
+            .map(|v| v.transform(parent_transform))
     }
 }
 
@@ -446,7 +449,7 @@ impl ShapeBoundingBox for Shape {
                 .filter_map(|v| v.global_bounding_box(local_transform))
                 .map(|v| v.straigthen())
                 .reduce(|acc, curr| BoundingBox::join(acc, curr))
-                .map(|v| v.transform(local_transform)),
+                .map(|v| v.as_unparticular()),
             Shape::Style { shape, .. } => shape.local_bounding_box(),
             Shape::Ellipse(e) => e.local_bounding_box(),
             Shape::Image(i) => i.local_bounding_box(),

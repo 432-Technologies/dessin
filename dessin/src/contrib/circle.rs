@@ -105,3 +105,24 @@ pub fn bounding_box() {
     assert_float_absolute_eq!(bb.width(), 35., 10.); // Good enought for now
     assert_float_absolute_eq!(bb.height(), 35., 10.); // Good enought for now
 }
+
+#[test]
+pub fn bounding_box_7() {
+    use crate::prelude::*;
+    use assert_float_eq::*;
+
+    let mut circle: Shape = Circle::default().with_radius(7.).into();
+
+    let bb = circle.local_bounding_box().unwrap();
+    assert_eq!(bb.width(), 14.);
+    assert_eq!(bb.height(), 14.);
+
+    let group = dessin!([
+        Circle: (
+            radius={7.}
+        ),
+    ]);
+    let bb = group.local_bounding_box().unwrap();
+    assert_eq!(bb.width(), 14.);
+    assert_eq!(bb.height(), 14.);
+}
