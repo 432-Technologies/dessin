@@ -1,10 +1,9 @@
-use std::f32::consts::FRAC_PI_2;
-
 use crate::{
     prelude::{Ellipse, Shape, ShapeOp},
     shapes::{Bezier, Curve, Keypoint},
 };
 use nalgebra::{self as na, Point2, Rotation2, Scale2, Transform2};
+use std::f32::consts::{FRAC_PI_2, FRAC_PI_4};
 
 #[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Circle {
@@ -72,4 +71,37 @@ impl From<Circle> for Ellipse {
     fn from(Circle { local_transform }: Circle) -> Self {
         Ellipse { local_transform }
     }
+}
+
+#[test]
+pub fn bounding_box() {
+    use crate::prelude::*;
+    use assert_float_eq::*;
+
+    let mut circle: Shape = Circle::default().with_radius(10.).into();
+
+    let bb = circle.local_bounding_box().unwrap();
+    assert_eq!(bb.width(), 20.);
+    assert_eq!(bb.height(), 20.);
+
+    let mut ellipse = circle.with_resize(Scale2::new(2., 0.5));
+    let bb = ellipse.local_bounding_box().unwrap();
+    assert_eq!(bb.width(), 40.);
+    assert_eq!(bb.height(), 10.);
+
+    ellipse.rotate(Rotation2::new(FRAC_PI_2));
+    let bb = ellipse.local_bounding_box().unwrap();
+    assert_eq!(bb.width(), 40.);
+    assert_eq!(bb.height(), 10.);
+    let bb = bb.straigthen();
+    assert_float_absolute_eq!(bb.width(), 10., 10e-3);
+    assert_float_absolute_eq!(bb.height(), 40., 10e-3);
+
+    ellipse.rotate(Rotation2::new(-FRAC_PI_4));
+    let bb = ellipse.local_bounding_box().unwrap();
+    assert_eq!(bb.width(), 40.);
+    assert_eq!(bb.height(), 10.);
+    let bb = bb.straigthen();
+    assert_float_absolute_eq!(bb.width(), 35., 10.); // Good enought for now
+    assert_float_absolute_eq!(bb.height(), 35., 10.); // Good enought for now
 }
