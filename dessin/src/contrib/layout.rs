@@ -3,7 +3,7 @@ use nalgebra::Transform2;
 use crate::prelude::*;
 
 /// Display children on top of one another
-/// 
+///
 /// `of={ Into<Shape> }`
 /// ``
 #[derive(Debug, Default, Clone, Shape)]
@@ -90,7 +90,7 @@ impl From<VerticalLayout> for Shape {
 
             let bb = shape
             	.local_bounding_box()
-            	.map(BoundingBox::into_straight)
+            	.map(BoundingBox::<UnParticular>::into_straight)
             	.unwrap_or(BoundingBox::zero());
 
              let shape_pos_y = if start_bottom {

@@ -135,10 +135,54 @@ impl<T> BoundingBox<T> {
         self.bottom_left
     }
 
-    /// Same as [`straighten`] but for chaining
-    #[inline]
-    pub fn into_straight(self) -> BoundingBox<Straight> {
-        self.straigthen()
+    /// Apply a transform to a [`BoundingBox`]
+    pub fn transform(self, transform: &Transform2<f32>) -> BoundingBox<UnParticular> {
+        BoundingBox {
+            _ty: PhantomData,
+            top_left: transform * self.top_left,
+            top_right: transform * self.top_right,
+            bottom_right: transform * self.bottom_right,
+            bottom_left: transform * self.bottom_left,
+        }
+    }
+
+    /// Width
+    pub fn width(&self) -> f32 {
+        (self.top_right - self.top_left).magnitude()
+    }
+
+    /// Height
+    pub fn height(&self) -> f32 {
+        (self.top_right - self.bottom_right).magnitude()
+    }
+}
+
+impl BoundingBox<UnParticular> {
+    /// Create a [`BoundingBox`] from each corner
+    pub fn new(
+        top_left: Point2<f32>,
+        top_right: Point2<f32>,
+        bottom_right: Point2<f32>,
+        bottom_left: Point2<f32>,
+    ) -> Self {
+        BoundingBox {
+            _ty: PhantomData,
+            top_left,
+            top_right,
+            bottom_right,
+            bottom_left,
+        }
+    }
+
+    /// Center of a [`BoundingBox`].
+    /// If you need a [`BoundingBox<Straight>`], you should straighten it first and then call center on it.
+    pub fn center(&self) -> Point2<f32> {
+        let x =
+            (self.bottom_left.x + self.bottom_right.x + self.top_left.x + self.top_right.x) / 4.;
+        let y =
+            (self.bottom_left.y + self.bottom_right.y + self.top_left.y + self.top_right.y) / 4.;
+
+        Point2::new(x, y)
     }
 
     /// Straighen a [`BoundingBox`] and guarantee that the sides of the bounding box are aligns with the X and Y axis.
@@ -178,43 +222,10 @@ impl<T> BoundingBox<T> {
         }
     }
 
-    /// Apply a transform to a [`BoundingBox`]
-    pub fn transform(self, transform: &Transform2<f32>) -> BoundingBox<UnParticular> {
-        BoundingBox {
-            _ty: PhantomData,
-            top_left: transform * self.top_left,
-            top_right: transform * self.top_right,
-            bottom_right: transform * self.bottom_right,
-            bottom_left: transform * self.bottom_left,
-        }
-    }
-
-    /// Width
-    pub fn width(&self) -> f32 {
-        (self.top_right - self.top_left).magnitude()
-    }
-
-    /// Height
-    pub fn height(&self) -> f32 {
-        (self.top_right - self.bottom_right).magnitude()
-    }
-}
-
-impl BoundingBox<UnParticular> {
-    /// Create a [`BoundingBox`] from each corner
-    pub fn new(
-        top_left: Point2<f32>,
-        top_right: Point2<f32>,
-        bottom_right: Point2<f32>,
-        bottom_left: Point2<f32>,
-    ) -> Self {
-        BoundingBox {
-            _ty: PhantomData,
-            top_left,
-            top_right,
-            bottom_right,
-            bottom_left,
-        }
+    /// Same as [`straighten`] but for chaining
+    #[inline]
+    pub fn into_straight(self) -> BoundingBox<Straight> {
+        self.straigthen()
     }
 }
 
@@ -277,6 +288,17 @@ impl BoundingBox<Straight> {
         }
     }
 
+    /// Straighen a [`BoundingBox`] and guarantee that the sides of the bounding box are aligns with the X and Y axis.
+    pub fn straigthen(&self) -> BoundingBox<Straight> {
+        *self
+    }
+
+    /// Same as [`straighten`] but for chaining
+    #[inline]
+    pub fn into_straight(self) -> BoundingBox<Straight> {
+        self
+    }
+
     /// A u B
     ///
     /// Creates a bigger [`BoundingBox`] from the union of the two.
@@ -336,6 +358,14 @@ impl BoundingBox<Straight> {
         self.bottom_left.y = min_y;
 
         self
+    }
+
+    /// Center of a [`BoundingBox`].
+    pub fn center(&self) -> Point2<f32> {
+        let x = (self.bottom_left.x + self.top_right.x) / 2.;
+        let y = (self.bottom_left.y + self.top_right.y) / 2.;
+
+        Point2::new(x, y)
     }
 }
 

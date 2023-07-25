@@ -3,7 +3,7 @@ use dessin::{
     prelude::*,
 };
 use image::{DynamicImage, ImageFormat};
-use nalgebra::{Scale2, Vector2};
+use nalgebra::{Point2, Scale2, Transform2, Translation2, Vector2};
 use std::{
     fmt::{self, Write},
     io::Cursor,
@@ -28,7 +28,7 @@ impl std::error::Error for ImageError {}
 
 #[derive(Default)]
 pub struct ImageOptions {
-    pub size: Option<(f32, f32)>,
+    pub canvas: Option<(f32, f32)>,
 }
 
 pub struct ImageExporter {
@@ -36,10 +36,14 @@ pub struct ImageExporter {
 }
 
 impl ImageExporter {
-    fn new((max_x, max_y): (f32, f32)) -> Self {
+    fn new(width: u32, height: u32) -> Self {
         ImageExporter {
-            buffer: DynamicImage::new_rgba32f(max_x as u32, max_y as u32),
+            buffer: DynamicImage::new_rgba32f(width, height),
         }
+    }
+
+    fn finalize(self) -> DynamicImage {
+        self.buffer
     }
 
     fn write_style(&mut self, style: StylePosition) -> Result<(), ImageError> {
@@ -280,29 +284,23 @@ impl Exporter for ImageExporter {
     }
 }
 
-pub trait ToSVG {
-    fn to_svg_with_options(&self, options: ImageOptions) -> Result<String, ImageError>;
-
-    fn to_svg(&self) -> Result<String, ImageError> {
-        self.to_svg_with_options(ImageOptions::default())
-    }
+pub trait ToImage {
+    fn rasterize(&self) -> Result<DynamicImage, ImageError>;
 }
 
-impl ToSVG for Shape {
-    fn to_svg_with_options(&self, options: ImageOptions) -> Result<String, ImageError> {
-        let size = options.size.unwrap_or_else(|| {
-            let bb = self
-                .local_bounding_box()
-                .unwrap_or_else(|| BoundingBox::zero().as_unparticular());
-            (bb.width(), bb.height())
-        });
+impl ToImage for Shape {
+    fn rasterize(&self) -> Result<DynamicImage, ImageError> {
+        let bb = self.local_bounding_box().unwrap().straigthen();
 
-        let mut exporter = ImageExporter::new(size);
+        let center: Vector2<f32> = bb.center() - Point2::origin();
+        let translation =
+            Translation2::from(Vector2::new(bb.width() / 2., bb.height() / 2.) - center);
+        let transform = nalgebra::convert::<_, Transform2<f32>>(translation);
 
-        let parent_transform = nalgebra::convert(Scale2::new(1., -1.));
-        self.write_into_exporter(&mut exporter, &parent_transform)?;
+        let mut exporter = ImageExporter::new(bb.width().ceil() as u32, bb.height().ceil() as u32);
 
-        // Ok(exporter.finish())
-        Ok("".to_string())
+        self.write_into_exporter(&mut exporter, &transform)?;
+
+        Ok(exporter.finalize())
     }
 }
