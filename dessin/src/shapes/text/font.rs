@@ -60,7 +60,7 @@ impl FontRef {
 }
 impl Default for FontRef {
     fn default() -> Self {
-        FontRef("Helvetica".to_string())
+		FontRef("Hyperlegible".to_string())
     }
 }
 
@@ -94,12 +94,22 @@ impl FontGroup<Font> {
         }
     }
 
-    pub fn helvetica() -> FontGroup<Font> {
+	#[cfg(feature = "default-font")]
+    pub fn hyperlegible() -> FontGroup<Font> {
         FontGroup {
-            regular: Font::ByName("Helvetica".to_string()),
-            bold: Some(Font::ByName("HelveticaBold".to_string())),
-            italic: Some(Font::ByName("HelveticaItalic".to_string())),
-            bold_italic: Some(Font::ByName("HelveticaBoldItalic".to_string())),
+            regular: Font::OTF(include_bytes!("../../../Atkinson-Hyperlegible-Regular-102.otf").to_vec()),
+            bold: Some(Font::OTF(include_bytes!("../../../Atkinson-Hyperlegible-Bold-102.otf").to_vec())),
+            italic: Some(Font::OTF(include_bytes!("../../../Atkinson-Hyperlegible-Italic-102.otf").to_vec())),
+            bold_italic: Some(Font::OTF(include_bytes!("../../../Atkinson-Hyperlegible-BoldItalic-102.otf").to_vec())),
+        }
+    }
+	#[cfg(not(feature = "default-font"))]
+    pub fn hyperlegible() -> FontGroup<Font> {
+        FontGroup {
+            regular: Font::ByName("HyperlegibleRegular".to_string()),
+            bold: Some(Font::ByName("HyperlegibleBold".to_string())),
+            italic: Some(Font::ByName("HyperlegibleItalic".to_string())),
+            bold_italic: Some(Font::ByName("HyperlegibleBoldItalic".to_string())),
         }
     }
 }
@@ -110,7 +120,9 @@ pub struct FontHolder {
 impl FontHolder {
     fn new() -> Self {
         let mut fonts = HashMap::new();
-        fonts.insert("Helvetica".to_string(), FontGroup::helvetica());
+
+		fonts.insert("Hyperlegible".to_string(), FontGroup::hyperlegible());
+
         FontHolder { fonts }
     }
 }

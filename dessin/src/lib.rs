@@ -118,7 +118,7 @@
 //! Generated functions have the same name as their corresponding field.
 //! This derive macro also generate corresponding `with_xxxx`, taking `self` instead of `&mut self` and returning `Self`.
 //!
-//! One still does need to implement `From<MyCompoenent> for Shape` manually.
+//! One still does need to implement `From<MyComponent> for Shape { ... }` manually.
 //!
 //! ## Implement own export format.
 //! Documentation can be found in the [`export`] module.

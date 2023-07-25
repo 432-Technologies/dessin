@@ -91,7 +91,7 @@ impl From<TextBox> for Shape {
         let raw_font = match fonts.get(FontWeight::Regular) {
             crate::font::Font::OTF(bytes) => bytes,
             crate::font::Font::TTF(bytes) => bytes,
-            crate::font::Font::ByName(_) => todo!(),
+            crate::font::Font::ByName(_) => unimplemented!(),
         };
 
         let font = Font::from_bytes(raw_font.as_slice(), FontSettings::default()).unwrap();
