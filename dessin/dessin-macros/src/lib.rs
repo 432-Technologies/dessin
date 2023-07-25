@@ -275,9 +275,34 @@ impl From<DessinGroup> for TokenStream {
     }
 }
 
+enum DessinArg {
+	Ident(Ident),
+    Expr(Expr),
+}
+impl Parse for DessinArg {
+	fn parse(input: ParseStream) -> Result<Self> {
+		let is_ident = input.peek(Ident) && input.peek2(Brace);
+		if is_ident {
+			let ident: Ident = input.parse()?;
+			Ok(DessinArg::Ident(ident))
+		} else {
+			let expr: Expr = input.parse()?;
+			Ok(DessinArg::Expr(expr))
+		}
+	}
+}
+impl From<DessinArg> for TokenStream {
+    fn from(dessin_arg: DessinArg) -> Self {
+		match dessin_arg {
+			DessinArg::Ident(v) => quote!(#v),
+			DessinArg::Expr(v) => quote!(#v),
+		}
+    }
+}
+
 struct DessinFor {
     variable: Ident,
-    it: Expr,
+    it: DessinArg,
     body: TokenStream,
 }
 impl Parse for DessinFor {
@@ -285,7 +310,7 @@ impl Parse for DessinFor {
         let _: Token![for] = input.parse()?;
         let variable: Ident = input.parse()?;
         let _: Token![in] = input.parse()?;
-        let it: Expr = input.parse()?;
+        let it: DessinArg = input.parse()?;
         let body;
         let _ = braced!(body in input);
         let body: TokenStream = body.parse()?;
@@ -295,6 +320,7 @@ impl Parse for DessinFor {
 }
 impl From<DessinFor> for TokenStream {
     fn from(DessinFor { variable, it, body }: DessinFor) -> Self {
+		let it = TokenStream::from(it);
         quote!(::dessin::prelude::Shape::Group {
             local_transform: ::dessin::nalgebra::Transform2::default(),
             shapes: {
@@ -311,14 +337,14 @@ impl From<DessinFor> for TokenStream {
 }
 
 struct DessinIfElse {
-    condition: Expr,
+    condition: DessinArg,
     if_body: Box<Dessin>,
     else_body: Option<Box<Dessin>>,
 }
 impl Parse for DessinIfElse {
     fn parse(input: ParseStream) -> Result<Self> {
         let _: Token![if] = input.parse()?;
-        let condition: Expr = input.parse()?;
+        let condition: DessinArg = input.parse()?;
         let if_body;
         let _ = braced!(if_body in input);
         let if_body: Dessin = if_body.parse()?;
@@ -351,6 +377,7 @@ impl From<DessinIfElse> for TokenStream {
             TokenStream::from(DessinType::Empty)
         };
 
+		let condition = TokenStream::from(condition);
         let if_body = TokenStream::from(*if_body);
 
         quote!(
@@ -530,6 +557,16 @@ fn for_loop_par() {
 //     )
 //     .unwrap();
 // }
+#[test]
+fn simple_for_loop() {
+    syn::parse_str::<Dessin>(
+        "for x in xs {
+            let y = x as f32 * 2.;
+            dessin!(Circle: ( radius={y}) )
+        }",
+    )
+    .unwrap();
+}
 #[test]
 fn for_loop_range_var_par() {
     syn::parse_str::<Dessin>(
