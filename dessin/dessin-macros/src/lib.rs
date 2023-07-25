@@ -1,3 +1,9 @@
+// #![warn(missing_docs)]
+
+//! Here is the definition of the macro for `dessin`
+//!
+//!
+
 extern crate proc_macro;
 
 use proc_macro2::TokenStream;
@@ -466,6 +472,110 @@ impl From<Dessin> for TokenStream {
     }
 }
 
+/// The DSL definition for [`dessin`](https://docs.rs/dessin/)
+/// 
+/// ## Components
+/// 
+/// ### Basic use, with variable or expression:
+/// ```dessin
+/// Component: (
+/// 	function={variable}
+/// 	function2={variable * 2.}
+/// )
+/// ```
+/// 
+/// ### With a function that takes no argument:
+/// 
+/// ```dessin
+/// Component: (
+/// 	function
+/// )
+/// ```
+/// 
+/// ### With a function that has the same name as a variable:
+/// 
+/// ```dessin
+/// fn main() {
+/// 	let my_value = "my string";
+/// 	dessin!(
+/// 		Component: (
+/// 			{my_value}
+/// 		)
+/// 	)
+/// }
+/// ```
+/// 
+/// ### With component in a mod:
+/// 
+/// ```dessin
+/// dessin!(
+/// 	my_mod::Component: (
+/// 		{my_value}
+/// 	)
+/// )
+/// ```
+/// 
+/// ## Group
+/// 
+/// ```dessin
+/// [
+/// 	Component1: (),
+/// 	Component2: (),
+/// ]
+/// ```
+/// 
+/// ## Erase type
+/// 
+/// Useful to access certain function only availiable in Shape (related to transform).
+/// Also useful also for branches with different components (see [If else](#with-different-components))
+/// 
+/// ```dessin
+/// Component: (
+/// 	component_function={value1}
+/// ) -> (
+/// 	shape_function={value2}
+/// )
+/// ```
+/// 
+/// ## For loop
+/// 
+/// ```dessin
+/// for x in iterator {
+/// 	// Rust code, must return a shape.
+/// 	let my_computation = x * x;
+/// 	
+/// 	dessin!(
+/// 		Component: (
+/// 			function={my_computation}
+/// 		)
+/// 	)
+/// }
+/// ```
+/// 
+/// ## If else
+/// 
+/// ```dessin
+/// if my_condition {
+/// 	Component: (
+/// 		function={"value1"}
+/// 	)
+/// } else {
+/// 	Component: (
+/// 		function={"value2"}
+/// 	)
+/// }
+/// ```
+/// 
+/// ### With different components
+/// 
+/// ```dessin
+/// if my_condition {
+/// 	Component1: () -> ()
+/// } else {
+/// 	Component2: () -> ()
+/// }
+/// ```
+/// 
 #[proc_macro]
 pub fn dessin(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let dessin = parse_macro_input!(tokens as Dessin);
