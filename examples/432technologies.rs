@@ -236,3 +236,5 @@ impl From<Logo432> for Shape {
         ])
     }
 }
+
+fn main() {}

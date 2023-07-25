@@ -1,18 +1,19 @@
 pub(crate) mod curve;
+pub(crate) mod dynamic;
 pub(crate) mod ellipse;
 pub(crate) mod image;
-#[cfg(feature = "reactive")]
-pub(crate) mod reactive;
 pub(crate) mod text;
 
 pub use self::image::*;
 pub use curve::*;
+pub use dynamic::*;
 pub use ellipse::*;
 use na::{Point2, Rotation2, Scale2, Vector2};
 use nalgebra::{self as na, Transform2, Translation2};
-#[cfg(feature = "reactive")]
-pub use reactive::*;
-use std::marker::PhantomData;
+use std::{
+    marker::PhantomData,
+    sync::{Arc, RwLock},
+};
 pub use text::*;
 
 /// Transforming operation on shapes such as:
@@ -20,7 +21,7 @@ pub use text::*;
 /// - a scale with [`scale`][ShapeOp::scale]
 /// - a rotation with [`rotate`][ShapeOp::rotate]
 /// - any other transform with [`transform`][ShapeOp::transform]
-pub trait ShapeOp: Into<Shape> + Clone {
+pub trait ShapeOp {
     /// Apply an ordinary transform.
     /// You don't need to implement [`translate`][ShapeOp::translate], [`scale`][ShapeOp::scale] or [`rotate`][ShapeOp::rotate]
     /// yourself as a blanket implementation is given with this transform.
@@ -57,7 +58,7 @@ pub trait ShapeOp: Into<Shape> + Clone {
 
 /// Same as [`ShapeOp`] but for chaining methods.
 /// All shapes that implement [`ShapeOp`] also implement [`ShapeOpWith`] for free.
-pub trait ShapeOpWith: ShapeOp {
+pub trait ShapeOpWith: ShapeOp + Sized {
     /// Transform
     #[inline]
     fn with_transform(mut self, transform_matrix: Transform2<f32>) -> Self {
@@ -370,7 +371,7 @@ impl BoundingBox<Straight> {
 }
 
 /// Traits that defined whether a [`Shape`] can be bound by a [`BoundingBox`]
-pub trait ShapeBoundingBox: ShapeOp {
+pub trait ShapeBoundingBox {
     /// [`BoundingBox`] of a [`Shape`]
     fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>>;
     /// Absolute [`BoundingBox`] from a transform
@@ -386,7 +387,7 @@ pub trait ShapeBoundingBox: ShapeOp {
 /// Building block of a dessin
 ///
 /// Every complex shape should boil down to these.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum Shape {
     /// A group of [`Shape`], locally positionned by a transform
     Group {
@@ -412,8 +413,10 @@ pub enum Shape {
     Text(Text),
     /// Curve
     Curve(Curve),
-    #[cfg(feature = "reactive")]
-    Reactive(Reactive),
+    Dynamic {
+        local_transform: Transform2<f32>,
+        shape: Arc<RwLock<dyn DynamicShape>>,
+    },
 }
 
 impl Default for Shape {
@@ -448,6 +451,9 @@ impl ShapeOp for Shape {
             Shape::Curve(v) => {
                 v.transform(transform_matrix);
             }
+            Shape::Dynamic { .. } => {
+                todo!()
+            }
         };
 
         self
@@ -464,6 +470,9 @@ impl ShapeOp for Shape {
             Shape::Image(v) => v.local_transform(),
             Shape::Text(v) => v.local_transform(),
             Shape::Curve(v) => v.local_transform(),
+            Shape::Dynamic { .. } => {
+                todo!()
+            }
         }
     }
 }
@@ -485,6 +494,9 @@ impl ShapeBoundingBox for Shape {
             Shape::Image(i) => i.local_bounding_box(),
             Shape::Text(t) => t.local_bounding_box(),
             Shape::Curve(c) => c.local_bounding_box(),
+            Shape::Dynamic { .. } => {
+                todo!()
+            }
         }
     }
 }

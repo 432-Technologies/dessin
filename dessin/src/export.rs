@@ -91,6 +91,7 @@ where
             Shape::Ellipse(ellipse) => exporter.export_ellipse(ellipse.position(parent_transform)),
             Shape::Curve(curve) => exporter.export_curve(curve.position(parent_transform)),
             Shape::Text(text) => exporter.export_text(text.position(parent_transform)),
+            Shape::Dynamic { .. } => todo!(),
         }
     }
 }

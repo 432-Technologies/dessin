@@ -8,11 +8,10 @@ version = "0.8.10-pre"
 
 [features]
 default = ["default-font"]
-reactive = []
 default-font = []
 
 [dependencies]
-dessin-macros = {path = "dessin-macros", version = "0.8.10-pre"}
+dessin-macros = { path = "dessin-macros", version = "0.8.10-pre" }
 fontdue = "^0.7.3"
 image = "^0.24.6"
 nalgebra = "^0.32.2"
