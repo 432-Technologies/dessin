@@ -2,7 +2,13 @@ use dessin::{
     nalgebra::{Point2, Rotation2, Translation2},
     prelude::*,
 };
-use std::f32::consts::{FRAC_PI_4, FRAC_PI_8, PI};
+use dessin_image::ToImage;
+use dessin_pdf::ToPDF;
+use dessin_svg::ToSVG;
+use std::{
+    f32::consts::{FRAC_PI_4, FRAC_PI_8, PI},
+    fs,
+};
 
 const C: Color = rgb(0x3b, 0x54, 0x85);
 fn c(a: u8) -> Color {
@@ -185,28 +191,28 @@ impl From<Squares> for Shape {
 }
 
 #[derive(Default)]
-pub struct Logo432;
-impl From<Logo432> for Shape {
-    fn from(_: Logo432) -> Self {
+pub struct Symbol432;
+impl From<Symbol432> for Shape {
+    fn from(_: Symbol432) -> Self {
         dessin!([
-             Curve: #(
+            Curve: #(
                 stroke={(rgb(0x7F, 0x7F, 0x7F), 0.6)}
                 then={Point2::new(0., 0.)}
                 then={Point2::new(0., 20.)}
                 then={Point2::new(-9.8, 0.)}
                 then={Point2::new(-8., 0.)}
             ),
-             Line: #(
+            Line: #(
                 stroke={(rgb(0x00, 0x02, 0x60), 0.6)}
                 from={[-10., 0.]}
                 to={[13., 0.]}
             ),
-             Line: #(
+            Line: #(
                 stroke={(rgb(0x00, 0x02, 0x60), 0.6)}
                 from={[0., 0.]}
                 to={[0., -10.]}
             ),
-             Text: #(
+            Text: #(
                 fill={rgb(0x00, 0x02, 0x60)}
                 text={"echnologies"}
                 font_size={2.5}
@@ -215,7 +221,7 @@ impl From<Logo432> for Shape {
                 vertical_align={TextVerticalAlign::Center}
                 align={TextAlign::Left}
             ),
-             Text: #(
+            Text: #(
                 fill={Color::BLACK}
                 text={"3"}
                 font_size={7.}
@@ -224,7 +230,7 @@ impl From<Logo432> for Shape {
                 vertical_align={TextVerticalAlign::Bottom}
                 align={TextAlign::Left}
             ),
-             Text: #(
+            Text: #(
                 fill={Color::BLACK}
                 text={"2"}
                 font_size={7.}
@@ -237,4 +243,55 @@ impl From<Logo432> for Shape {
     }
 }
 
-fn main() {}
+#[derive(Default)]
+pub struct Logo432;
+impl From<Logo432> for Shape {
+    fn from(_: Logo432) -> Self {
+        dessin!([
+            InnerBubbleRing: (),
+            BinaryRing: (
+                radius={10.}
+            ),
+            TimerRing: (),
+            ThreeColoredRing: (),
+            Squares: (),
+            BinaryRing: (
+                radius={30.}
+            ),
+            Circle: #(
+                stroke={Stroke::Full { color: rgb(0x96, 0x96, 0x96), width: 0.2 }}
+                radius={70.}
+            ),
+            Symbol432: () -> (
+                scale={[4., 4.]}
+                translate={[-20., -20.]}
+            ),
+        ])
+    }
+}
+
+fn main() {
+    let dessin: Shape = Logo432.into();
+
+    // SVG
+    fs::write("./target/432.svg", dessin.to_svg().unwrap()).unwrap();
+
+    // PDF
+    fs::write(
+        "./target/432.pdf",
+        dessin.to_pdf().unwrap().save_to_bytes().unwrap(),
+    )
+    .unwrap();
+
+    // Image
+    dessin!(
+        var(dessin): (
+            scale={[5., 5.]}
+        )
+    )
+    .rasterize()
+    .unwrap()
+    .into_rgba8()
+    .save("./target/432.png")
+    .unwrap();
+}

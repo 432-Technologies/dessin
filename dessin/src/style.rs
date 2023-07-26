@@ -126,9 +126,37 @@ impl Color {
     }
 
     /// Cast a color to (red, green, blue), as f64
+    pub fn as_rgb_f32(&self) -> (f32, f32, f32) {
+        let (r, g, b) = self.as_rgb();
+        (r as f32 / 255., g as f32 / 255., b as f32 / 255.)
+    }
+
+    /// Cast a color to (red, green, blue, alpha), as f32
+    pub fn as_rgba_f32(&self) -> (f32, f32, f32, f32) {
+        let (r, g, b, a) = self.rgba();
+        (
+            r as f32 / 255.,
+            g as f32 / 255.,
+            b as f32 / 255.,
+            a as f32 / 255.,
+        )
+    }
+
+    /// Cast a color to (red, green, blue), as f64
     pub fn as_rgb_f64(&self) -> (f64, f64, f64) {
         let (r, g, b) = self.as_rgb();
         (r as f64 / 255., g as f64 / 255., b as f64 / 255.)
+    }
+
+    /// Cast a color to (red, green, blue, alpha), as f64
+    pub fn as_rgba_f64(&self) -> (f64, f64, f64, f64) {
+        let (r, g, b, a) = self.rgba();
+        (
+            r as f64 / 255.,
+            g as f64 / 255.,
+            b as f64 / 255.,
+            a as f64 / 255.,
+        )
     }
 }
 

@@ -47,6 +47,7 @@ impl PDFExporter {
 
 impl Exporter for PDFExporter {
     type Error = PDFError;
+    const CAN_EXPORT_ELLIPSE: bool = false;
 
     fn start_style(
         &mut self,
@@ -177,16 +178,14 @@ impl Exporter for PDFExporter {
         Ok(())
     }
 
-    fn export_ellipse(&mut self, _ellipse: EllipsePosition) -> Result<(), Self::Error> {
-        todo!()
-    }
-
     fn export_curve(&mut self, _curve: CurvePosition) -> Result<(), Self::Error> {
-        todo!()
+        // TODO
+        Ok(())
     }
 
     fn export_text(&mut self, _text: TextPosition) -> Result<(), Self::Error> {
-        todo!()
+        // TODO
+        Ok(())
     }
 }
 
@@ -259,25 +258,25 @@ impl ToPDF for Shape {
             bold_italic,
         } in dessin::font::fonts().values()
         {
-            fn find_builtin_font(f: &str) -> Result<printpdf::BuiltinFont, PDFError> {
-                match f {
-                    "TimesRoman" => Ok(printpdf::BuiltinFont::TimesRoman),
-                    "TimesBold" => Ok(printpdf::BuiltinFont::TimesBold),
-                    "TimesItalic" => Ok(printpdf::BuiltinFont::TimesItalic),
-                    "TimesBoldItalic" => Ok(printpdf::BuiltinFont::TimesBoldItalic),
-                    "Helvetica" => Ok(printpdf::BuiltinFont::Helvetica),
-                    "HelveticaBold" => Ok(printpdf::BuiltinFont::HelveticaBold),
-                    "HelveticaOblique" => Ok(printpdf::BuiltinFont::HelveticaOblique),
-                    "HelveticaBoldOblique" => Ok(printpdf::BuiltinFont::HelveticaBoldOblique),
-                    "Courier" => Ok(printpdf::BuiltinFont::Courier),
-                    "CourierOblique" => Ok(printpdf::BuiltinFont::CourierOblique),
-                    "CourierBold" => Ok(printpdf::BuiltinFont::CourierBold),
-                    "CourierBoldOblique" => Ok(printpdf::BuiltinFont::CourierBoldOblique),
-                    "Symbol" => Ok(printpdf::BuiltinFont::Symbol),
-                    "ZapfDingbats" => Ok(printpdf::BuiltinFont::ZapfDingbats),
-                    _ => Err(PDFError::UnknownBuiltinFont(f.to_string())),
-                }
-            }
+            // fn find_builtin_font(f: &str) -> Result<printpdf::BuiltinFont, PDFError> {
+            //     match f {
+            //         "TimesRoman" => Ok(printpdf::BuiltinFont::TimesRoman),
+            //         "TimesBold" => Ok(printpdf::BuiltinFont::TimesBold),
+            //         "TimesItalic" => Ok(printpdf::BuiltinFont::TimesItalic),
+            //         "TimesBoldItalic" => Ok(printpdf::BuiltinFont::TimesBoldItalic),
+            //         "Helvetica" => Ok(printpdf::BuiltinFont::Helvetica),
+            //         "HelveticaBold" => Ok(printpdf::BuiltinFont::HelveticaBold),
+            //         "HelveticaOblique" => Ok(printpdf::BuiltinFont::HelveticaOblique),
+            //         "HelveticaBoldOblique" => Ok(printpdf::BuiltinFont::HelveticaBoldOblique),
+            //         "Courier" => Ok(printpdf::BuiltinFont::Courier),
+            //         "CourierOblique" => Ok(printpdf::BuiltinFont::CourierOblique),
+            //         "CourierBold" => Ok(printpdf::BuiltinFont::CourierBold),
+            //         "CourierBoldOblique" => Ok(printpdf::BuiltinFont::CourierBoldOblique),
+            //         "Symbol" => Ok(printpdf::BuiltinFont::Symbol),
+            //         "ZapfDingbats" => Ok(printpdf::BuiltinFont::ZapfDingbats),
+            //         _ => Err(PDFError::UnknownBuiltinFont(f.to_string())),
+            //     }
+            // }
 
             let regular = match regular {
                 // dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,

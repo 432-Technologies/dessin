@@ -88,7 +88,13 @@ where
                 exporter.end_style()
             }
             Shape::Image(image) => exporter.export_image(image.position(parent_transform)),
-            Shape::Ellipse(ellipse) => exporter.export_ellipse(ellipse.position(parent_transform)),
+            Shape::Ellipse(ellipse) => {
+                if E::CAN_EXPORT_ELLIPSE {
+                    exporter.export_ellipse(ellipse.position(parent_transform))
+                } else {
+                    exporter.export_curve(ellipse.as_curve().position(parent_transform))
+                }
+            }
             Shape::Curve(curve) => exporter.export_curve(curve.position(parent_transform)),
             Shape::Text(text) => exporter.export_text(text.position(parent_transform)),
             Shape::Dynamic {
@@ -159,6 +165,8 @@ pub trait Exporter {
     /// Export error
     type Error;
 
+    const CAN_EXPORT_ELLIPSE: bool;
+
     /// Enter a scope of style
     ///
     /// All [`Shape`][crate::shapes::Shape] between [`start_style`][Exporter::start_style] and [`end_style`][Exporter::end_style] must have this style applied to them.
@@ -169,7 +177,9 @@ pub trait Exporter {
     /// Export an [`Image`][crate::shapes::image::Image]
     fn export_image(&mut self, image: ImagePosition) -> Result<(), Self::Error>;
     /// Export an [`Ellipse`][crate::shapes::ellipse::Ellipse]
-    fn export_ellipse(&mut self, ellipse: EllipsePosition) -> Result<(), Self::Error>;
+    fn export_ellipse(&mut self, _ellipse: EllipsePosition) -> Result<(), Self::Error> {
+        Ok(())
+    }
     /// Export a [`Curve`][crate::shapes::curve::Curve]
     fn export_curve(&mut self, curve: CurvePosition) -> Result<(), Self::Error>;
     /// Export a [`Text`][crate::shapes::text::Text]

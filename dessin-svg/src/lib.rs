@@ -174,6 +174,7 @@ impl SVGExporter {
 
 impl Exporter for SVGExporter {
     type Error = SVGError;
+    const CAN_EXPORT_ELLIPSE: bool = true;
 
     fn start_style(&mut self, style: StylePosition) -> Result<(), Self::Error> {
         write!(self.acc, "<g ")?;
