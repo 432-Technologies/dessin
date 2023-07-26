@@ -1,3 +1,73 @@
+//! Basic building blocks of dessin
+//!
+//! ## Usage
+//!
+//! ### Ellipse
+//!
+//! ```
+//! # use dessin::prelude::*;
+//! dessin!(
+//! 	Ellipse: ()
+//! );
+//! ```
+//!
+//! ### Text
+//!
+//! ```
+//! # use dessin::prelude::*;
+//! dessin!(
+//! 	Text: ()
+//! );
+//! ```
+//!
+//! ### Curve
+//!
+//! ```
+//! # use dessin::prelude::*;
+//! dessin!(
+//! 	Curve: ()
+//! );
+//! ```
+//!
+//! ### Image
+//!
+//! ```
+//! # use dessin::prelude::*;
+//! dessin!(
+//! 	Image: ()
+//! );
+//! ```
+//!
+//! ### Group
+//!
+//! ```
+//! # use dessin::prelude::*;
+//! dessin!(
+//! 	[]
+//! );
+//! ```
+//!
+//! ### Dynamic
+//!
+//! ```
+//! # use dessin::prelude::*;
+//!
+//! let ellipse_ref /* : Arc<RwLock<Ellipse>> */ = Default::default();
+//!
+//! dessin!(
+//! 	Dynamic<Ellipse>: (
+//! 		_ref={&ellipse_ref}
+//! 		semi_major_axis={2.}
+//! 	)
+//! );
+//!
+//! // Later in code
+//!
+//! ellipse_ref.write().unwrap().semi_major_axis(0.5);
+//! ```
+//!
+//! ## Details
+
 pub(crate) mod curve;
 pub(crate) mod dynamic;
 pub(crate) mod ellipse;
@@ -10,11 +80,7 @@ pub use dynamic::*;
 pub use ellipse::*;
 use na::{Point2, Rotation2, Scale2, Vector2};
 use nalgebra::{self as na, Transform2, Translation2};
-use std::{
-    fmt,
-    marker::PhantomData,
-    sync::{Arc, RwLock},
-};
+use std::{fmt, marker::PhantomData, sync::Arc};
 pub use text::*;
 
 /// Transforming operation on shapes such as:
@@ -414,6 +480,11 @@ pub enum Shape {
     Text(Text),
     /// Curve
     Curve(Curve),
+    /// Shape whose body is generated only during export.
+    ///
+    /// Enables chirurgical changes of the shape.
+    ///
+    /// See [`Dynamic`] for more details.
     Dynamic {
         local_transform: Transform2<f32>,
         shaper: Arc<Shaper>,
