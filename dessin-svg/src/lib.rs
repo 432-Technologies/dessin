@@ -378,12 +378,8 @@ impl ToSVG for Shape {
                     .local_bounding_box()
                     .unwrap_or_else(|| BoundingBox::zero().as_unparticular())
                     .straigthen();
-                (
-                    bb.bottom_left().x,
-                    -bb.bottom_left().y,
-                    bb.width(),
-                    bb.height(),
-                )
+
+                (bb.top_left().x, -bb.top_left().y, bb.width(), bb.height())
             }
         };
 
