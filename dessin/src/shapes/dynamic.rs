@@ -2,8 +2,10 @@ use crate::prelude::*;
 use nalgebra::Transform2;
 use std::{
     ops::{Deref, DerefMut},
-    sync::{Arc, RwLock},
+    sync::Arc,
 };
+
+pub type Shaper = dyn Fn() -> Shape;
 
 pub trait DynamicShape: std::fmt::Debug {
     fn as_shape(&self) -> Shape;
@@ -60,17 +62,7 @@ where
     ) -> Self {
         Shape::Dynamic {
             local_transform,
-            shape: Arc::new(RwLock::new(shape)),
+            shaper: Arc::new(move || shape.as_shape()),
         }
     }
-}
-
-#[allow(unused)]
-fn dynamic() {
-    let c = dessin!([
-        Dynamic<Anchor<Circle>>: (
-            radius={2.}
-            anchor={[2., 2.]}
-        )
-    ]);
 }

@@ -11,6 +11,7 @@ pub use ellipse::*;
 use na::{Point2, Rotation2, Scale2, Vector2};
 use nalgebra::{self as na, Transform2, Translation2};
 use std::{
+    fmt,
     marker::PhantomData,
     sync::{Arc, RwLock},
 };
@@ -387,7 +388,7 @@ pub trait ShapeBoundingBox {
 /// Building block of a dessin
 ///
 /// Every complex shape should boil down to these.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum Shape {
     /// A group of [`Shape`], locally positionned by a transform
     Group {
@@ -415,8 +416,45 @@ pub enum Shape {
     Curve(Curve),
     Dynamic {
         local_transform: Transform2<f32>,
-        shape: Arc<RwLock<dyn DynamicShape>>,
+        shaper: Arc<Shaper>,
     },
+}
+
+impl fmt::Debug for Shape {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Group {
+                local_transform,
+                shapes,
+            } => f
+                .debug_struct("Group")
+                .field("local_transform", local_transform)
+                .field("shapes", shapes)
+                .finish(),
+            Self::Style {
+                fill,
+                stroke,
+                shape,
+            } => f
+                .debug_struct("Style")
+                .field("fill", fill)
+                .field("stroke", stroke)
+                .field("shape", shape)
+                .finish(),
+            Self::Ellipse(arg0) => f.debug_tuple("Ellipse").field(arg0).finish(),
+            Self::Image(arg0) => f.debug_tuple("Image").field(arg0).finish(),
+            Self::Text(arg0) => f.debug_tuple("Text").field(arg0).finish(),
+            Self::Curve(arg0) => f.debug_tuple("Curve").field(arg0).finish(),
+            Self::Dynamic {
+                local_transform,
+                shaper: _,
+            } => f
+                .debug_struct("Dynamic")
+                .field("local_transform", local_transform)
+                .field("shaper", &"Arc<Fn() -> Shape>")
+                .finish(),
+        }
+    }
 }
 
 impl Default for Shape {
@@ -451,8 +489,10 @@ impl ShapeOp for Shape {
             Shape::Curve(v) => {
                 v.transform(transform_matrix);
             }
-            Shape::Dynamic { .. } => {
-                todo!()
+            Shape::Dynamic {
+                local_transform, ..
+            } => {
+                *local_transform = transform_matrix * *local_transform;
             }
         };
 
@@ -470,9 +510,9 @@ impl ShapeOp for Shape {
             Shape::Image(v) => v.local_transform(),
             Shape::Text(v) => v.local_transform(),
             Shape::Curve(v) => v.local_transform(),
-            Shape::Dynamic { .. } => {
-                todo!()
-            }
+            Shape::Dynamic {
+                local_transform, ..
+            } => local_transform,
         }
     }
 }
@@ -494,9 +534,12 @@ impl ShapeBoundingBox for Shape {
             Shape::Image(i) => i.local_bounding_box(),
             Shape::Text(t) => t.local_bounding_box(),
             Shape::Curve(c) => c.local_bounding_box(),
-            Shape::Dynamic { .. } => {
-                todo!()
-            }
+            Shape::Dynamic {
+                local_transform,
+                shaper,
+            } => shaper()
+                .local_bounding_box()
+                .map(|v| v.transform(local_transform)),
         }
     }
 }
