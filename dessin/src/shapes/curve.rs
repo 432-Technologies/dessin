@@ -217,7 +217,8 @@ impl ShapeBoundingBox for Curve {
             .filter_map(|v| v.bounding_box())
             .map(|v| v.straigthen())
             .reduce(|acc, curr| acc.join(curr))
-            .map(|v| v.as_unparticular())
+            .map(|bb| bb.as_unparticular())
+            .map(|bb| bb.transform(&self.local_transform))
     }
 }
 

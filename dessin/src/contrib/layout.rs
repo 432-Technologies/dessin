@@ -16,37 +16,33 @@ pub struct VerticalLayout {
     pub gap: f32,
 }
 impl VerticalLayout {
+    ///
+    /// In the case of a Group, local_transform is discarded as the shapes will be rearranged in a vertical layout
     #[inline]
     pub fn of<T: Into<Shape>>(&mut self, shape: T) -> &mut Self {
         match shape.into() {
             Shape::Group {
-                local_transform,
+                local_transform: _,
                 shapes,
             } => {
                 self.shapes.extend(shapes);
-                self.local_transform *= local_transform;
             }
             x => {
                 self.shapes.push(x);
             }
         }
+
+        self
+    }
+    #[inline]
+    pub fn with<T: Into<Shape>>(mut self, shape: T) -> Self {
+        self.of(shape);
         self
     }
 
     #[inline]
     pub fn extend<T: IntoIterator<Item = Shape>>(&mut self, shapes: T) -> &mut Self {
         self.shapes.extend(shapes);
-        self
-    }
-
-    #[inline]
-    pub fn push(&mut self, shape: Shape) -> &mut Self {
-        self.shapes.push(shape);
-        self
-    }
-    #[inline]
-    pub fn with_push(mut self, shape: Shape) -> Self {
-        self.push(shape);
         self
     }
 
@@ -112,21 +108,11 @@ impl From<VerticalLayout> for Shape {
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+    use assert_float_eq::*;
     use nalgebra::Point2;
 
     #[test]
     fn base_layout() {
-        // let helvetica = include_bytes!("../Helvetica.otf");
-        // crate::font::add_font(
-        //     "Helvetica",
-        //     FontGroup {
-        //         regular: font::Font::OTF(helvetica.to_vec()),
-        //         bold: None,
-        //         italic: None,
-        //         bold_italic: None,
-        //     },
-        // );
-
         let layout = dessin!(VerticalLayout: (
             of={dessin!([
                 Circle: (radius={10.}),
@@ -139,7 +125,7 @@ mod tests {
         };
 
         let [c1, c2] = shapes.as_slice() else {
-            panic!("Expected 2 shapes")
+            panic!("Expected 2 shapes, got {:#?}", shapes)
         };
 
         let p = Point2::new(0., 0.);
@@ -162,12 +148,37 @@ mod tests {
         };
 
         let [c1, c2, c3] = shapes.as_slice() else {
-            panic!("Expected 3 shapes")
+            panic!("Expected 3 shapes, get: {:#?}", shapes)
         };
 
         let p = Point2::new(0., 0.);
         assert_eq!(c1.local_transform() * p, Point2::new(0., -10.));
         assert_eq!(c2.local_transform() * p, Point2::new(0., -30.));
         assert_eq!(c3.local_transform() * p, Point2::new(0., -50.));
+    }
+
+    #[test]
+    fn layout_of_polygons() {
+        let height_triangle = polygones::Triangle::default()
+            .as_shape()
+            .local_bounding_box()
+            .unwrap()
+            .height();
+
+        assert_float_absolute_eq!(height_triangle, 2. * (3f32.sqrt() / 2.), 10e-5);
+
+        let shape = dessin!([
+            VerticalLayout: (
+                of={dessin!(polygones::Triangle: () )}
+                of={dessin!(Circle: (radius={1.}))}
+            )
+        ]);
+
+        let bb = shape.local_bounding_box().unwrap();
+
+        dbg!(shape);
+
+        assert_eq!(bb.width(), 2.);
+        assert_eq!(bb.height(), 2. + height_triangle);
     }
 }
