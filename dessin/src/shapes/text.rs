@@ -217,7 +217,6 @@ impl ShapeBoundingBox for Text {
         let raw_font = match fonts.get(FontWeight::Regular) {
             crate::font::Font::OTF(bytes) => bytes,
             crate::font::Font::TTF(bytes) => bytes,
-            crate::font::Font::ByName(_) => unimplemented!(),
         };
 
         let font = fontdue::Font::from_bytes(raw_font.as_slice(), fontdue::FontSettings::default())

@@ -280,16 +280,16 @@ impl ToPDF for Shape {
             }
 
             let regular = match regular {
-                dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
+                // dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
                 dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
                     doc.add_external_font(b.as_slice())?
                 }
             };
 
             let bold = match bold {
-                Some(dessin::font::Font::ByName(n)) => {
-                    Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-                }
+                // Some(dessin::font::Font::ByName(n)) => {
+                //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
+                // }
                 Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
                     Some(doc.add_external_font(b.as_slice())?)
                 }
@@ -297,9 +297,9 @@ impl ToPDF for Shape {
             };
 
             let italic = match italic {
-                Some(dessin::font::Font::ByName(n)) => {
-                    Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-                }
+                // Some(dessin::font::Font::ByName(n)) => {
+                //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
+                // }
                 Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
                     Some(doc.add_external_font(b.as_slice())?)
                 }
@@ -307,9 +307,9 @@ impl ToPDF for Shape {
             };
 
             let bold_italic = match bold_italic {
-                Some(dessin::font::Font::ByName(n)) => {
-                    Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-                }
+                // Some(dessin::font::Font::ByName(n)) => {
+                //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
+                // }
                 Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
                     Some(doc.add_external_font(b.as_slice())?)
                 }

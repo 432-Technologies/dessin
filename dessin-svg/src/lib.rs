@@ -73,7 +73,7 @@ impl SVGExporter {
                     let (mime, bytes) = match data {
                         dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
                         dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
-                        dessin::font::Font::ByName(_) => return None,
+                        // dessin::font::Font::ByName(_) => return None,
                     };
 
                     let font = data_encoding::BASE64.encode(&bytes);

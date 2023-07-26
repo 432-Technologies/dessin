@@ -60,7 +60,7 @@ impl FontRef {
 }
 impl Default for FontRef {
     fn default() -> Self {
-		FontRef("Hyperlegible".to_string())
+        FontRef("Hyperlegible".to_string())
     }
 }
 
@@ -72,7 +72,6 @@ impl<S: Into<String>> From<S> for FontRef {
 
 #[derive(Clone)]
 pub enum Font {
-    ByName(String),
     OTF(Vec<u8>),
     TTF(Vec<u8>),
 }
@@ -94,16 +93,24 @@ impl FontGroup<Font> {
         }
     }
 
-	#[cfg(feature = "default-font")]
+    #[cfg(feature = "default-font")]
     pub fn hyperlegible() -> FontGroup<Font> {
         FontGroup {
-            regular: Font::OTF(include_bytes!("../../../Atkinson-Hyperlegible-Regular-102.otf").to_vec()),
-            bold: Some(Font::OTF(include_bytes!("../../../Atkinson-Hyperlegible-Bold-102.otf").to_vec())),
-            italic: Some(Font::OTF(include_bytes!("../../../Atkinson-Hyperlegible-Italic-102.otf").to_vec())),
-            bold_italic: Some(Font::OTF(include_bytes!("../../../Atkinson-Hyperlegible-BoldItalic-102.otf").to_vec())),
+            regular: Font::OTF(
+                include_bytes!("../../../Atkinson-Hyperlegible-Regular-102.otf").to_vec(),
+            ),
+            bold: Some(Font::OTF(
+                include_bytes!("../../../Atkinson-Hyperlegible-Bold-102.otf").to_vec(),
+            )),
+            italic: Some(Font::OTF(
+                include_bytes!("../../../Atkinson-Hyperlegible-Italic-102.otf").to_vec(),
+            )),
+            bold_italic: Some(Font::OTF(
+                include_bytes!("../../../Atkinson-Hyperlegible-BoldItalic-102.otf").to_vec(),
+            )),
         }
     }
-	#[cfg(not(feature = "default-font"))]
+    #[cfg(not(feature = "default-font"))]
     pub fn hyperlegible() -> FontGroup<Font> {
         FontGroup {
             regular: Font::ByName("HyperlegibleRegular".to_string()),
@@ -121,7 +128,7 @@ impl FontHolder {
     fn new() -> Self {
         let mut fonts = HashMap::new();
 
-		fonts.insert("Hyperlegible".to_string(), FontGroup::hyperlegible());
+        fonts.insert("Hyperlegible".to_string(), FontGroup::hyperlegible());
 
         FontHolder { fonts }
     }
