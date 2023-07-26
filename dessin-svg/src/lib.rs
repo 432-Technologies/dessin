@@ -367,8 +367,8 @@ impl ToSVG for Shape {
                 let overall_bb = bb.join(mirror_bb);
 
                 (
-                    overall_bb.width() / 2.,
-                    overall_bb.height() / 2.,
+                    -overall_bb.width() / 2.,
+                    -overall_bb.height() / 2.,
                     overall_bb.width(),
                     overall_bb.height(),
                 )
@@ -380,18 +380,12 @@ impl ToSVG for Shape {
                     .straigthen();
                 (
                     bb.bottom_left().x,
-                    bb.bottom_left().y,
+                    -bb.bottom_left().y,
                     bb.width(),
                     bb.height(),
                 )
             }
         };
-        // let size = options.size.unwrap_or_else(|| {
-        //     let bb = self
-        //         .local_bounding_box()
-        //         .unwrap_or_else(|| BoundingBox::zero().as_unparticular());
-        //     (bb.width(), bb.height())
-        // });
 
         let mut exporter = SVGExporter::new(min_x, min_y, span_x, span_y);
 
