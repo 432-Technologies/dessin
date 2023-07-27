@@ -103,7 +103,7 @@ fn triangle_in_group() {
 
     let sqrt3_over_2 = 3f32.sqrt() / 2.;
 
-    let Shape::Group { local_transform, shapes } = dessin!([Triangle: ()]) else {
+    let Shape::Group { local_transform, shapes, .. } = dessin!([Triangle: ()]) else {
         panic!("Not a group");
     };
     assert_eq!(shapes.len(), 1);

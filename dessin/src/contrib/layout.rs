@@ -14,6 +14,7 @@ pub struct VerticalLayout {
     #[shape(skip)]
     pub start_bottom: bool,
     pub gap: f32,
+    pub metadata: Vec<(String, String)>,
 }
 impl VerticalLayout {
     ///
@@ -24,7 +25,9 @@ impl VerticalLayout {
             Shape::Group {
                 local_transform: _,
                 shapes,
+                metadata,
             } => {
+                self.metadata.extend(metadata);
                 self.shapes.extend(shapes);
             }
             x => {
@@ -76,6 +79,7 @@ impl From<VerticalLayout> for Shape {
             shapes,
             start_bottom,
             gap,
+            metadata,
         }: VerticalLayout,
     ) -> Self {
         let direction = if start_bottom { 1. } else { -1. };
@@ -98,7 +102,7 @@ impl From<VerticalLayout> for Shape {
             shape.translate([0., direction * y - shape_pos_y]);
 
 
-            y += bb.height() + gap;
+            y += bb.height() + gap; 
 
             shape
         } -> ( transform={local_transform} ))
@@ -120,7 +124,7 @@ mod tests {
             ])}
         ));
 
-        let Shape::Group { local_transform: _, shapes } = Shape::from(layout) else {
+        let Shape::Group { local_transform: _, shapes, .. } = Shape::from(layout) else {
             panic!("Not a group")
         };
 
@@ -143,7 +147,7 @@ mod tests {
             ])}
         ));
 
-        let Shape::Group { local_transform: _, shapes } = Shape::from(layout) else {
+        let Shape::Group { local_transform: _, shapes, .. } = Shape::from(layout) else {
             panic!("Not a group")
         };
 

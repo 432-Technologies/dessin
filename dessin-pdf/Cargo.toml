@@ -4,10 +4,10 @@ edition = "2021"
 license = "MIT"
 name = "dessin-pdf"
 repository = "https://github.com/432-technologies/dessin"
-version = "0.8.12-pre"
+version = "0.8.13-pre"
 
 [dependencies]
-dessin = { version = "0.8.12-pre", path = "../dessin" }
+dessin = { version = "0.8.13-pre", path = "../dessin" }
 fontdue = "^0.7.3"
 image = "^0.24.6"
 nalgebra = "^0.32.2"

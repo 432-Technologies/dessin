@@ -65,11 +65,16 @@ where
             Shape::Group {
                 local_transform,
                 shapes,
+                metadata,
             } => {
+                exporter.start_block(metadata.as_slice())?;
+
                 let parent_transform = parent_transform * local_transform;
                 for shape in shapes {
                     shape.write_into_exporter(exporter, &parent_transform)?;
                 }
+
+                exporter.end_block(metadata.as_slice())?;
 
                 Ok(())
             }
@@ -173,6 +178,15 @@ pub trait Exporter {
     fn start_style(&mut self, style: StylePosition) -> Result<(), Self::Error>;
     /// End a scope of style
     fn end_style(&mut self) -> Result<(), Self::Error>;
+
+    /// Start of a block, with custom metadata attached
+    fn start_block(&mut self, _metadata: &[(String, String)]) -> Result<(), Self::Error> {
+        Ok(())
+    }
+    /// End a scope of block
+    fn end_block(&mut self, _metadata: &[(String, String)]) -> Result<(), Self::Error> {
+        Ok(())
+    }
 
     /// Export an [`Image`][crate::shapes::image::Image]
     fn export_image(&mut self, image: ImagePosition) -> Result<(), Self::Error>;

@@ -274,6 +274,7 @@ impl From<DessinGroup> for TokenStream {
 
         quote!(::dessin::prelude::Shape::Group {
             local_transform: ::dessin::nalgebra::Transform2::default(),
+            metadata: ::std::vec::Vec::new(),
             shapes: ::std::vec![
                 #(::dessin::prelude::Shape::from(#children)),*
             ],
@@ -282,27 +283,27 @@ impl From<DessinGroup> for TokenStream {
 }
 
 enum DessinArg {
-	Ident(Ident),
+    Ident(Ident),
     Expr(Expr),
 }
 impl Parse for DessinArg {
-	fn parse(input: ParseStream) -> Result<Self> {
-		let is_ident = input.peek(Ident) && input.peek2(Brace);
-		if is_ident {
-			let ident: Ident = input.parse()?;
-			Ok(DessinArg::Ident(ident))
-		} else {
-			let expr: Expr = input.parse()?;
-			Ok(DessinArg::Expr(expr))
-		}
-	}
+    fn parse(input: ParseStream) -> Result<Self> {
+        let is_ident = input.peek(Ident) && input.peek2(Brace);
+        if is_ident {
+            let ident: Ident = input.parse()?;
+            Ok(DessinArg::Ident(ident))
+        } else {
+            let expr: Expr = input.parse()?;
+            Ok(DessinArg::Expr(expr))
+        }
+    }
 }
 impl From<DessinArg> for TokenStream {
     fn from(dessin_arg: DessinArg) -> Self {
-		match dessin_arg {
-			DessinArg::Ident(v) => quote!(#v),
-			DessinArg::Expr(v) => quote!(#v),
-		}
+        match dessin_arg {
+            DessinArg::Ident(v) => quote!(#v),
+            DessinArg::Expr(v) => quote!(#v),
+        }
     }
 }
 
@@ -326,8 +327,9 @@ impl Parse for DessinFor {
 }
 impl From<DessinFor> for TokenStream {
     fn from(DessinFor { variable, it, body }: DessinFor) -> Self {
-		let it = TokenStream::from(it);
+        let it = TokenStream::from(it);
         quote!(::dessin::prelude::Shape::Group {
+            metadata: ::std::vec::Vec::new(),
             local_transform: ::dessin::nalgebra::Transform2::default(),
             shapes: {
                 let __current_iterator__ = (#it).into_iter();
@@ -383,7 +385,7 @@ impl From<DessinIfElse> for TokenStream {
             TokenStream::from(DessinType::Empty)
         };
 
-		let condition = TokenStream::from(condition);
+        let condition = TokenStream::from(condition);
         let if_body = TokenStream::from(*if_body);
 
         quote!(
@@ -473,9 +475,9 @@ impl From<Dessin> for TokenStream {
 }
 
 /// The DSL definition for [`dessin`](https://docs.rs/dessin/)
-/// 
+///
 /// ## Components
-/// 
+///
 /// ### Basic use, with variable or expression:
 /// ```dessin
 /// Component: (
@@ -483,17 +485,17 @@ impl From<Dessin> for TokenStream {
 /// 	function2={variable * 2.}
 /// )
 /// ```
-/// 
+///
 /// ### With a function that takes no argument:
-/// 
+///
 /// ```dessin
 /// Component: (
 /// 	function
 /// )
 /// ```
-/// 
+///
 /// ### With a function that has the same name as a variable:
-/// 
+///
 /// ```dessin
 /// fn main() {
 /// 	let my_value = "my string";
@@ -504,9 +506,9 @@ impl From<Dessin> for TokenStream {
 /// 	)
 /// }
 /// ```
-/// 
+///
 /// ### With component in a mod:
-/// 
+///
 /// ```dessin
 /// dessin!(
 /// 	my_mod::Component: (
@@ -514,21 +516,21 @@ impl From<Dessin> for TokenStream {
 /// 	)
 /// )
 /// ```
-/// 
+///
 /// ## Group
-/// 
+///
 /// ```dessin
 /// [
 /// 	Component1: (),
 /// 	Component2: (),
 /// ]
 /// ```
-/// 
+///
 /// ## Erase type
-/// 
+///
 /// Useful to access certain function only availiable in Shape (related to transform).
 /// Also useful also for branches with different components (see [If else](#with-different-components))
-/// 
+///
 /// ```dessin
 /// Component: (
 /// 	component_function={value1}
@@ -536,14 +538,14 @@ impl From<Dessin> for TokenStream {
 /// 	shape_function={value2}
 /// )
 /// ```
-/// 
+///
 /// ## For loop
-/// 
+///
 /// ```dessin
 /// for x in iterator {
 /// 	// Rust code, must return a shape.
 /// 	let my_computation = x * x;
-/// 	
+///
 /// 	dessin!(
 /// 		Component: (
 /// 			function={my_computation}
@@ -551,9 +553,9 @@ impl From<Dessin> for TokenStream {
 /// 	)
 /// }
 /// ```
-/// 
+///
 /// ## If else
-/// 
+///
 /// ```dessin
 /// if my_condition {
 /// 	Component: (
@@ -565,9 +567,9 @@ impl From<Dessin> for TokenStream {
 /// 	)
 /// }
 /// ```
-/// 
+///
 /// ### With different components
-/// 
+///
 /// ```dessin
 /// if my_condition {
 /// 	Component1: () -> ()
@@ -575,7 +577,7 @@ impl From<Dessin> for TokenStream {
 /// 	Component2: () -> ()
 /// }
 /// ```
-/// 
+///
 #[proc_macro]
 pub fn dessin(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let dessin = parse_macro_input!(tokens as Dessin);

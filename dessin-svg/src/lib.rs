@@ -116,6 +116,7 @@ impl SVGExporter {
         Ok(())
     }
 
+    #[allow(unused)]
     fn write_curve(&mut self, curve: CurvePosition) -> Result<(), SVGError> {
         let mut has_start = false;
 
@@ -186,6 +187,25 @@ impl Exporter for SVGExporter {
 
     fn end_style(&mut self) -> Result<(), Self::Error> {
         write!(self.acc, "</g>")?;
+        Ok(())
+    }
+
+    fn start_block(&mut self, _metadata: &[(String, String)]) -> Result<(), Self::Error> {
+        if !_metadata.is_empty() {
+            write!(self.acc, "<g ")?;
+            for (key, value) in _metadata {
+                write!(self.acc, r#"{key}={value} "#)?;
+            }
+            write!(self.acc, ">")?;
+        }
+
+        Ok(())
+    }
+
+    fn end_block(&mut self, _metadata: &[(String, String)]) -> Result<(), Self::Error> {
+        if !_metadata.is_empty() {
+            write!(self.acc, "</g>")?;
+        }
         Ok(())
     }
 
