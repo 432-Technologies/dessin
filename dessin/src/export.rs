@@ -62,11 +62,11 @@ where
         parent_transform: &Transform2<f32>,
     ) -> Result<(), <E as Exporter>::Error> {
         match self {
-            Shape::Group {
+            Shape::Group(Group {
                 local_transform,
                 shapes,
                 metadata,
-            } => {
+            }) => {
                 exporter.start_block(metadata.as_slice())?;
 
                 let parent_transform = parent_transform * local_transform;

@@ -22,11 +22,11 @@ impl VerticalLayout {
     #[inline]
     pub fn of<T: Into<Shape>>(&mut self, shape: T) -> &mut Self {
         match shape.into() {
-            Shape::Group {
+            Shape::Group(Group {
                 local_transform: _,
                 shapes,
                 metadata,
-            } => {
+            }) => {
                 self.metadata.extend(metadata);
                 self.shapes.extend(shapes);
             }
@@ -89,9 +89,9 @@ impl From<VerticalLayout> for Shape {
             let mut shape = shape;
 
             let bb = shape
-            	.local_bounding_box()
-            	.map(BoundingBox::<UnParticular>::into_straight)
-            	.unwrap_or(BoundingBox::zero());
+                .local_bounding_box()
+                .map(BoundingBox::<UnParticular>::into_straight)
+                .unwrap_or(BoundingBox::zero());
 
              let shape_pos_y = if start_bottom {
                  bb.bottom_right().y
@@ -102,10 +102,13 @@ impl From<VerticalLayout> for Shape {
             shape.translate([0., direction * y - shape_pos_y]);
 
 
-            y += bb.height() + gap; 
+            y += bb.height() + gap;
 
             shape
-        } -> ( transform={local_transform} ))
+        } -> (
+            transform={local_transform}
+            extend_metadata={metadata}
+        ))
     }
 }
 
@@ -124,7 +127,7 @@ mod tests {
             ])}
         ));
 
-        let Shape::Group { local_transform: _, shapes, .. } = Shape::from(layout) else {
+        let Shape::Group(Group { local_transform: _, shapes, .. }) = Shape::from(layout) else {
             panic!("Not a group")
         };
 
@@ -147,7 +150,7 @@ mod tests {
             ])}
         ));
 
-        let Shape::Group { local_transform: _, shapes, .. } = Shape::from(layout) else {
+        let Shape::Group (Group{ local_transform: _, shapes, .. }) = Shape::from(layout) else {
             panic!("Not a group")
         };
 

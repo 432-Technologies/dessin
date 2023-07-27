@@ -1,6 +1,6 @@
 use crate::prelude::*;
-use nalgebra::{Point2, Rotation2, Scale2, Transform2};
-use std::f32::consts::{FRAC_PI_4, TAU};
+use nalgebra::{Point2, Transform2};
+use std::f32::consts::TAU;
 
 pub mod polygones {
     use super::Polygone;
@@ -103,7 +103,7 @@ fn triangle_in_group() {
 
     let sqrt3_over_2 = 3f32.sqrt() / 2.;
 
-    let Shape::Group { local_transform, shapes, .. } = dessin!([Triangle: ()]) else {
+    let Shape::Group (Group{ local_transform, shapes, .. }) = dessin!([Triangle: ()]) else {
         panic!("Not a group");
     };
     assert_eq!(shapes.len(), 1);
@@ -134,6 +134,8 @@ fn triangle_in_group() {
 fn bounding_box() {
     use crate::prelude::{polygones::*, *};
     use assert_float_eq::*;
+    use nalgebra::Rotation2;
+    use std::f32::consts::FRAC_PI_4;
 
     let polys: [(usize, Shape); 4] = [
         (3, Triangle::default().into()),

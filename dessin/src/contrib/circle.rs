@@ -3,7 +3,7 @@ use crate::{
     shapes::{Bezier, Curve, Keypoint},
 };
 use nalgebra::{self as na, Point2, Rotation2, Scale2, Transform2};
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4};
+use std::f32::consts::FRAC_PI_2;
 
 #[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Circle {
@@ -77,6 +77,7 @@ impl From<Circle> for Ellipse {
 pub fn bounding_box() {
     use crate::prelude::*;
     use assert_float_eq::*;
+    use std::f32::consts::FRAC_PI_4;
 
     let mut circle: Shape = Circle::default().with_radius(10.).into();
 

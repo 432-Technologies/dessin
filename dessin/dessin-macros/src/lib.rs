@@ -272,13 +272,13 @@ impl From<DessinGroup> for TokenStream {
             .map(|v| TokenStream::from(v))
             .collect::<Vec<_>>();
 
-        quote!(::dessin::prelude::Shape::Group {
+        quote!(::dessin::prelude::Shape::Group(::dessin::prelude::Group {
             local_transform: ::dessin::nalgebra::Transform2::default(),
             metadata: ::std::vec::Vec::new(),
             shapes: ::std::vec![
                 #(::dessin::prelude::Shape::from(#children)),*
             ],
-        })
+        }))
     }
 }
 
@@ -328,7 +328,7 @@ impl Parse for DessinFor {
 impl From<DessinFor> for TokenStream {
     fn from(DessinFor { variable, it, body }: DessinFor) -> Self {
         let it = TokenStream::from(it);
-        quote!(::dessin::prelude::Shape::Group {
+        quote!(::dessin::prelude::Shape::Group(::dessin::prelude::Group {
             metadata: ::std::vec::Vec::new(),
             local_transform: ::dessin::nalgebra::Transform2::default(),
             shapes: {
@@ -340,7 +340,7 @@ impl From<DessinFor> for TokenStream {
                 }
                 __current_shapes__
             },
-        })
+        }))
     }
 }
 

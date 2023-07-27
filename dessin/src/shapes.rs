@@ -457,20 +457,24 @@ pub trait ShapeBoundingBox {
     }
 }
 
+/// A group of [`Shape`], locally positionned by a transform
+#[derive(Default, Debug, Clone)]
+pub struct Group {
+    /// Transform of the whole group
+    pub local_transform: Transform2<f32>,
+    /// List of shapes
+    pub shapes: Vec<Shape>,
+    /// Metadata
+    pub metadata: Vec<(String, String)>,
+}
+
 /// Building block of a dessin
 ///
 /// Every complex shape should boil down to these.
 #[derive(Clone)]
 pub enum Shape {
     /// A group of [`Shape`], locally positionned by a transform
-    Group {
-        /// Transform of the whole group
-        local_transform: Transform2<f32>,
-        /// List of shapes
-        shapes: Vec<Shape>,
-        /// Metadata
-        metadata: Vec<(String, String)>,
-    },
+    Group(Group),
     /// Block of style
     Style {
         /// Fill
@@ -500,44 +504,58 @@ pub enum Shape {
 }
 
 impl Shape {
+    fn get_or_mutate_as_group(&mut self) -> &mut Group {
+        if let Shape::Group(g) = self {
+            g
+        } else {
+            let mut dummy = Shape::Group(Group {
+                local_transform: Default::default(),
+                shapes: Default::default(),
+                metadata: Default::default(),
+            });
+
+            std::mem::swap(self, &mut dummy);
+
+            let mut group = Shape::Group(Group {
+                local_transform: Default::default(),
+                shapes: vec![dummy],
+                metadata: vec![],
+            });
+
+            std::mem::swap(self, &mut group);
+            self.get_or_mutate_as_group()
+        }
+    }
+    pub fn extend_metadata<K: ToString, V: ToString, E: IntoIterator<Item = (K, V)>>(
+        &mut self,
+        extend: E,
+    ) {
+        self.get_or_mutate_as_group().metadata.extend(
+            extend
+                .into_iter()
+                .map(|(k, v)| (k.to_string(), v.to_string())),
+        );
+    }
     pub fn add_metadata<K: ToString, V: ToString>(&mut self, (key, value): (K, V)) {
         let key = key.to_string();
         let value = value.to_string();
 
-        match self {
-            Shape::Group { metadata, .. } => metadata.push((key, value)),
-            x => {
-                let mut dummy = Shape::Group {
-                    local_transform: Default::default(),
-                    shapes: Default::default(),
-                    metadata: Default::default(),
-                };
-
-                std::mem::swap(x, &mut dummy);
-
-                let mut group = Shape::Group {
-                    local_transform: Default::default(),
-                    shapes: vec![dummy],
-                    metadata: vec![(key, value)],
-                };
-
-                std::mem::swap(x, &mut group);
-            }
-        }
+        self.get_or_mutate_as_group().metadata.push((key, value));
     }
 }
 
 impl fmt::Debug for Shape {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Group {
+            Self::Group(Group {
                 local_transform,
                 shapes,
-                ..
-            } => f
+                metadata,
+            }) => f
                 .debug_struct("Group")
                 .field("local_transform", local_transform)
                 .field("shapes", shapes)
+                .field("metadata", metadata)
                 .finish(),
             Self::Style {
                 fill,
@@ -567,20 +585,20 @@ impl fmt::Debug for Shape {
 
 impl Default for Shape {
     fn default() -> Self {
-        Shape::Group {
+        Shape::Group(Group {
             local_transform: Transform2::default(),
             shapes: vec![],
             metadata: vec![],
-        }
+        })
     }
 }
 
 impl ShapeOp for Shape {
     fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
         match self {
-            Shape::Group {
+            Shape::Group(Group {
                 local_transform, ..
-            } => {
+            }) => {
                 *local_transform = transform_matrix * *local_transform;
             }
             Shape::Style { shape, .. } => {
@@ -611,9 +629,9 @@ impl ShapeOp for Shape {
     #[inline]
     fn local_transform(&self) -> &Transform2<f32> {
         match self {
-            Shape::Group {
+            Shape::Group(Group {
                 local_transform, ..
-            } => local_transform,
+            }) => local_transform,
             Shape::Style { shape, .. } => shape.local_transform(),
             Shape::Ellipse(v) => v.local_transform(),
             Shape::Image(v) => v.local_transform(),
@@ -629,11 +647,11 @@ impl ShapeOp for Shape {
 impl ShapeBoundingBox for Shape {
     fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
         match self {
-            Shape::Group {
+            Shape::Group(Group {
                 local_transform,
                 shapes,
                 ..
-            } => shapes
+            }) => shapes
                 .iter()
                 .filter_map(|v| v.global_bounding_box(local_transform))
                 .map(|v| v.straigthen())
