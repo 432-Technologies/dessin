@@ -5,5 +5,7 @@ mkShell {
     clang
     pkgconfig
     openssl
+    cmake
+    fontconfig
   ];
 }

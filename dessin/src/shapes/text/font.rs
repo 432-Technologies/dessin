@@ -76,6 +76,14 @@ pub enum Font {
     TTF(Vec<u8>),
 }
 
+impl Font {
+    pub fn as_bytes(&self) -> &[u8] {
+        match self {
+            Font::OTF(b) | Font::TTF(b) => b.as_slice(),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct FontGroup<T> {
     pub regular: T,

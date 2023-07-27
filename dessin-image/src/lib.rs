@@ -1,15 +1,21 @@
-use ::image::{DynamicImage, Rgba32FImage};
+use ::image::{DynamicImage, RgbaImage};
 use dessin::{
     export::{Export, Exporter},
     prelude::*,
 };
 use nalgebra::{Point2, Transform2, Translation2, Vector2};
+use raqote::{
+    DrawOptions, DrawTarget, LineCap, LineJoin, PathBuilder, Point, SolidSource, Source,
+    StrokeStyle,
+};
 use std::fmt;
 
 #[derive(Debug)]
 pub enum ImageError {
     WriteError(fmt::Error),
     CurveHasNoStartingPoint(CurvePosition),
+    FontLoadingError(font_kit::error::FontLoadingError),
+    ImageError,
 }
 impl fmt::Display for ImageError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -29,19 +35,19 @@ pub struct ImageOptions {
 }
 
 pub struct ImageExporter {
-    buffer: Rgba32FImage,
+    buffer: DrawTarget,
     style: Vec<StylePosition>,
 }
 
 impl ImageExporter {
     fn new(width: u32, height: u32) -> Self {
         ImageExporter {
-            buffer: Rgba32FImage::new(width, height),
+            buffer: DrawTarget::new(width as i32, height as i32),
             style: vec![],
         }
     }
 
-    fn finalize(self) -> Rgba32FImage {
+    fn finalize(self) -> DrawTarget {
         self.buffer
     }
 
@@ -125,136 +131,88 @@ impl Exporter for ImageExporter {
     }
 
     fn export_curve(&mut self, curve: CurvePosition) -> Result<(), Self::Error> {
+        let mut path = PathBuilder::new();
+
+        for (idx, k) in curve.keypoints.iter().enumerate() {
+            let is_first = idx == 0;
+
+            match k {
+                KeypointPosition::Point(p) if is_first => path.move_to(p.x, p.y),
+                KeypointPosition::Point(p) => path.line_to(p.x, p.y),
+                KeypointPosition::Bezier(b) => {
+                    match (is_first, b.start) {
+                        (true, None) => return Err(ImageError::CurveHasNoStartingPoint(curve)),
+                        (true, Some(s)) => path.move_to(s.x, s.y),
+                        (false, None) => {}
+                        (false, Some(s)) => path.line_to(s.x, s.y),
+                    }
+
+                    path.cubic_to(
+                        b.start_control.x,
+                        b.start_control.y,
+                        b.end_control.x,
+                        b.end_control.y,
+                        b.end.x,
+                        b.end.y,
+                    );
+                }
+            }
+        }
+
+        if curve.closed {
+            path.close()
+        }
+
+        let path = path.finish();
+
         let style = self.style();
 
         if let Some(Fill::Color(c)) = style.fill {
-            // draw_hollow_ellipse_mut(&mut self.buffer, (center.x as i32, center.y as i32), wi)
-            // imageproc::d
+            let (r, g, b, a) = c.rgba();
+            self.buffer.fill(
+                &path,
+                &Source::Solid(SolidSource { r: b, g, b: r, a }),
+                &DrawOptions::new(),
+            )
         }
 
-        let stroke_color = style
-            .stroke
-            .map(|v| match v {
-                Stroke::Full { color, width } => color,
-                Stroke::Dashed {
-                    color,
-                    width,
-                    on,
-                    off,
-                } => color,
-            })
-            .or_else(|| {
-                style.fill.map(|v| match v {
-                    Fill::Color(c) => c,
-                })
-            });
-
-        match stroke_color {
-            Some(c) => {
-                let (r, g, b, a) = c.as_rgba_f32();
-                let color = ::image::Rgba([r, g, b, a]);
-
-                let mut first_point = None;
-                let mut last_point = None;
-
-                for k in &curve.keypoints {
-                    match (&mut last_point, k) {
-                        (x @ None, KeypointPosition::Point(p)) => {
-                            *x = Some(*p);
-                            first_point = Some(*p);
-                        }
-                        (
-                            None,
-                            KeypointPosition::Bezier(Bezier {
-                                start,
-                                start_control,
-                                end_control,
-                                end,
-                            }),
-                        ) => {
-                            let start = start.ok_or_else(|| {
-                                ImageError::CurveHasNoStartingPoint(curve.clone())
-                            })?;
-
-                            first_point = Some(start);
-                            last_point = Some(*end);
-
-                            imageproc::drawing::draw_cubic_bezier_curve_mut(
-                                &mut self.buffer,
-                                (start.x, start.y),
-                                (end.x, end.y),
-                                (start_control.x, start_control.y),
-                                (end_control.x, end_control.y),
-                                color,
-                            );
-                        }
-                        (Some(_p), KeypointPosition::Point(p)) => {
-                            imageproc::drawing::draw_line_segment_mut(
-                                &mut self.buffer,
-                                (_p.x, _p.y),
-                                (p.x, p.y),
-                                color,
-                            );
-                            *_p = *p;
-                        }
-                        (
-                            Some(_p),
-                            KeypointPosition::Bezier(Bezier {
-                                start,
-                                start_control,
-                                end_control,
-                                end,
-                            }),
-                        ) => {
-                            let start = match start {
-                                Some(p) => {
-                                    imageproc::drawing::draw_line_segment_mut(
-                                        &mut self.buffer,
-                                        (_p.x, _p.y),
-                                        (p.x, p.y),
-                                        color,
-                                    );
-                                    p
-                                }
-                                None => _p,
-                            };
-
-                            imageproc::drawing::draw_cubic_bezier_curve_mut(
-                                &mut self.buffer,
-                                (start.x, start.y),
-                                (end.x, end.y),
-                                (start_control.x, start_control.y),
-                                (end_control.x, end_control.y),
-                                color,
-                            );
-
-                            *_p = *end;
-                        }
-                    }
-
-                    if first_point.is_none() {
-                        match k {
-                            KeypointPosition::Point(p) => first_point = Some(*p),
-                            KeypointPosition::Bezier(Bezier { start, .. }) => {
-                                first_point = Some(start.ok_or_else(|| {
-                                    ImageError::CurveHasNoStartingPoint(curve.clone())
-                                })?)
-                            }
-                        }
-                    }
-                }
-
-                if curve.closed {
-                    match (last_point, first_point) {
-                        (Some(_p), Some(p)) => imageproc::drawing::draw_line_segment_mut(
-                            &mut self.buffer,
-                            (_p.x, _p.y),
-                            (p.x, p.y),
-                            color,
-                        ),
-                        _ => {}
-                    }
-                }
+        match style.stroke {
+            Some(Stroke::Full { color, width }) => {
+                let (r, g, b, a) = color.rgba();
+                self.buffer.stroke(
+                    &path,
+                    &Source::Solid(SolidSource { r: b, g, b: r, a }),
+                    &StrokeStyle {
+                        cap: LineCap::Butt,
+                        join: LineJoin::Miter,
+                        width,
+                        miter_limit: 2.,
+                        dash_array: vec![],
+                        dash_offset: 0.,
+                    },
+                    &DrawOptions::new(),
+                );
+            }
+            Some(Stroke::Dashed {
+                color,
+                width,
+                on,
+                off,
+            }) => {
+                let (r, g, b, a) = color.rgba();
+                self.buffer.stroke(
+                    &path,
+                    &Source::Solid(SolidSource { r: b, g, b: r, a }),
+                    &StrokeStyle {
+                        cap: LineCap::Butt,
+                        join: LineJoin::Miter,
+                        width,
+                        miter_limit: 2.,
+                        dash_array: vec![on, off],
+                        dash_offset: 0.,
+                    },
+                    &DrawOptions::new(),
+                );
             }
             None => {}
         }
@@ -275,56 +233,29 @@ impl Exporter for ImageExporter {
             font,
         }: TextPosition,
     ) -> Result<(), Self::Error> {
-        // let id = rand::random::<u64>().to_string();
+        let font = font.clone().unwrap_or_default();
+        let fg = dessin::font::get(font);
+        let font = fg.get(font_weight).as_bytes();
 
-        // let weight = match font_weight {
-        //     FontWeight::Bold | FontWeight::BoldItalic => "bold",
-        //     _ => "normal",
-        // };
-        // let text_style = match font_weight {
-        //     FontWeight::Italic | FontWeight::BoldItalic => "italic",
-        //     _ => "normal",
-        // };
-        // let align = match align {
-        //     TextAlign::Center => "middle",
-        //     TextAlign::Left => "start",
-        //     TextAlign::Right => "end",
-        // };
+        //dt.set_transform(&Transform::create_translation(50.0, 0.0));
+        // dt.set_transform(&Transform::rotation(euclid::Angle::degrees(15.0)));
 
-        // let text = text.replace("<", "&lt;").replace(">", "&gt;");
-        // let font = font
-        //     .as_ref()
-        //     .map(|v| v.name(font_weight))
-        //     .unwrap_or_else(|| dessin::font::FontRef::default().name(font_weight));
+        let color = match self.style().fill {
+            Some(Fill::Color(c)) => c,
+            None => return Ok(()),
+        };
+        let (r, g, b, a) = color.rgba();
 
-        // write!(
-        //     self.acc,
-        //     r#"<text x="{x}" y="{y}" font-family="{font}" text-anchor="{align}" font-size="{font_size}px" font-weight="{weight}" text-style="{text_style}""#,
-        //     x = reference_start.x,
-        //     y = reference_start.y,
-        // )?;
-
-        // let rotation = direction.angle(&Vector2::new(1., 0.));
-        // if rotation.abs() > 10e-6 {
-        //     write!(
-        //         self.acc,
-        //         r#" transform="rotate({rot})" "#,
-        //         rot = -rotation.to_degrees()
-        //     )?;
-        // }
-
-        // write!(self.acc, r#">"#)?;
-
-        // if let Some(curve) = on_curve {
-        //     write!(self.acc, r#"<path id="{id}" d=""#)?;
-        //     self.write_curve(curve)?;
-        //     write!(self.acc, r#""/>"#)?;
-
-        //     write!(self.acc, r##"<textPath href="#{id}">{text}</textPath>"##)?;
-        // } else {
-        //     write!(self.acc, "{text}")?;
-        // }
-        // write!(self.acc, r#"</text>"#)?;
+        let font = font_kit::loader::Loader::from_bytes(std::sync::Arc::new(font.to_vec()), 0)
+            .map_err(|e| ImageError::FontLoadingError(e))?;
+        self.buffer.draw_text(
+            &font,
+            font_size,
+            text,
+            Point::new(reference_start.x, reference_start.y),
+            &Source::Solid(SolidSource { r: b, g, b: r, a }),
+            &DrawOptions::new(),
+        );
 
         Ok(())
     }
@@ -345,10 +276,25 @@ impl ToImage for Shape {
         let transform = nalgebra::convert::<_, Transform2<f32>>(translation)
             * nalgebra::convert::<_, Transform2<f32>>(scale);
 
-        let mut exporter = ImageExporter::new(bb.width().ceil() as u32, bb.height().ceil() as u32);
+        let width = bb.width().ceil() as u32;
+        let height = bb.height().ceil() as u32;
+        let mut exporter = ImageExporter::new(width, height);
 
         self.write_into_exporter(&mut exporter, &transform)?;
 
-        Ok(DynamicImage::ImageRgba32F(exporter.finalize()))
+        let raw: Vec<u32> = exporter.finalize().into_vec();
+        let raw: Vec<u8> = unsafe {
+            let cap = raw.capacity();
+            let len = raw.len();
+            let ptr = Box::into_raw(raw.into_boxed_slice());
+
+            Vec::from_raw_parts(ptr.cast(), len * 4, cap * 4)
+        };
+
+        let img = DynamicImage::ImageRgba8(
+            RgbaImage::from_raw(width, height, raw).ok_or(ImageError::ImageError)?,
+        );
+
+        Ok(img)
     }
 }
