@@ -1,18 +1,18 @@
 [package]
 authors = [
-  "Olivier Lemoine <olivier@le-moine.fr>",
-  "Francois Morillon <francois.morillon@yahoo.fr>",
+	"Olivier Lemoine <olivier@le-moine.fr>",
+	"Francois Morillon <francois.morillon@yahoo.fr>",
 ]
 description = "Drawing SVG"
 edition = "2021"
 license = "MIT"
 name = "dessin-svg"
 repository = "https://github.com/432-technologies/dessin"
-version = "0.8.11-pre"
+version = "0.8.12-pre"
 
 [dependencies]
 data-encoding = "^2.3.3"
-dessin = {version = "0.8.11-pre", path = "../dessin"}
+dessin = { version = "0.8.12-pre", path = "../dessin" }
 image = "^0.24.6"
 nalgebra = "^0.32.2"
 rand = "^0.8.5"

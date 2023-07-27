@@ -165,7 +165,7 @@ pub trait Exporter {
     /// Export error
     type Error;
 
-    const CAN_EXPORT_ELLIPSE: bool;
+    const CAN_EXPORT_ELLIPSE: bool = true;
 
     /// Enter a scope of style
     ///

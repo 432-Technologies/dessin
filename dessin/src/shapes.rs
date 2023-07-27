@@ -367,6 +367,12 @@ impl BoundingBox<Straight> {
         self
     }
 
+    /// Scale difference from self to other
+    #[inline]
+    pub fn scale_difference(&self, other: &BoundingBox<Straight>) -> Vector2<f32> {
+        Vector2::new(other.width() / self.width(), other.height() / self.height())
+    }
+
     /// A u B
     ///
     /// Creates a bigger [`BoundingBox`] from the union of the two.
