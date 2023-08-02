@@ -49,7 +49,7 @@ impl Default for TextBox {
             vertical_align: TextVerticalAlign::Top,
             text: Default::default(),
             font_weight: Default::default(),
-            width: Default::default(),
+            width: f32::MAX,
             height: Default::default(),
             font: Default::default(),
         }
@@ -157,18 +157,11 @@ impl From<TextBox> for Shape {
     }
 }
 
-impl ShapeBoundingBox for TextBox {
-    fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
-        // self.font_size
-        todo!()
-    }
-}
-
 #[test]
 fn one_line() {
     use assert_float_eq::*;
 
-    let text = "it should work pass famous last word";
+    let text = "it should work, famous last word";
 
     let shape: Shape = dessin!(TextBox: #(
         {text}
@@ -176,8 +169,7 @@ fn one_line() {
         font_size={5.}
         align={TextAlign::Left}
         line_spacing={2.}
-    ))
-    .into();
+    ) -> ());
 
     let bb = shape.local_bounding_box();
     assert_float_absolute_eq!(bb.height(), 5., 0.001);
@@ -187,7 +179,7 @@ fn one_line() {
 fn two_lines() {
     use assert_float_eq::*;
 
-    let text = "it should work pass\nfamous last word";
+    let text = "it should work\nfamous last word";
 
     let shape: Shape = dessin!(TextBox: #(
         {text}

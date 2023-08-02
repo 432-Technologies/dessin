@@ -271,8 +271,6 @@ mod tests {
             line_spacing={2.}
         ));
 
-        let bb1 = first_text.local_bounding_box();
-
         let layout = dessin!(VerticalLayout: (
             start_from_bottom
             {gap}
