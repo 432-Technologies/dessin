@@ -96,7 +96,6 @@ impl From<VerticalLayout> for Shape {
             metadata,
         }: VerticalLayout,
     ) -> Self {
-        let direction = if start_bottom { 1. } else { -1. };
         let mut y = 0.;
 
         dessin!(for shape in (shapes) {
@@ -105,13 +104,17 @@ impl From<VerticalLayout> for Shape {
             let bb = shape
                 .local_bounding_box().into_straight();
 
-            let shape_pos_y = if start_bottom {
-                bb.bottom_right().y
+
+            let y_translation = if start_bottom {
+                -bb.bottom() // Recenter the bottom of the shape to be 0
+                + y // And then, above all the others
             } else {
-                bb.top_right().y
+                -bb.top() // Recenter the top of the shape to be 0
+                - y // And then, below all the others
+
             };
 
-            shape.translate([0., direction * y - shape_pos_y]);
+            shape.translate([0., y_translation]);
 
             y += bb.height() + gap;
 
@@ -128,6 +131,61 @@ mod tests {
     use crate::prelude::*;
     use assert_float_eq::*;
     use nalgebra::Point2;
+
+    #[test]
+    fn one_element() {
+        let layout = dessin!(VerticalLayout: (
+            of={Text::default().with_font_size(10.)}
+        ) -> ());
+
+        let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
+
+        assert_float_absolute_eq!(bb.height(), 10., 0.0001);
+    }
+
+    #[test]
+    fn two_distinct_elements() {
+        let layout = dessin!(VerticalLayout: (
+            of={Text::default().with_font_size(10.)}
+            of={Text::default().with_font_size(10.)}
+        ) -> ());
+
+        let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
+
+        assert_float_absolute_eq!(bb.height(), 20., 0.0001);
+    }
+
+    #[test]
+    fn two_elements_vec_with_gap() {
+        let layout = dessin!(VerticalLayout: (
+            of={dessin!([
+				Text: (
+					font_size={10.}
+				),
+				Text: (
+					font_size={10.}
+				),
+			])}
+			gap={4.}
+        ) -> ());
+
+        let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
+
+        assert_float_absolute_eq!(bb.height(), 24., 0.0001);
+    }
+
+    #[test]
+    fn two_distinct_elements_with_gap() {
+        let layout = dessin!(VerticalLayout: (
+            of={Text::default().with_font_size(10.)}
+            of={Text::default().with_font_size(10.)}
+			gap={4.}
+        ) -> ());
+
+        let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
+
+        assert_float_absolute_eq!(bb.height(), 24., 0.0001);
+    }
 
     #[test]
     fn base_layout() {

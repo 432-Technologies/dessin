@@ -167,7 +167,9 @@ impl ShapeBoundingBox for Text {
 
         let width = size_of(&font, &self.text, self.font_size);
 
-        BoundingBox::centered([width, self.font_size]).as_unparticular()
+        BoundingBox::centered([width, self.font_size])
+            .as_unparticular()
+            .transform(self.local_transform())
     }
 }
 

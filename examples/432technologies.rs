@@ -61,7 +61,7 @@ impl From<BinaryRing> for Shape {
             text={T}
             // on_curve={Rectangle::default().with_width(30.).with_height(30.).as_curve()}
             // on_curve={Curve::default().with_then(Point2::new(0., 0.)).with_then(Point2::new(100., 100.))}
-            on_curve={Circle::default().with_radius(radius).into()}
+            on_curve={Circle::default().with_radius(radius)}
             font_size={1.}
             fill={Fill::Color(C)}
         ))

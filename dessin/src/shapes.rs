@@ -174,10 +174,44 @@ pub struct BoundingBox<Type> {
     bottom_left: Point2<f32>,
 }
 impl<T> BoundingBox<T> {
+    /// Top border
+    ///
+    /// ⚠️ There is no guarantee that this is actually the most top border.
+    /// [`straigthen`][BoundingBox::straigthen] the [`BoundingBox`] first for this guarantee.
+    #[inline]
+    pub fn top(&self) -> f32 {
+        self.top_left.y
+    }
+    /// Bottom border
+    ///
+    /// ⚠️ There is no guarantee that this is actually the most bottom border.
+    /// [`straigthen`][BoundingBox::straigthen] the [`BoundingBox`] first for this guarantee.
+    #[inline]
+    pub fn bottom(&self) -> f32 {
+        self.bottom_left.y
+    }
+    /// Left border
+    ///
+    /// ⚠️ There is no guarantee that this is actually the most left border.
+    /// [`straigthen`][BoundingBox::straigthen] the [`BoundingBox`] first for this guarantee.
+    #[inline]
+    pub fn left(&self) -> f32 {
+        self.bottom_left.x
+    }
+    /// Right border
+    ///
+    /// ⚠️ There is no guarantee that this is actually the most right border.
+    /// [`straigthen`][BoundingBox::straigthen] the [`BoundingBox`] first for this guarantee.
+    #[inline]
+    pub fn right(&self) -> f32 {
+        self.bottom_right.x
+    }
+
     /// Top left corner
     ///
     /// ⚠️ There is no guarantee that this is actually the most top and left corner.
     /// [`straigthen`][BoundingBox::straigthen] the [`BoundingBox`] first for this guarantee.
+    #[inline]
     pub fn top_left(&self) -> Point2<f32> {
         self.top_left
     }
@@ -185,6 +219,7 @@ impl<T> BoundingBox<T> {
     ///
     /// ⚠️ There is no guarantee that this is actually the most top and right corner.
     /// [`straigthen`][BoundingBox::straigthen] the [`BoundingBox`] first for this guarantee.
+    #[inline]
     pub fn top_right(&self) -> Point2<f32> {
         self.top_right
     }
@@ -192,6 +227,7 @@ impl<T> BoundingBox<T> {
     ///
     /// ⚠️ There is no guarantee that this is actually the most bottom and right corner.
     /// [`straigthen`][BoundingBox::straigthen] the [`BoundingBox`] first for this guarantee.
+    #[inline]
     pub fn bottom_right(&self) -> Point2<f32> {
         self.bottom_right
     }
@@ -199,6 +235,7 @@ impl<T> BoundingBox<T> {
     ///
     /// ⚠️ There is no guarantee that this is actually the most bottom and left corner.
     /// [`straigthen`][BoundingBox::straigthen] the [`BoundingBox`] first for this guarantee.
+    #[inline]
     pub fn bottom_left(&self) -> Point2<f32> {
         self.bottom_left
     }
@@ -650,7 +687,7 @@ impl ShapeBoundingBox for Shape {
             }) => shapes
                 .iter()
                 .map(|v| v.global_bounding_box(local_transform).straigthen())
-                .reduce(|acc, curr| BoundingBox::join(acc, curr))
+                .reduce(BoundingBox::join)
                 .unwrap_or_else(|| BoundingBox::zero())
                 .as_unparticular(),
             Shape::Style { shape, .. } => shape.local_bounding_box(),
