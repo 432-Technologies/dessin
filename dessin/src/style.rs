@@ -1,4 +1,4 @@
-use crate::shapes::{Shape, ShapeOp};
+use crate::prelude::*;
 use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
 use std::{
     f32::consts::FRAC_1_SQRT_2,
@@ -339,5 +339,12 @@ impl<T: ShapeOp> ShapeOp for Style<T> {
     #[inline]
     fn global_transform(&self, parent_transform: &Transform2<f32>) -> Transform2<f32> {
         self.shape.global_transform(parent_transform)
+    }
+}
+
+impl<T: ShapeBoundingBox> ShapeBoundingBox for Style<T> {
+    #[inline]
+    fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
+        self.shape.local_bounding_box()
     }
 }

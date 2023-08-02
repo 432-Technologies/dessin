@@ -5,18 +5,23 @@ use crate::{
 use nalgebra::{self as na, Point2, Rotation2, Scale2, Transform2};
 use std::f32::consts::FRAC_PI_2;
 
+/// Circle with a radius
 #[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Circle {
+    /// [`ShapeOp`]
     #[local_transform]
     pub local_transform: Transform2<f32>,
 }
 
 impl Circle {
+    /// Radius
     #[inline]
     pub fn radius(&mut self, radius: f32) -> &mut Self {
         self.scale(Scale2::new(2. * radius, 2. * radius));
         self
     }
+
+    /// Radius
     #[inline]
     pub fn with_radius(mut self, radius: f32) -> Self {
         self.radius(radius);
@@ -110,7 +115,6 @@ pub fn bounding_box() {
 #[test]
 pub fn bounding_box_7() {
     use crate::prelude::*;
-    use assert_float_eq::*;
 
     let mut circle: Shape = Circle::default().with_radius(7.).into();
 

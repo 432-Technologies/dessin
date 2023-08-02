@@ -159,6 +159,13 @@ impl From<TextBox> for Shape {
     }
 }
 
+impl ShapeBoundingBox for TextBox {
+    fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
+        // self.font_size
+        todo!()
+    }
+}
+
 #[test]
 fn one_line() {
     use assert_float_eq::*;

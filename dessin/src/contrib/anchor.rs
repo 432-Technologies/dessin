@@ -2,9 +2,17 @@ use crate::prelude::{Shape, ShapeBoundingBox, ShapeOp, ShapeOpWith};
 use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
 use std::ops::{Deref, DerefMut};
 
+/// Place a shape relative to its anchor points.
+///
+/// Relative to its center, an anchor of:
+/// - [0, 0] places its content in the center
+/// - [1, 1] places its content in the bottom right
+/// and so on
 #[derive(Debug, Clone, PartialEq, Shape)]
 pub struct Anchor<T> {
+    /// Holded shape
     pub shape: T,
+    /// Anchor point
     #[shape(into)]
     pub anchor: Vector2<f32>,
 }
@@ -20,6 +28,7 @@ where
     }
 }
 impl<T> Anchor<T> {
+    /// Wrap a [`Shape`] with Anchor
     #[inline]
     pub fn new(shape: T) -> Self {
         Anchor {

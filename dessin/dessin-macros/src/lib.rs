@@ -1,4 +1,5 @@
-// #![warn(missing_docs)]
+#![warn(missing_docs)]
+#![allow(clippy::tabs_in_doc_comments)]
 
 //! Here is the definition of the macro for `dessin`
 //!
@@ -94,7 +95,7 @@ impl From<Actions> for TokenStream {
     fn from(Actions(actions): Actions) -> Self {
         let actions = actions
             .into_iter()
-            .map(|v| TokenStream::from(v))
+            .map(TokenStream::from)
             .collect::<Vec<_>>();
 
         quote!(#(#actions)*)
@@ -269,7 +270,7 @@ impl From<DessinGroup> for TokenStream {
     fn from(DessinGroup { children }: DessinGroup) -> Self {
         let children = children
             .into_iter()
-            .map(|v| TokenStream::from(v))
+            .map(TokenStream::from)
             .collect::<Vec<_>>();
 
         quote!(::dessin::prelude::Shape::Group(::dessin::prelude::Group {
@@ -801,6 +802,9 @@ fn group_in_group() {
     .unwrap();
 }
 
+/// Helper macro
+///
+/// Auto implements setter for each members
 #[proc_macro_derive(Shape, attributes(shape, local_transform))]
 pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -821,7 +825,13 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             let mut skip = false;
             let mut into = false;
             let mut boolean = false;
+			let mut doc = None;
             for attr in field.attrs {
+				if attr.path().is_ident("doc") {
+					doc = Some(attr);
+					continue;
+				}
+
                 if attr.path().is_ident("local_transform") {
                     if local_transform.is_some() {
                         panic!("Only one field can be a local_transform");
@@ -858,12 +868,14 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             let with_ident = mk_ident(&format!("with_{ident}"), None);
             if boolean {
                 quote!(
+					#doc
                     #[inline]
                     #vis fn #ident(&mut self) -> &mut Self {
                         self.#ident = true;
                         self
                     }
 
+					#doc
                     #[inline]
                     #vis fn #with_ident(mut self) -> Self {
                         self.#ident();
@@ -872,12 +884,14 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 )
             } else if into {
                 quote!(
+					#doc
                     #[inline]
                     #vis fn #ident<__INTO__T: Into<#ty>>(&mut self, value: __INTO__T) -> &mut Self {
                         self.#ident = value.into();
                         self
                     }
 
+					#doc
                     #[inline]
                     #vis fn #with_ident<__INTO__T: Into<#ty>>(mut self, value: __INTO__T) -> Self {
                         self.#ident(value);
@@ -886,12 +900,14 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 )
             } else {
                 quote!(
+					#doc
                     #[inline]
                     #vis fn #ident(&mut self, value: #ty) -> &mut Self {
                         self.#ident = value;
                         self
                     }
 
+					#doc
                     #[inline]
                     #vis fn #with_ident(mut self, value: #ty) -> Self {
                         self.#ident(value);

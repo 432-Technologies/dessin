@@ -1,4 +1,5 @@
-// #![warn(missing_docs)]
+#![warn(missing_docs)]
+#![allow(clippy::tabs_in_doc_comments)]
 
 //! **dessin is library aimed at building complex drawings, combine them, move them and export them as PDF or SVG.**
 //!
@@ -155,10 +156,7 @@ pub mod font {
 
 #[cfg(test)]
 mod tests {
-    use nalgebra::Rotation2;
-
-    use crate::prelude::{polygones::Octogon, *};
-    use core::f32::consts::FRAC_PI_8;
+    use crate::prelude::{polygons::Octogon, *};
 
     #[test]
     fn erased_type() {

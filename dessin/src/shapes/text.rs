@@ -1,5 +1,7 @@
 pub mod font;
 
+use std::cell::Cell;
+
 use super::{font::FontRef, BoundingBox, Curve, CurvePosition, ShapeBoundingBox, UnParticular};
 use crate::shapes::{Shape, ShapeOp};
 use na::{Point2, Unit, Vector2};
@@ -68,6 +70,7 @@ pub struct Text {
     pub on_curve: Option<Curve>,
     pub font_size: f32,
     pub font: Option<FontRef>,
+    bounding_box_cache: Cell<Option<BoundingBox<UnParticular>>>,
 }
 impl Default for Text {
     fn default() -> Self {
@@ -80,6 +83,7 @@ impl Default for Text {
             on_curve: Default::default(),
             font_size: 10.,
             font: Default::default(),
+            bounding_box_cache: Default::default(),
         }
     }
 }

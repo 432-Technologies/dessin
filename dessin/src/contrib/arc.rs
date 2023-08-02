@@ -2,8 +2,10 @@ use crate::prelude::*;
 use nalgebra::{Point2, Rotation2, Scale2, Transform2};
 use std::f32::consts::{FRAC_PI_2, PI};
 
+/// Arc between a start_angle and a end_angle, with a radius.
 #[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Arc {
+    /// [`ShapeOp`]
     #[local_transform]
     pub local_transform: Transform2<f32>,
     /// start angle in radian
@@ -12,11 +14,14 @@ pub struct Arc {
     pub end_angle: f32,
 }
 impl Arc {
+    /// Radius
     #[inline]
     pub fn radius(&mut self, radius: f32) -> &mut Self {
         self.scale(Scale2::new(radius, radius));
         self
     }
+
+    /// Radius
     #[inline]
     pub fn with_radius(mut self, radius: f32) -> Self {
         self.radius(radius);

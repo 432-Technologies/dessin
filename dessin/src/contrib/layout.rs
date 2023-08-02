@@ -166,7 +166,7 @@ mod tests {
 
     #[test]
     fn layout_of_polygons() {
-        let height_triangle = polygones::Triangle::default()
+        let height_triangle = polygons::Triangle::default()
             .as_shape()
             .local_bounding_box()
             .height();
@@ -175,7 +175,7 @@ mod tests {
 
         let shape = dessin!([
             VerticalLayout: (
-                of={dessin!(polygones::Triangle: () )}
+                of={dessin!(polygons::Triangle: () )}
                 of={dessin!(Circle: (radius={1.}))}
             )
         ]);
@@ -192,18 +192,23 @@ mod tests {
     fn layout_of_textbox() {
         let text = "test\nwhy\nnot";
         let gap = 2.;
-        let shape: Shape = dessin!(VerticalLayout: (
+
+        let first_text = dessin!(TextBox: #(
+            {text}
+            fill={Fill::Color(Color::BLACK)}
+            font_size={3.6}
+            align={TextAlign::Left}
+            width={115.}
+            line_spacing={2.}
+        ));
+
+        let bb1 = first_text.local_bounding_box();
+
+        let layout = dessin!(VerticalLayout: (
             start_from_bottom
             {gap}
             of={dessin!([
-                TextBox: #(
-                    {text}
-                    fill={Fill::Color(Color::BLACK)}
-                    font_size={3.6}
-                    align={TextAlign::Left}
-                    width={115.}
-                    line_spacing={2.}
-                ),
+                var(first_text): (),
                 Text: #(
                     text={"Notes"}
                     fill={Color::BLACK}
@@ -213,12 +218,15 @@ mod tests {
                 ),
             ])}
             translate={[-105. + 2., -148.5 + 5.]}
-        ))
-        .into();
+        ));
+
+        let shape = Shape::from(layout);
+
         let bounding_bb = shape.local_bounding_box();
+
         let height = bounding_bb.height();
         let min_y = bounding_bb.bottom_left().y;
-        // let width = bounding_bb.width();
+
         assert_float_absolute_eq!(height, 3. * gap + 3. * 3.6 + 3.6, 0.1);
         assert_float_absolute_eq!(min_y, -148.5 + 5., 0.1);
     }

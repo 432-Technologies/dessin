@@ -4,23 +4,31 @@ use nalgebra::Vector2;
 
 use crate::prelude::*;
 
+/// Center and scale a shape to be contain into a given bounding_box
 #[derive(Default, Shape)]
 pub struct Fit<T> {
+    /// The underlying shape
     #[shape(skip)]
     pub shape: T,
+
+    /// Should the underlying shape be stretch or not ?
     #[shape(bool)]
     pub keep_ratio: bool,
+
+    /// Container
     #[shape(skip)]
     pub bounding_box: Option<BoundingBox<Straight>>,
 }
 
 impl<T> Fit<T> {
+    /// Container
     #[inline]
     pub fn bounding_box(&mut self, bb: BoundingBox<Straight>) -> &mut Self {
         self.bounding_box = Some(bb);
         self
     }
 
+    /// Container
     #[inline]
     pub fn with_bounding_box(mut self, bb: BoundingBox<Straight>) -> Self {
         self.bounding_box(bb);

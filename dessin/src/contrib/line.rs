@@ -4,17 +4,21 @@ use crate::{
 };
 use nalgebra::{Point2, Transform2};
 
+/// Straight line between 2 points, from and to
 #[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Line {
+    /// [`ShapeOp`]
     #[local_transform]
     pub local_transform: Transform2<f32>,
+
+    /// Starting point
     #[shape(into)]
     from: Point2<f32>,
+
+    /// Ending point
     #[shape(into)]
     to: Point2<f32>,
 }
-
-impl Line {}
 
 impl From<Line> for Shape {
     #[inline]
