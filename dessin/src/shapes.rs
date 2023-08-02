@@ -446,14 +446,10 @@ impl BoundingBox<Straight> {
 /// Traits that defined whether a [`Shape`] can be bound by a [`BoundingBox`]
 pub trait ShapeBoundingBox {
     /// [`BoundingBox`] of a [`Shape`]
-    fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>>;
+    fn local_bounding_box(&self) -> BoundingBox<UnParticular>;
     /// Absolute [`BoundingBox`] from a transform
-    fn global_bounding_box(
-        &self,
-        parent_transform: &Transform2<f32>,
-    ) -> Option<BoundingBox<UnParticular>> {
-        self.local_bounding_box()
-            .map(|v| v.transform(parent_transform))
+    fn global_bounding_box(&self, parent_transform: &Transform2<f32>) -> BoundingBox<UnParticular> {
+        self.local_bounding_box().transform(parent_transform)
     }
 }
 
@@ -645,7 +641,7 @@ impl ShapeOp for Shape {
 }
 
 impl ShapeBoundingBox for Shape {
-    fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
+    fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
         match self {
             Shape::Group(Group {
                 local_transform,
@@ -653,10 +649,10 @@ impl ShapeBoundingBox for Shape {
                 ..
             }) => shapes
                 .iter()
-                .filter_map(|v| v.global_bounding_box(local_transform))
-                .map(|v| v.straigthen())
+                .map(|v| v.global_bounding_box(local_transform).straigthen())
                 .reduce(|acc, curr| BoundingBox::join(acc, curr))
-                .map(|v| v.as_unparticular()),
+                .unwrap_or_else(|| BoundingBox::zero())
+                .as_unparticular(),
             Shape::Style { shape, .. } => shape.local_bounding_box(),
             Shape::Ellipse(e) => e.local_bounding_box(),
             Shape::Image(i) => i.local_bounding_box(),
@@ -665,9 +661,7 @@ impl ShapeBoundingBox for Shape {
             Shape::Dynamic {
                 local_transform,
                 shaper,
-            } => shaper()
-                .local_bounding_box()
-                .map(|v| v.transform(local_transform)),
+            } => shaper().local_bounding_box().transform(local_transform),
         }
     }
 }

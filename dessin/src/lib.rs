@@ -183,7 +183,7 @@ mod tests {
                 radius={7.}
             ),
         ]);
-        let bb = group.local_bounding_box().unwrap();
+        let bb = group.local_bounding_box();
         assert_eq!(bb.width(), 14.);
         assert_eq!(bb.height(), 14.);
 
@@ -195,7 +195,7 @@ mod tests {
                 radius={7.}
             ),
         ]);
-        let bb = group.local_bounding_box().unwrap();
+        let bb = group.local_bounding_box();
         assert_eq!(bb.width(), 24.);
         assert_eq!(bb.height(), 24.);
 
@@ -207,7 +207,7 @@ mod tests {
                 radius={7.}
             ),
         ]);
-        let bb = group.local_bounding_box().unwrap();
+        let bb = group.local_bounding_box();
         assert_eq!(bb.width(), 30.);
         assert_eq!(bb.height(), 30.);
 
@@ -219,7 +219,7 @@ mod tests {
                 radius={7.}
             ),
         ]);
-        let bb = group.local_bounding_box().unwrap();
+        let bb = group.local_bounding_box();
         assert_eq!(bb.width(), 26.);
         assert_eq!(bb.height(), 26.);
     }

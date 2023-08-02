@@ -23,12 +23,15 @@ impl VerticalLayout {
     pub fn of<T: Into<Shape>>(&mut self, shape: T) -> &mut Self {
         match shape.into() {
             Shape::Group(Group {
-                local_transform: _,
+                local_transform,
                 shapes,
                 metadata,
             }) => {
                 self.metadata.extend(metadata);
-                self.shapes.extend(shapes);
+                self.shapes.extend(shapes.into_iter().map(|mut v| {
+                    v.transform(local_transform);
+                    v
+                }));
             }
             x => {
                 self.shapes.push(x);
@@ -89,18 +92,15 @@ impl From<VerticalLayout> for Shape {
             let mut shape = shape;
 
             let bb = shape
-                .local_bounding_box()
-                .map(BoundingBox::<UnParticular>::into_straight)
-                .unwrap_or(BoundingBox::zero());
+                .local_bounding_box().into_straight();
 
-             let shape_pos_y = if start_bottom {
-                 bb.bottom_right().y
-             } else {
-                 bb.top_right().y
-             };
+            let shape_pos_y = if start_bottom {
+                bb.bottom_right().y
+            } else {
+                bb.top_right().y
+            };
 
             shape.translate([0., direction * y - shape_pos_y]);
-
 
             y += bb.height() + gap;
 
@@ -169,7 +169,6 @@ mod tests {
         let height_triangle = polygones::Triangle::default()
             .as_shape()
             .local_bounding_box()
-            .unwrap()
             .height();
 
         assert_float_absolute_eq!(height_triangle, 2. * (3f32.sqrt() / 2.), 10e-5);
@@ -181,11 +180,46 @@ mod tests {
             )
         ]);
 
-        let bb = shape.local_bounding_box().unwrap();
+        let bb = shape.local_bounding_box();
 
         dbg!(shape);
 
         assert_eq!(bb.width(), 2.);
         assert_eq!(bb.height(), 2. + height_triangle);
+    }
+
+    #[test]
+    fn layout_of_textbox() {
+        let text = "test\nwhy\nnot";
+        let gap = 2.;
+        let shape: Shape = dessin!(VerticalLayout: (
+            start_from_bottom
+            {gap}
+            of={dessin!([
+                TextBox: #(
+                    {text}
+                    fill={Fill::Color(Color::BLACK)}
+                    font_size={3.6}
+                    align={TextAlign::Left}
+                    width={115.}
+                    line_spacing={2.}
+                ),
+                Text: #(
+                    text={"Notes"}
+                    fill={Color::BLACK}
+                    font_weight={FontWeight::Bold}
+                    font_size={3.6}
+                    align={TextAlign::Left}
+                ),
+            ])}
+            translate={[-105. + 2., -148.5 + 5.]}
+        ))
+        .into();
+        let bounding_bb = shape.local_bounding_box();
+        let height = bounding_bb.height();
+        let min_y = bounding_bb.bottom_left().y;
+        // let width = bounding_bb.width();
+        assert_float_absolute_eq!(height, 3. * gap + 3. * 3.6 + 3.6, 0.1);
+        assert_float_absolute_eq!(min_y, -148.5 + 5., 0.1);
     }
 }

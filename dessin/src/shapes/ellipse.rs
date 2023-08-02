@@ -102,12 +102,12 @@ impl ShapeOp for Ellipse {
 }
 
 impl ShapeBoundingBox for Ellipse {
-    fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
-        Some(BoundingBox::new(
+    fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
+        BoundingBox::new(
             self.local_transform() * Point2::new(-0.5, 0.5),
             self.local_transform() * Point2::new(0.5, 0.5),
             self.local_transform() * Point2::new(0.5, -0.5),
             self.local_transform() * Point2::new(-0.5, -0.5),
-        ))
+        )
     }
 }

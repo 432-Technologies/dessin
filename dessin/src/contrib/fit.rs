@@ -54,11 +54,12 @@ impl<T: Into<Shape>> From<Fit<T>> for Shape {
     ) -> Self {
         let shape: Shape = shape.into();
 
-        let shape_bb = shape.local_bounding_box().map(|v| v.straigthen());
+        let shape_bb = shape.local_bounding_box().straigthen();
 
-        let mut scale = match (shape_bb, bounding_box) {
-            (Some(bb1), Some(bb2)) => bb1.scale_difference(&bb2),
-            _ => [1., 1.].into(),
+        let mut scale = if let Some(bb) = bounding_box {
+            shape_bb.scale_difference(&bb)
+        } else {
+            Vector2::new(1., 1.)
         };
 
         if keep_ratio {
@@ -66,7 +67,7 @@ impl<T: Into<Shape>> From<Fit<T>> for Shape {
             scale = Vector2::new(v, v);
         }
 
-        let translation = shape_bb.map(|v| v.center()).unwrap_or_default();
+        let translation = shape_bb.center();
 
         shape.with_translate(-translation).with_resize(scale)
     }

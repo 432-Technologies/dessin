@@ -26,10 +26,10 @@ impl Keypoint {
         }
     }
 
-    pub fn bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
+    pub fn bounding_box(&self) -> BoundingBox<UnParticular> {
         match self {
             Keypoint::Curve(c) => c.local_bounding_box(),
-            Keypoint::Point(p) => Some(BoundingBox::at(*p).as_unparticular()),
+            Keypoint::Point(p) => BoundingBox::at(*p).as_unparticular(),
             Keypoint::Bezier(b) => {
                 let mut bb = BoundingBox::at(b.start_control)
                     .join(BoundingBox::at(b.end_control))
@@ -39,7 +39,7 @@ impl Keypoint {
                     bb = bb.join(BoundingBox::at(start))
                 }
 
-                Some(bb.as_unparticular())
+                bb.as_unparticular()
             }
         }
     }

@@ -145,12 +145,12 @@ fn bounding_box() {
     ];
 
     for (n, mut poly) in polys.into_iter() {
-        let bb = poly.local_bounding_box().unwrap();
+        let bb = poly.local_bounding_box();
         assert!(bb.width() <= 2., "{} <= 2. for {n}-gon", bb.width());
         assert!(bb.height() <= 2., "{} <= 2. for {n}-gon", bb.height());
 
         poly.rotate(Rotation2::new(FRAC_PI_4));
-        let bb = poly.local_bounding_box().unwrap();
+        let bb = poly.local_bounding_box();
         assert!(bb.width() <= 2., "{} <= 2. for {n}-gon", bb.width());
         assert!(bb.height() <= 2., "{} <= 2. for {n}-gon", bb.height());
         let bb = bb.straigthen();

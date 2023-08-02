@@ -267,7 +267,7 @@ pub trait ToImage {
 
 impl ToImage for Shape {
     fn rasterize(&self) -> Result<DynamicImage, ImageError> {
-        let bb = self.local_bounding_box().unwrap().straigthen();
+        let bb = self.local_bounding_box().straigthen();
 
         let center: Vector2<f32> = bb.center() - Point2::origin();
         let translation =

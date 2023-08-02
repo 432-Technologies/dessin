@@ -10,6 +10,7 @@ pub struct TextBox {
     pub line_spacing: f32,
     pub align: TextAlign,
     pub vertical_align: TextVerticalAlign,
+    #[shape(into)]
     pub text: String,
     pub font_weight: FontWeight,
     /// Dimension on the x-axis
@@ -156,4 +157,43 @@ impl From<TextBox> for Shape {
         ))
         .into()
     }
+}
+
+#[test]
+fn one_line() {
+    use assert_float_eq::*;
+
+    let text = "it should work pass famous last word";
+
+    let shape: Shape = dessin!(TextBox: #(
+        {text}
+        fill={Fill::Color(Color::BLACK)}
+        font_size={5.}
+        align={TextAlign::Left}
+        line_spacing={2.}
+    ))
+    .into();
+
+    let bb = shape.local_bounding_box();
+    assert_float_absolute_eq!(bb.height(), 5., 0.001);
+}
+
+#[test]
+fn two_lines() {
+    use assert_float_eq::*;
+
+    let text = "it should work pass\nfamous last word";
+
+    let shape: Shape = dessin!(TextBox: #(
+        {text}
+        fill={Fill::Color(Color::BLACK)}
+        font_size={5.}
+        align={TextAlign::Left}
+        line_spacing={2.}
+    ))
+    .into();
+
+    let bb = shape.local_bounding_box();
+
+    assert_float_absolute_eq!(bb.height(), 12., 0.0001);
 }

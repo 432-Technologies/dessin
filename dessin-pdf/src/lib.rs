@@ -222,9 +222,7 @@ impl ToPDF for Shape {
         options: PDFOptions,
     ) -> Result<(), PDFError> {
         let (width, height) = options.size.unwrap_or_else(|| {
-            let bb = self
-                .local_bounding_box()
-                .unwrap_or_else(|| BoundingBox::zero().as_unparticular());
+            let bb = self.local_bounding_box();
             (bb.width(), bb.height())
         });
 
@@ -240,9 +238,7 @@ impl ToPDF for Shape {
         mut options: PDFOptions,
     ) -> Result<PdfDocumentReference, PDFError> {
         let size = options.size.unwrap_or_else(|| {
-            let bb = self
-                .local_bounding_box()
-                .unwrap_or_else(|| BoundingBox::zero().as_unparticular());
+            let bb = self.local_bounding_box();
             (bb.width(), bb.height())
         });
         options.size = Some(size);

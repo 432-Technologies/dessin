@@ -211,14 +211,15 @@ impl From<Curve> for Shape {
 }
 
 impl ShapeBoundingBox for Curve {
-    fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
-        self.keypoints
+    fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
+        let bb = self
+            .keypoints
             .iter()
-            .filter_map(|v| v.bounding_box())
-            .map(|v| v.straigthen())
+            .map(|v| v.bounding_box().straigthen())
             .reduce(|acc, curr| acc.join(curr))
-            .map(|bb| bb.as_unparticular())
-            .map(|bb| bb.transform(&self.local_transform))
+            .unwrap_or_else(|| BoundingBox::zero());
+
+        bb.as_unparticular().transform(&self.local_transform)
     }
 }
 

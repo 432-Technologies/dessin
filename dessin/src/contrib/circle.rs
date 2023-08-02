@@ -81,17 +81,17 @@ pub fn bounding_box() {
 
     let mut circle: Shape = Circle::default().with_radius(10.).into();
 
-    let bb = circle.local_bounding_box().unwrap();
+    let bb = circle.local_bounding_box();
     assert_eq!(bb.width(), 20.);
     assert_eq!(bb.height(), 20.);
 
     let mut ellipse = circle.with_resize(Scale2::new(2., 0.5));
-    let bb = ellipse.local_bounding_box().unwrap();
+    let bb = ellipse.local_bounding_box();
     assert_eq!(bb.width(), 40.);
     assert_eq!(bb.height(), 10.);
 
     ellipse.rotate(Rotation2::new(FRAC_PI_2));
-    let bb = ellipse.local_bounding_box().unwrap();
+    let bb = ellipse.local_bounding_box();
     assert_eq!(bb.width(), 40.);
     assert_eq!(bb.height(), 10.);
     let bb = bb.straigthen();
@@ -99,7 +99,7 @@ pub fn bounding_box() {
     assert_float_absolute_eq!(bb.height(), 40., 10e-3);
 
     ellipse.rotate(Rotation2::new(-FRAC_PI_4));
-    let bb = ellipse.local_bounding_box().unwrap();
+    let bb = ellipse.local_bounding_box();
     assert_eq!(bb.width(), 40.);
     assert_eq!(bb.height(), 10.);
     let bb = bb.straigthen();
@@ -114,7 +114,7 @@ pub fn bounding_box_7() {
 
     let mut circle: Shape = Circle::default().with_radius(7.).into();
 
-    let bb = circle.local_bounding_box().unwrap();
+    let bb = circle.local_bounding_box();
     assert_eq!(bb.width(), 14.);
     assert_eq!(bb.height(), 14.);
 
@@ -123,7 +123,7 @@ pub fn bounding_box_7() {
             radius={7.}
         ),
     ]);
-    let bb = group.local_bounding_box().unwrap();
+    let bb = group.local_bounding_box();
     assert_eq!(bb.width(), 14.);
     assert_eq!(bb.height(), 14.);
 }

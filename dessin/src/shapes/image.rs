@@ -103,7 +103,7 @@ impl ShapeOp for Image {
 }
 
 impl ShapeBoundingBox for Image {
-    fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
+    fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
         let ImagePosition {
             top_left,
             top_right,
@@ -115,12 +115,7 @@ impl ShapeBoundingBox for Image {
             rotation: _,
             image: _,
         } = self.position(&Transform2::default());
-        Some(BoundingBox::new(
-            top_left,
-            top_right,
-            bottom_right,
-            bottom_left,
-        ))
+        BoundingBox::new(top_left, top_right, bottom_right, bottom_left)
     }
 }
 
@@ -159,7 +154,7 @@ mod tests {
     #[test]
     fn bounding_box() {
         let img = dessin!(Image: ());
-        let bb = img.local_bounding_box().unwrap();
+        let bb = img.local_bounding_box();
 
         assert_eq!(bb.width(), 1.);
         assert_eq!(bb.height(), 1.);

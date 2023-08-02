@@ -51,18 +51,16 @@ where
 {
     fn from(Anchor { shape, anchor }: Anchor<T>) -> Self {
         let shape: Shape = shape.into();
-        if let Some(bb) = shape.local_bounding_box() {
-            let bb = bb.straigthen();
-            let width = bb.width() / 2.;
-            let height = bb.height() / 2.;
 
-            let translate_x = -anchor.x * width;
-            let translate_y = -anchor.y * height;
+        let bb = shape.local_bounding_box().straigthen();
 
-            shape.with_translate(Translation2::new(translate_x, translate_y))
-        } else {
-            shape
-        }
+        let width = bb.width() / 2.;
+        let height = bb.height() / 2.;
+
+        let translate_x = -anchor.x * width;
+        let translate_y = -anchor.y * height;
+
+        shape.with_translate(Translation2::new(translate_x, translate_y))
     }
 }
 

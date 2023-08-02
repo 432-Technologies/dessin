@@ -374,10 +374,7 @@ impl ToSVG for Shape {
                 height,
             } => (x - width / 2., y - height / 2., width, height),
             ViewPort::AutoCentered => {
-                let bb = self
-                    .local_bounding_box()
-                    .unwrap_or_else(|| BoundingBox::zero().as_unparticular())
-                    .straigthen();
+                let bb = self.local_bounding_box().straigthen();
 
                 let mirror_bb = bb
                     .transform(&nalgebra::convert::<_, Transform2<f32>>(Scale2::new(
@@ -395,10 +392,7 @@ impl ToSVG for Shape {
                 )
             }
             ViewPort::AutoBoundingBox => {
-                let bb = self
-                    .local_bounding_box()
-                    .unwrap_or_else(|| BoundingBox::zero().as_unparticular())
-                    .straigthen();
+                let bb = self.local_bounding_box().straigthen();
 
                 (bb.top_left().x, -bb.top_left().y, bb.width(), bb.height())
             }

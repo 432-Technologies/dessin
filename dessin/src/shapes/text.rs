@@ -212,7 +212,7 @@ impl ShapeOp for Text {
 }
 
 impl ShapeBoundingBox for Text {
-    fn local_bounding_box(&self) -> Option<BoundingBox<UnParticular>> {
+    fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
         let fonts = crate::font::get(self.font.clone().unwrap_or_default());
         let raw_font = match fonts.get(FontWeight::Regular) {
             crate::font::Font::OTF(bytes) => bytes,
@@ -224,7 +224,7 @@ impl ShapeBoundingBox for Text {
 
         let width = size_of(&font, &self.text, self.font_size);
 
-        Some(BoundingBox::centered([width, self.font_size]).as_unparticular())
+        BoundingBox::centered([width, self.font_size]).as_unparticular()
     }
 }
 
