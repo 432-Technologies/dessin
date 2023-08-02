@@ -3,21 +3,25 @@ use nalgebra::Transform2;
 use crate::prelude::*;
 
 /// Display children on top of one another
-///
-/// `of={ Into<Shape> }`
-/// ``
 #[derive(Debug, Default, Clone, Shape)]
 pub struct VerticalLayout {
+    ///
     #[local_transform]
     pub local_transform: Transform2<f32>,
+
+    /// Shapes
     pub shapes: Vec<Shape>,
+
     #[shape(skip)]
-    pub start_bottom: bool,
+    start_bottom: bool,
+
+    /// Gap between each elements
     pub gap: f32,
-    pub metadata: Vec<(String, String)>,
+
+    #[shape(skip)]
+    metadata: Vec<(String, String)>,
 }
 impl VerticalLayout {
-    ///
     /// In the case of a Group, local_transform is discarded as the shapes will be rearranged in a vertical layout
     #[inline]
     pub fn of<T: Into<Shape>>(&mut self, shape: T) -> &mut Self {
@@ -40,34 +44,41 @@ impl VerticalLayout {
 
         self
     }
+
+    /// Chained version of [`VerticalLayout::of`]
     #[inline]
     pub fn with<T: Into<Shape>>(mut self, shape: T) -> Self {
         self.of(shape);
         self
     }
 
+    /// Iterator version of [`VerticalLayout::of`]
     #[inline]
     pub fn extend<T: IntoIterator<Item = Shape>>(&mut self, shapes: T) -> &mut Self {
         self.shapes.extend(shapes);
         self
     }
 
+    /// Flow from bottom to top
     #[inline]
     pub fn start_from_bottom(&mut self) -> &mut Self {
         self.start_bottom = true;
         self
     }
+    /// Flow from bottom to top
     #[inline]
     pub fn with_start_from_bottom(mut self) -> Self {
         self.start_from_bottom();
         self
     }
 
+    /// Flow from top to bottom (default)
     #[inline]
     pub fn start_from_top(&mut self) -> &mut Self {
         self.start_bottom = false;
         self
     }
+    /// Flow from top to bottom (default)
     #[inline]
     pub fn with_start_from_top(mut self) -> Self {
         self.start_from_top();

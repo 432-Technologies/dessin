@@ -1,28 +1,34 @@
 use crate::prelude::*;
 use nalgebra::{Point2, Scale2, Transform2};
 
+/// Rectangle
 #[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Rectangle {
+    /// [`ShapeOp`]
     #[local_transform]
     pub local_transform: Transform2<f32>,
 }
 impl Rectangle {
+    /// Width (x axis)
     #[inline]
     pub fn width(&mut self, width: f32) -> &mut Self {
         self.scale(Scale2::new(width, 1.));
         self
     }
+    /// Width (x axis)
     #[inline]
     pub fn with_width(mut self, width: f32) -> Self {
         self.width(width);
         self
     }
 
+    /// Height (y axis)
     #[inline]
     pub fn height(&mut self, height: f32) -> &mut Self {
         self.scale(Scale2::new(1., height));
         self
     }
+    /// Height (y axis)
     #[inline]
     pub fn with_height(mut self, height: f32) -> Self {
         self.height(height);

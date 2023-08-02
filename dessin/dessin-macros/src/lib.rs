@@ -8,7 +8,7 @@
 extern crate proc_macro;
 
 use proc_macro2::TokenStream;
-use quote::{__private::mk_ident, quote};
+use quote::{__private::mk_ident, quote, spanned::Spanned};
 use syn::{
     braced, bracketed, parenthesized,
     parse::{Parse, ParseStream},
@@ -810,7 +810,7 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-    let vis = input.vis;
+    // let vis = input.vis;
 
     let mut local_transform = None;
 
@@ -825,6 +825,8 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
             let mut skip = false;
             let mut into = false;
             let mut boolean = false;
+			let mut some = false;
+			let mut into_some = false;
 			let mut doc = None;
             for attr in field.attrs {
 				if attr.path().is_ident("doc") {
@@ -855,6 +857,14 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                             boolean = true;
                         }
 
+						if meta.path.is_ident("some") {
+                            some = true;
+                        }
+
+						if meta.path.is_ident("into_some") {
+                            into_some = true;
+                        }
+
                         Ok(())
                     })
                     .unwrap()
@@ -870,14 +880,14 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 quote!(
 					#doc
                     #[inline]
-                    #vis fn #ident(&mut self) -> &mut Self {
+                    pub fn #ident(&mut self) -> &mut Self {
                         self.#ident = true;
                         self
                     }
 
 					#doc
                     #[inline]
-                    #vis fn #with_ident(mut self) -> Self {
+                    pub fn #with_ident(mut self) -> Self {
                         self.#ident();
                         self
                     }
@@ -886,30 +896,98 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 quote!(
 					#doc
                     #[inline]
-                    #vis fn #ident<__INTO__T: Into<#ty>>(&mut self, value: __INTO__T) -> &mut Self {
+                    pub fn #ident<__INTO__T: Into<#ty>>(&mut self, value: __INTO__T) -> &mut Self {
                         self.#ident = value.into();
                         self
                     }
 
 					#doc
                     #[inline]
-                    #vis fn #with_ident<__INTO__T: Into<#ty>>(mut self, value: __INTO__T) -> Self {
+                    pub fn #with_ident<__INTO__T: Into<#ty>>(mut self, value: __INTO__T) -> Self {
                         self.#ident(value);
                         self
                     }
                 )
-            } else {
+            } else if some {
+				let err_msg = syn::Error::new(ty.__span(), "Not supported").to_compile_error();
+				
+				let Type::Path(syn::TypePath {path: syn::Path {segments, ..}, ..}) = ty else {
+					return err_msg;
+				};
+
+				let ty = match segments.iter().next() {
+					Some(syn::PathSegment  {arguments: syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments {args, ..}), ..}) => {
+						match args.iter().next() {
+							Some(syn::GenericArgument::Type(t)) => {
+								t
+							}
+							_ => return err_msg
+						}
+					}
+					_ => return err_msg
+				};
+
+				quote!(
+					#doc
+                    #[inline]
+                    pub fn #ident(&mut self, value: #ty) -> &mut Self {
+                        self.#ident = Some(value);
+                        self
+                    }
+
+					#doc
+                    #[inline]
+                    pub fn #with_ident(mut self, value: #ty) -> Self {
+                        self.#ident(value);
+                        self
+                    }
+				)
+			} else if into_some {
+				let err_msg = syn::Error::new(ty.__span(), "Not supported").to_compile_error();
+				
+				let Type::Path(syn::TypePath {path: syn::Path {segments, ..}, ..}) = ty else {
+					return err_msg;
+				};
+
+				let ty = match segments.iter().next() {
+					Some(syn::PathSegment  {arguments: syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments {args, ..}), ..}) => {
+						match args.iter().next() {
+							Some(syn::GenericArgument::Type(t)) => {
+								t
+							}
+							_ => return err_msg
+						}
+					}
+					_ => return err_msg
+				};
+
+				quote!(
+					#doc
+                    #[inline]
+                    pub fn #ident<__INTO__T: Into<#ty>>(&mut self, value: __INTO__T) -> &mut Self {
+                        self.#ident = Some(value.into());
+                        self
+                    }
+
+					#doc
+                    #[inline]
+                    pub fn #with_ident<__INTO__T: Into<#ty>>(mut self, value: __INTO__T) -> Self {
+                        self.#ident(value);
+                        self
+                    }
+				)
+			} else {
                 quote!(
 					#doc
                     #[inline]
-                    #vis fn #ident(&mut self, value: #ty) -> &mut Self {
+                    pub fn #ident(&mut self, value: #ty) -> &mut Self {
                         self.#ident = value;
                         self
                     }
 
 					#doc
                     #[inline]
-                    #vis fn #with_ident(mut self, value: #ty) -> Self {
+                    pub fn #with_ident(mut self, value: #ty) -> Self {
                         self.#ident(value);
                         self
                     }

@@ -2,23 +2,41 @@ use crate::{font::FontRef, prelude::*};
 use fontdue::{Font, FontSettings};
 use nalgebra::Transform2;
 
+/// Box of text, with auto wrapping text if width is too large
 #[derive(Debug, Clone, PartialEq, Shape)]
 pub struct TextBox {
+    /// [`ShapeOp`]
     #[local_transform]
     pub local_transform: Transform2<f32>,
+
+    /// Font size
     pub font_size: f32,
+
+    /// Spacing between each line
     pub line_spacing: f32,
+
+    /// Horizontal align
     pub align: TextAlign,
+
+    /// Vertical align
     pub vertical_align: TextVerticalAlign,
+
+    /// The text
     #[shape(into)]
     pub text: String,
+
+    /// Font weight
     pub font_weight: FontWeight,
+
     /// Dimension on the x-axis
     pub width: f32,
+
     /// Dimension on the y-axis
-    #[shape(skip)]
+    #[shape(some)]
     pub height: Option<f32>,
-    #[shape(skip)]
+
+    /// Font
+    #[shape(into_some)]
     pub font: Option<FontRef>,
 }
 impl Default for TextBox {
@@ -38,33 +56,13 @@ impl Default for TextBox {
     }
 }
 impl TextBox {
-    #[inline]
-    pub fn font<F: Into<FontRef>>(&mut self, font: F) -> &mut Self {
-        self.font = Some(font.into());
-        self
-    }
-    #[inline]
-    pub fn with_font<F: Into<FontRef>>(mut self, font: F) -> Self {
-        self.font(font);
-        self
-    }
-
-    #[inline]
-    pub fn height(&mut self, height: f32) -> &mut Self {
-        self.height = Some(height);
-        self
-    }
-    #[inline]
-    pub fn with_height(mut self, height: f32) -> Self {
-        self.height(height);
-        self
-    }
-
+    /// Remove height constraint (default)
     #[inline]
     pub fn no_height(&mut self) -> &mut Self {
         self.height = None;
         self
     }
+    /// Remove height constraint (default)
     #[inline]
     pub fn without_weight(mut self) -> Self {
         self.no_height();
