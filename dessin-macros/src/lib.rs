@@ -26,6 +26,7 @@ mod kw {
 struct Action {
     fn_name: Ident,
     arg: Option<Expr>,
+    is_call_optional: bool,
 }
 impl Parse for Action {
     fn parse(input: ParseStream) -> Result<Self> {
@@ -39,9 +40,11 @@ impl Parse for Action {
             Ok(Action {
                 fn_name: fn_name_and_value,
                 arg: Some(arg),
+                is_call_optional: false,
             })
         } else {
             let fn_name: Ident = input.parse()?;
+            let is_call_optional = input.parse::<Token![?]>().is_ok();
 
             match input.parse::<Token![=]>() {
                 Ok(_) => {
@@ -58,24 +61,33 @@ impl Parse for Action {
                     Ok(Action {
                         fn_name,
                         arg: Some(arg),
+                        is_call_optional
                     })
                 }
-                Err(_) => Ok(Action { fn_name, arg: None }),
+                Err(_) => Ok(Action { fn_name, arg: None, is_call_optional: false }),
             }
         }
     }
 }
 impl From<Action> for TokenStream {
-    fn from(Action { fn_name, arg }: Action) -> Self {
+    fn from(Action { fn_name, arg, is_call_optional }: Action) -> Self {
         let arg = if let Some(arg) = arg {
             quote!(#arg)
         } else {
             quote!()
         };
 
-        quote!(
-            __current_shape__.#fn_name(#arg);
-        )
+        if is_call_optional {
+            quote!(
+                if let Some(arg) = #arg {
+                    __current_shape__.#fn_name(arg);
+                }
+            )
+        } else {
+            quote!(
+                __current_shape__.#fn_name(#arg);
+            )
+        }
     }
 }
 
@@ -599,6 +611,10 @@ fn action_with_arg() {
     syn::parse_str::<Action>("my_fn={(1., 1.)}").unwrap();
 }
 #[test]
+fn action_with_opt() {
+    syn::parse_str::<Action>("my_fn?={Some((1., 1.))}").unwrap();
+}
+#[test]
 fn action_without_arg() {
     syn::parse_str::<Action>("my_fn").unwrap();
 }
@@ -650,16 +666,16 @@ fn for_loop_par() {
     )
     .unwrap();
 }
-// #[test]
-// fn for_loop_var() {
-//     syn::parse_str::<Dessin>(
-//         "for x in it {
-//             let y = x as f32 * 2.;
-//             dessin!(Circle: ( radius={y}) )
-//         }",
-//     )
-//     .unwrap();
-// }
+#[test]
+fn for_loop_var() {
+    syn::parse_str::<Dessin>(
+        "for x in it {
+            let y = x as f32 * 2.;
+            dessin!(Circle: ( radius={y}) )
+        }",
+    )
+    .unwrap();
+}
 // #[test]
 // fn for_loop_range_var() {
 //     syn::parse_str::<Dessin>(

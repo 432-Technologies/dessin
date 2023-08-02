@@ -6,13 +6,14 @@ members = [
 	"dessin-svg",
 	"dessin-pdf",
 	"dessin-image",
+	"dessin-macros",
 
 	# Internal
 	"examples",
 ]
 
 [workspace.package]
-version = "0.8.14-pre"
+version = "0.8.15-pre"
 license = "MIT"
 edition = "2021"
 repository = "https://github.com/432-Technologies/dessin"

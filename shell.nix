@@ -3,7 +3,7 @@ mkShell {
   buildInputs = [
     rustup
     clang
-    pkgconfig
+    pkg-config
     openssl
     cmake
     fontconfig
