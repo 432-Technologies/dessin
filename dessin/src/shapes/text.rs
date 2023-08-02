@@ -1,9 +1,8 @@
+/// Font storage
 pub mod font;
 
-use std::cell::Cell;
-
-use super::{font::FontRef, BoundingBox, Curve, CurvePosition, ShapeBoundingBox, UnParticular};
-use crate::shapes::{Shape, ShapeOp};
+use crate::prelude::*;
+use font::FontRef;
 use na::{Point2, Unit, Vector2};
 use nalgebra::{self as na, Transform2};
 
@@ -24,28 +23,41 @@ pub(crate) fn size_of(font: &fontdue::Font, s: &str, font_size: f32) -> f32 {
         .sum()
 }
 
+/// Weight of a font
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum FontWeight {
     #[default]
+    /// Regular
     Regular,
+    /// Bold
     Bold,
+    /// Italic
     Italic,
+    /// BoldItalic
     BoldItalic,
 }
 
+/// TextAlign
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum TextAlign {
     #[default]
+    /// Left
     Left,
+    /// Center
     Center,
+    /// Right
     Right,
 }
 
+/// TextVerticalAlign
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub enum TextVerticalAlign {
     #[default]
+    /// Bottom
     Bottom,
+    /// Center
     Center,
+    /// Top
     Top,
 }
 
@@ -60,17 +72,28 @@ pub struct TextPosition<'a> {
     pub font: &'a Option<FontRef>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Shape)]
 pub struct Text {
-    pub text: String,
+    /// [`ShapeOp`]
+    #[local_transform]
     pub local_transform: Transform2<f32>,
+
+    #[shape(into)]
+    pub text: String,
+
     pub align: TextAlign,
+
     pub vertical_align: TextVerticalAlign,
+
     pub font_weight: FontWeight,
+
+    #[shape(into_some)]
     pub on_curve: Option<Curve>,
+
     pub font_size: f32,
+
+    #[shape(into_some)]
     pub font: Option<FontRef>,
-    bounding_box_cache: Cell<Option<BoundingBox<UnParticular>>>,
 }
 impl Default for Text {
     fn default() -> Self {
@@ -83,22 +106,10 @@ impl Default for Text {
             on_curve: Default::default(),
             font_size: 10.,
             font: Default::default(),
-            bounding_box_cache: Default::default(),
         }
     }
 }
 impl Text {
-    #[inline]
-    pub fn font<F: Into<FontRef>>(&mut self, font: F) -> &mut Self {
-        self.font = Some(font.into());
-        self
-    }
-    #[inline]
-    pub fn with_font<F: Into<FontRef>>(mut self, font: F) -> Self {
-        self.font(font);
-        self
-    }
-
     #[inline]
     pub fn maybe_font<F: Into<FontRef>>(&mut self, font: Option<F>) -> &mut Self {
         self.font = font.map(Into::into).into();
@@ -107,66 +118,6 @@ impl Text {
     #[inline]
     pub fn with_maybe_font<F: Into<FontRef>>(mut self, font: Option<F>) -> Self {
         self.maybe_font(font);
-        self
-    }
-
-    #[inline]
-    pub fn text<T: ToString>(&mut self, text: T) -> &mut Self {
-        self.text = text.to_string();
-        self
-    }
-    #[inline]
-    pub fn with_text<T: ToString>(mut self, text: T) -> Self {
-        self.text(text);
-        self
-    }
-
-    #[inline]
-    pub fn align(&mut self, align: TextAlign) -> &mut Self {
-        self.align = align;
-        self
-    }
-    #[inline]
-    pub fn with_align(mut self, align: TextAlign) -> Self {
-        self.align(align);
-        self
-    }
-
-    #[inline]
-    pub fn vertical_align(&mut self, vertical_align: TextVerticalAlign) -> &mut Self {
-        self.vertical_align = vertical_align;
-        self
-    }
-    #[inline]
-    pub fn with_vertical_align(mut self, vertical_align: TextVerticalAlign) -> Self {
-        self.vertical_align(vertical_align);
-        self
-    }
-
-    #[inline]
-    pub fn font_weight(&mut self, font_weight: FontWeight) -> &mut Self {
-        self.font_weight = font_weight;
-        self
-    }
-    #[inline]
-    pub fn with_font_weight(mut self, font_weight: FontWeight) -> Self {
-        self.font_weight(font_weight);
-        self
-    }
-
-    #[inline]
-    pub fn font_size(&mut self, font_size: f32) -> &mut Self {
-        self.font_size = font_size;
-        self
-    }
-    #[inline]
-    pub fn with_font_size(mut self, font_size: f32) -> Self {
-        self.font_size(font_size);
-        self
-    }
-
-    pub fn on_curve(&mut self, curve: Curve) -> &mut Self {
-        self.on_curve = Some(curve);
         self
     }
 
@@ -200,18 +151,6 @@ impl Text {
 impl From<Text> for Shape {
     fn from(v: Text) -> Self {
         Shape::Text(v)
-    }
-}
-
-impl ShapeOp for Text {
-    fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
-        self.local_transform = transform_matrix * self.local_transform;
-        self
-    }
-
-    #[inline]
-    fn local_transform(&self) -> &Transform2<f32> {
-        &self.local_transform
     }
 }
 
