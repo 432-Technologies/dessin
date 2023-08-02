@@ -74,7 +74,7 @@ impl TextBox {
 impl From<TextBox> for Shape {
     fn from(
         TextBox {
-            local_transform: _,
+            local_transform,
             font_size,
             line_spacing,
             text,
@@ -152,6 +152,7 @@ impl From<TextBox> for Shape {
                 maybe_font={font_ref.clone()}
             )).into())}
             gap={line_spacing}
+            transform={local_transform}
         ))
         .into()
     }
