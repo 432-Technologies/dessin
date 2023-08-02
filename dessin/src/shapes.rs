@@ -537,7 +537,7 @@ pub enum Shape {
 }
 
 impl Shape {
-    fn get_or_mutate_as_group(&mut self) -> &mut Group {
+    pub fn get_or_mutate_as_group(&mut self) -> &mut Group {
         if let Shape::Group(g) = self {
             g
         } else {

@@ -194,3 +194,68 @@ fn two_lines() {
 
     assert_float_absolute_eq!(bb.height(), 12., 0.0001);
 }
+
+#[test]
+fn should_break() {
+    use assert_float_eq::*;
+    use nalgebra::{convert, Translation2};
+
+    let text = "it should work, famous last word";
+
+    let mut shape: Shape = dessin!(TextBox: (
+        {text}
+        font_size={5.}
+		width={40.}
+        align={TextAlign::Left}
+    ) -> ());
+
+    let shapes = shape.get_or_mutate_as_group().shapes.clone();
+    assert_eq!(shapes.len(), 2);
+
+    {
+        let Shape::Text(text) = shapes[0].clone() else {
+			unreachable!()
+		};
+
+        let lt = convert::<_, Transform2<f32>>(Translation2::new(0., (5. / 2.) * -1.));
+
+        assert_eq!(
+            text,
+            Text {
+                local_transform: lt,
+                text: "it should work,".to_string(),
+                align: TextAlign::Left,
+                vertical_align: Default::default(),
+                font_weight: Default::default(),
+                on_curve: None,
+                font_size: 5.,
+                font: None
+            }
+        );
+    }
+
+    {
+        let Shape::Text(text) = shapes[1].clone() else {
+			unreachable!()
+		};
+
+        let lt = convert::<_, Transform2<f32>>(Translation2::new(0., ((5. / 2.) + 5.) * -1.));
+
+        assert_eq!(
+            text,
+            Text {
+                local_transform: lt,
+                text: "famous last word".to_string(),
+                align: TextAlign::Left,
+                vertical_align: Default::default(),
+                font_weight: Default::default(),
+                on_curve: None,
+                font_size: 5.,
+                font: None
+            }
+        );
+    }
+
+    let bb = shape.local_bounding_box();
+    assert_float_absolute_eq!(bb.height(), 10., 0.001);
+}
