@@ -65,8 +65,8 @@ impl Image {
         let bottom_left = transform * Point2::new(-0.5, -0.5);
         let center = transform * Point2::origin();
 
-        let rot_dir = Unit::new_normalize(transform * Vector2::x());
-        let rotation = rot_dir.angle(&Vector2::x());
+        let rot_dir = transform * Vector2::x();
+        let rotation = rot_dir.y.atan2(rot_dir.x);
 
         ImagePosition {
             center,

@@ -239,7 +239,7 @@ impl Exporter for SVGExporter {
             write!(
                 self.acc,
                 r#" transform="rotate({rot})" "#,
-                rot = -rotation.to_degrees()
+                rot = (-rotation.to_degrees() + 360.) % 360.
             )?;
         }
 
@@ -327,7 +327,7 @@ impl Exporter for SVGExporter {
             y = reference_start.y,
         )?;
 
-        let rotation = direction.angle(&Vector2::new(1., 0.));
+        let rotation = direction.y.atan2(direction.x);
         if rotation.abs() > 10e-6 {
             write!(
                 self.acc,

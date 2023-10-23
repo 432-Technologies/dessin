@@ -63,7 +63,7 @@ impl Ellipse {
         let semi_major_axis = transform * Vector2::new(0.5, 0.);
         let semi_minor_axis = transform * Vector2::new(0., 0.5);
 
-        let rotation = Unit::new_normalize(semi_major_axis).angle(&Vector2::x());
+        let rotation = semi_major_axis.y.atan2(semi_major_axis.x);
 
         EllipsePosition {
             center,
