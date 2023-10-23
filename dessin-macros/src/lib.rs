@@ -15,7 +15,7 @@ use syn::{
     parse_macro_input,
     punctuated::Punctuated,
     token::{Brace, Bracket},
-    DataStruct, DeriveInput, Expr, Fields, FieldsNamed, Ident, Result, Token, Type,
+    DataStruct, DeriveInput, Expr, Fields, FieldsNamed, Ident, Result, Token, Type, ExprLet,
 };
 
 mod kw {
@@ -296,24 +296,32 @@ impl From<DessinGroup> for TokenStream {
 }
 
 enum DessinArg {
+    Let(ExprLet),
     Ident(Ident),
     Expr(Expr),
 }
 impl Parse for DessinArg {
     fn parse(input: ParseStream) -> Result<Self> {
+        if input.peek(Token![let]) {
+            let let_exp: ExprLet = input.parse()?;
+            return Ok(DessinArg::Let(let_exp))
+        }
+
         let is_ident = input.peek(Ident) && input.peek2(Brace);
         if is_ident {
             let ident: Ident = input.parse()?;
-            Ok(DessinArg::Ident(ident))
-        } else {
-            let expr: Expr = input.parse()?;
-            Ok(DessinArg::Expr(expr))
-        }
+            return Ok(DessinArg::Ident(ident))
+        } 
+        
+        let expr: Expr = input.parse()?;
+        Ok(DessinArg::Expr(expr))
+        
     }
 }
 impl From<DessinArg> for TokenStream {
     fn from(dessin_arg: DessinArg) -> Self {
         match dessin_arg {
+            DessinArg::Let (v) => quote!(#v),
             DessinArg::Ident(v) => quote!(#v),
             DessinArg::Expr(v) => quote!(#v),
         }
@@ -741,6 +749,15 @@ fn combined_group_erased() {
 fn simple_if() {
     syn::parse_str::<Dessin>(
         "if my_condition {
+            Circle: ()
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn if_let() {
+    syn::parse_str::<Dessin>(
+        "if let Some(x) = my_condition {
             Circle: ()
         }",
     )
