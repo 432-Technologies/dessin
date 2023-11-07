@@ -14,6 +14,7 @@ auto_import! {
     fit,
     layout,
     line,
+    padding,
     polygone,
     rectangle,
     textbox,
