@@ -1,5 +1,11 @@
 [package]
+authors = [
+    "Olivier Lemoine <olivier.lemoine@432technologies.com>",
+    "Francois Morillon <francois.morillon@432technologies.com>",
+]
 description = "Build complex drawing for PDF, SVG, ..."
+categories = ["graphics", "gui", "rendering", "template-engine"]
+keywords = ["graphics", "draw", "layout"]
 edition = "2021"
 license = "MIT"
 name = "dessin"
@@ -12,7 +18,7 @@ default-font = []
 
 [dependencies]
 dessin-macros = { path = "../dessin-macros", version = "0.8.17-pre" }
-fontdue = "^0.7.3"
+fontdue = "^0.8.0"
 image = "^0.24.6"
 nalgebra = "^0.32.2"
 once_cell = "^1.18.0"

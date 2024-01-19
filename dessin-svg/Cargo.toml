@@ -1,9 +1,11 @@
 [package]
 authors = [
-	"Olivier Lemoine <olivier@le-moine.fr>",
-	"Francois Morillon <francois.morillon@yahoo.fr>",
+	"Olivier Lemoine <olivier.lemoine@432technologies.com>",
+	"Francois Morillon <francois.morillon@432technologies.com>",
 ]
 description = "Drawing SVG"
+categories = ["graphics", "gui", "rendering", "template-engine"]
+keywords = ["graphics", "draw", "layout", "svg"]
 edition = "2021"
 license = "MIT"
 name = "dessin-svg"
