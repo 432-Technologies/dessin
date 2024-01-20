@@ -61,16 +61,26 @@ impl Parse for Action {
                     Ok(Action {
                         fn_name,
                         arg: Some(arg),
-                        is_call_optional
+                        is_call_optional,
                     })
                 }
-                Err(_) => Ok(Action { fn_name, arg: None, is_call_optional: false }),
+                Err(_) => Ok(Action {
+                    fn_name,
+                    arg: None,
+                    is_call_optional: false,
+                }),
             }
         }
     }
 }
 impl From<Action> for TokenStream {
-    fn from(Action { fn_name, arg, is_call_optional }: Action) -> Self {
+    fn from(
+        Action {
+            fn_name,
+            arg,
+            is_call_optional,
+        }: Action,
+    ) -> Self {
         let arg = if let Some(arg) = arg {
             quote!(#arg)
         } else {

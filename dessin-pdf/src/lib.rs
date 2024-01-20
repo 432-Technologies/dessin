@@ -4,7 +4,7 @@ use dessin::{
 };
 use nalgebra::Translation2;
 use once_cell::sync::OnceCell;
-use printpdf::{Mm, PdfDocument, PdfDocumentReference, PdfLayerReference};
+use printpdf::{Line, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference, Point};
 use std::{
     fmt,
     sync::{Arc, RwLock},
@@ -55,7 +55,7 @@ impl Exporter for PDFExporter {
     ) -> Result<(), Self::Error> {
         if let Some(fill) = fill {
             let (r, g, b) = match fill {
-                Fill::Color(c) => c.as_rgb_f64(),
+                Fill::Color(c) => c.as_rgb_f32(),
             };
 
             self.layer
@@ -69,7 +69,7 @@ impl Exporter for PDFExporter {
 
         if let Some(stroke) = stroke {
             let ((r, g, b), w) = match stroke {
-                Stroke::Full { color, width } => (color.as_rgb_f64(), width),
+                Stroke::Full { color, width } => (color.as_rgb_f32(), width),
                 Stroke::Dashed {
                     color,
                     width,
@@ -86,7 +86,7 @@ impl Exporter for PDFExporter {
                         gap_3: None,
                     });
 
-                    (color.as_rgb_f64(), width)
+                    (color.as_rgb_f32(), width)
                 }
             };
 
@@ -99,7 +99,7 @@ impl Exporter for PDFExporter {
                 }));
 
             self.layer
-                .set_outline_thickness(printpdf::Mm(w as f64).into_pt().0);
+                .set_outline_thickness(printpdf::Mm(w).into_pt().0);
         }
 
         Ok(())
@@ -162,29 +162,77 @@ impl Exporter for PDFExporter {
         printpdf::Image::from_dynamic_image(image).add_to_layer(
             self.layer.clone(),
             printpdf::ImageTransform {
-                translate_x: Some(Mm(bottom_left.x as f64)),
-                translate_y: Some(Mm(bottom_left.y as f64)),
+                translate_x: Some(Mm(bottom_left.x)),
+                translate_y: Some(Mm(bottom_left.y)),
                 rotate: Some(printpdf::ImageRotation {
-                    angle_ccw_degrees: rotation.to_degrees() as f64,
+                    angle_ccw_degrees: rotation.to_degrees(),
                     rotation_center_x: printpdf::Px((width_px / 2) as usize),
                     rotation_center_y: printpdf::Px((height_px / 2) as usize),
                 }),
-                scale_x: Some(scale_width as f64),
-                scale_y: Some(scale_height as f64),
-                dpi: Some(dpi as f64),
+                scale_x: Some(scale_width),
+                scale_y: Some(scale_height),
+                dpi: Some(dpi),
             },
         );
 
         Ok(())
     }
 
-    fn export_curve(&mut self, _curve: CurvePosition) -> Result<(), Self::Error> {
-        // TODO
+    fn export_curve(&mut self, curve: CurvePosition) -> Result<(), Self::Error> {
+        let points1 = curve
+            .keypoints
+            .iter()
+            .enumerate()
+            .flat_map(|(i, key_point)| {
+                let next_control = matches!(curve.keypoints.get(i + 1), Some(KeypointPosition::Bezier(b)) if b.start.is_none());
+                match key_point {
+                    KeypointPosition::Point(p) => {
+                        vec![(Point::new(Mm(p.x), Mm(p.y)), next_control)]
+                    }
+                    KeypointPosition::Bezier(b) => {
+                        let mut res = vec![];
+                        if let Some(start) = b.start {
+                            res.push((Point::new(Mm(start.x), Mm(start.y)), true));
+                        }
+                        res.append(&mut vec![
+                                (
+                                    Point::new(Mm(b.start_control.x), Mm(b.start_control.y)),
+                                    true,
+                                ),
+                                (Point::new(Mm(b.end_control.x), Mm(b.end_control.y)), false),
+                                (Point::new(Mm(b.end.x), Mm(b.end.y)), next_control),
+                            ]);
+                        res
+                    }
+                }
+            })
+            .collect();
+
+        let line = Line {
+            points: points1,
+            is_closed: curve.closed,
+        };
+        self.layer.add_line(line);
         Ok(())
     }
 
-    fn export_text(&mut self, _text: TextPosition) -> Result<(), Self::Error> {
-        // TODO
+    fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> {
+        let fonts = FONT_HOLDER
+            .get()
+            .expect("fonts wasn't initialized before exports?");
+        let font = &fonts.read().unwrap()[0].regular;
+        self.layer.begin_text_section();
+        // if let Some(font) = text.font {
+        self.layer.set_font(&font, 33.0);
+        self.layer.write_text(text.text.clone(), &font);
+        self.layer
+            .set_text_cursor(Mm(text.reference_start.x), Mm(text.reference_start.y));
+        self.layer.set_line_height(text.font_size);
+        self.layer.set_word_spacing(3000.0);
+        self.layer.set_character_spacing(10.0);
+        self.layer
+            .set_text_rendering_mode(printpdf::TextRenderingMode::Stroke);
+        self.layer.end_text_section();
         Ok(())
     }
 }
@@ -237,14 +285,11 @@ impl ToPDF for Shape {
         &self,
         mut options: PDFOptions,
     ) -> Result<PdfDocumentReference, PDFError> {
-        let size = options.size.unwrap_or_else(|| {
+        let size = options.size.get_or_insert_with(|| {
             let bb = self.local_bounding_box();
             (bb.width(), bb.height())
         });
-        options.size = Some(size);
-
-        let (doc, page, layer) =
-            PdfDocument::new("", Mm(size.0 as f64), Mm(size.1 as f64), "Layer 1");
+        let (doc, page, layer) = PdfDocument::new("", Mm(size.0), Mm(size.1), "Layer 1");
         let layer = doc.get_page(page).get_layer(layer);
 
         for dessin::font::FontGroup {
