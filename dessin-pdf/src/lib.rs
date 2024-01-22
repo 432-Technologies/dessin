@@ -1,17 +1,18 @@
 use dessin::{
     export::{Export, Exporter},
+    font::FontGroup,
     prelude::*,
 };
 use nalgebra::Translation2;
-use once_cell::sync::OnceCell;
-use printpdf::{Line, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference, Point};
-use std::{
-    fmt,
-    sync::{Arc, RwLock},
+use printpdf::{
+    BuiltinFont, Font, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference,
+    PdfLayerReference, Point,
 };
-
-static FONT_HOLDER: OnceCell<Arc<RwLock<Vec<dessin::font::FontGroup<printpdf::IndirectFontRef>>>>> =
-    OnceCell::new();
+use std::{
+    collections::HashMap,
+    fmt,
+    sync::{Arc, OnceLock, RwLock},
+};
 
 #[derive(Debug)]
 pub enum PDFError {
@@ -31,17 +32,27 @@ impl From<printpdf::Error> for PDFError {
     }
 }
 
+type PDFFontHolder = HashMap<String, FontGroup<IndirectFontRef>>;
+
 #[derive(Default)]
 pub struct PDFOptions {
     pub size: Option<(f32, f32)>,
+    pub fonts: PDFFontHolder,
 }
 
 pub struct PDFExporter {
     layer: PdfLayerReference,
+    fonts: PDFFontHolder,
 }
 impl PDFExporter {
-    pub fn new(layer: PdfLayerReference) -> Self {
-        PDFExporter { layer }
+    pub fn new(layer: PdfLayerReference, fonts: PDFFontHolder) -> Self {
+        PDFExporter { layer, fonts }
+    }
+    pub fn new_with_default_font(layer: PdfLayerReference) -> Self {
+        PDFExporter {
+            layer,
+            fonts: PDFFontHolder::default(),
+        }
     }
 }
 
@@ -217,14 +228,20 @@ impl Exporter for PDFExporter {
     }
 
     fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> {
-        let fonts = FONT_HOLDER
-            .get()
-            .expect("fonts wasn't initialized before exports?");
-        let font = &fonts.read().unwrap()[0].regular;
+        let font = text
+            .font
+            .as_ref().map(|f| f.font_family()).unwrap_or("default");
+        let font = self.fonts.get(font)
+            .and_then(|font| match text.font_weight {
+                FontWeight::Regular => Some(font.regular.clone()),
+                FontWeight::Bold => font.bold.clone(),
+                FontWeight::Italic => font.italic.clone(),
+                FontWeight::BoldItalic => font.bold_italic.clone(),
+            })
+            .unwrap();
         self.layer.begin_text_section();
-        // if let Some(font) = text.font {
-        self.layer.set_font(&font, 33.0);
-        self.layer.write_text(text.text.clone(), &font);
+        self.layer.set_font(&font, text.font_size);
+        self.layer.write_text(text.text, &font);
         self.layer
             .set_text_cursor(Mm(text.reference_start.x), Mm(text.reference_start.y));
         self.layer.set_line_height(text.font_size);
@@ -273,8 +290,7 @@ impl ToPDF for Shape {
             let bb = self.local_bounding_box();
             (bb.width(), bb.height())
         });
-
-        let mut exporter = PDFExporter::new(layer);
+        let mut exporter = PDFExporter::new(layer, options.fonts);
         let translation = Translation2::new(width / 2., height / 2.);
         let parent_transform = nalgebra::convert(translation);
 
@@ -291,34 +307,32 @@ impl ToPDF for Shape {
         });
         let (doc, page, layer) = PdfDocument::new("", Mm(size.0), Mm(size.1), "Layer 1");
         let layer = doc.get_page(page).get_layer(layer);
+        let default_regular = doc.add_builtin_font(BuiltinFont::Helvetica).unwrap();
+        let default_bold = doc.add_builtin_font(BuiltinFont::HelveticaBold).unwrap();
+        let default_italic = doc.add_builtin_font(BuiltinFont::HelveticaOblique).unwrap();
+        let default_bold_italic = doc
+            .add_builtin_font(BuiltinFont::HelveticaBoldOblique)
+            .unwrap();
+        options.fonts.insert(
+            "default".to_string(),
+            dessin::font::FontGroup {
+                regular: default_regular,
+                bold: Some(default_bold),
+                bold_italic: Some(default_bold_italic),
+                italic: Some(default_italic),
+            },
+        );
 
-        for dessin::font::FontGroup {
-            regular,
-            bold,
-            italic,
-            bold_italic,
-        } in dessin::font::fonts().values()
+        for (
+            key,
+            dessin::font::FontGroup {
+                regular,
+                bold,
+                italic,
+                bold_italic,
+            },
+        ) in dessin::font::fonts()
         {
-            // fn find_builtin_font(f: &str) -> Result<printpdf::BuiltinFont, PDFError> {
-            //     match f {
-            //         "TimesRoman" => Ok(printpdf::BuiltinFont::TimesRoman),
-            //         "TimesBold" => Ok(printpdf::BuiltinFont::TimesBold),
-            //         "TimesItalic" => Ok(printpdf::BuiltinFont::TimesItalic),
-            //         "TimesBoldItalic" => Ok(printpdf::BuiltinFont::TimesBoldItalic),
-            //         "Helvetica" => Ok(printpdf::BuiltinFont::Helvetica),
-            //         "HelveticaBold" => Ok(printpdf::BuiltinFont::HelveticaBold),
-            //         "HelveticaOblique" => Ok(printpdf::BuiltinFont::HelveticaOblique),
-            //         "HelveticaBoldOblique" => Ok(printpdf::BuiltinFont::HelveticaBoldOblique),
-            //         "Courier" => Ok(printpdf::BuiltinFont::Courier),
-            //         "CourierOblique" => Ok(printpdf::BuiltinFont::CourierOblique),
-            //         "CourierBold" => Ok(printpdf::BuiltinFont::CourierBold),
-            //         "CourierBoldOblique" => Ok(printpdf::BuiltinFont::CourierBoldOblique),
-            //         "Symbol" => Ok(printpdf::BuiltinFont::Symbol),
-            //         "ZapfDingbats" => Ok(printpdf::BuiltinFont::ZapfDingbats),
-            //         _ => Err(PDFError::UnknownBuiltinFont(f.to_string())),
-            //     }
-            // }
-
             let regular = match regular {
                 // dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
                 dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
@@ -355,16 +369,14 @@ impl ToPDF for Shape {
                 }
                 None => None,
             };
-
-            let fh = FONT_HOLDER.get_or_init(|| Arc::new(RwLock::new(vec![])));
-            fh.write().unwrap().push(dessin::font::FontGroup {
+            let fonts_group = dessin::font::FontGroup {
                 regular,
                 bold,
                 bold_italic,
                 italic,
-            });
+            };
+            options.fonts.insert(key, fonts_group);
         }
-
         self.write_to_pdf_with_options(layer, options)?;
 
         Ok(doc)

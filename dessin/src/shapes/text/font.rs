@@ -57,6 +57,9 @@ impl FontRef {
             FontWeight::BoldItalic => format!("{}BoldItalic", self.0),
         }
     }
+    pub fn font_family(&self) -> &str {
+        &self.0
+    }
 }
 impl Default for FontRef {
     fn default() -> Self {
