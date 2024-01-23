@@ -1,18 +1,26 @@
 [package]
 authors = [
-	"Olivier Lemoine <olivier@le-moine.fr>",
-	"Francois Morillon <francois.morillon@yahoo.fr>",
+	"Olivier Lemoine <olivier.lemoine@432technologies.com>",
+	"Francois Morillon <francois.morillon@432technologies.com>",
 ]
 description = "Dessin into image"
+categories = [
+	"graphics",
+	"gui",
+	"rendering",
+	"template-engine",
+	"multimedia::images",
+]
+keywords = ["graphics", "draw", "layout", "image"]
 edition = "2021"
 license = "MIT"
 name = "dessin-image"
 repository = "https://github.com/432-technologies/dessin"
-version = "0.8.16-pre"
+version = "0.8.17-pre"
 
 [dependencies]
 data-encoding = "^2.3.3"
-dessin = { version = "0.8.16-pre", path = "../dessin" }
+dessin = { version = "0.8.17-pre", path = "../dessin" }
 font-kit = "0.11.0"
 image = "^0.24.6"
 imageproc = "^0.23.0"
