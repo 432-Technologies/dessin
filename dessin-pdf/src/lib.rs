@@ -5,7 +5,7 @@ use dessin::{
 };
 use nalgebra::Translation2;
 use printpdf::{
-    BuiltinFont, Font, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference,
+    BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference,
     PdfLayerReference, Point,
 };
 use std::{
@@ -230,8 +230,12 @@ impl Exporter for PDFExporter {
     fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> {
         let font = text
             .font
-            .as_ref().map(|f| f.font_family()).unwrap_or("default");
-        let font = self.fonts.get(font)
+            .as_ref()
+            .map(|f| f.font_family())
+            .unwrap_or("default");
+        let font = self
+            .fonts
+            .get(font)
             .and_then(|font| match text.font_weight {
                 FontWeight::Regular => Some(font.regular.clone()),
                 FontWeight::Bold => font.bold.clone(),
@@ -241,14 +245,24 @@ impl Exporter for PDFExporter {
             .unwrap();
         self.layer.begin_text_section();
         self.layer.set_font(&font, text.font_size);
+        // if let Some(te) = text.on_curve {
+        //     self.layer.add_polygon()
+        //     todo!()
+        // }
+        let rotation = text.direction.y.atan2(text.direction.x).to_degrees();
+        self.layer
+            .set_text_rendering_mode(printpdf::TextRenderingMode::Fill);
+        self.layer
+            .set_text_matrix(printpdf::TextMatrix::TranslateRotate(
+                Mm(text.reference_start.x).into_pt(),
+                Mm(text.reference_start.y).into_pt(),
+                rotation,
+            ));
+        
+        // self.layer.set_line_height(text.font_size);
+        // self.layer.set_word_spacing(3000.0);
+        // self.layer.set_character_spacing(10.0);
         self.layer.write_text(text.text, &font);
-        self.layer
-            .set_text_cursor(Mm(text.reference_start.x), Mm(text.reference_start.y));
-        self.layer.set_line_height(text.font_size);
-        self.layer.set_word_spacing(3000.0);
-        self.layer.set_character_spacing(10.0);
-        self.layer
-            .set_text_rendering_mode(printpdf::TextRenderingMode::Stroke);
         self.layer.end_text_section();
         Ok(())
     }
