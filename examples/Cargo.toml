@@ -21,3 +21,7 @@ path = "./red_circle_with_macro.rs"
 [[example]]
 name = "animation"
 path = "./animation.rs"
+
+[[example]]
+name = "red_circle_without_macro"
+path = "./red_circle_without_macro.rs"

@@ -8,10 +8,9 @@ use dessin::{
     prelude::*,
 };
 
-fn main(){
-
+fn main() {
     // create a circle with radius of 11
-    let circle:Shape = Circle::default().with_radius(11.).into();
+    let circle = Circle::default().with_radius(11.);
 
     let mut circle = Style::new(circle);
 
@@ -19,8 +18,16 @@ fn main(){
     circle.fill(Fill::Color(rgb(255, 0, 0)));
 
     // creates a grey margin of 0.2 (0.1 outside and 0.1 inside the circle)
-    circle.stroke(Stroke::Full { color: rgb(96, 96, 96), width: 0.2 });
+    circle.stroke(Stroke::Full {
+        color: rgb(96, 96, 96),
+        width: 0.2,
+    });
+
+    let circle = Style::new(circle).with_fill(Fill::Color(rgb(255, 0, 0))).with_stroke(Stroke::Full {
+        color: rgb(96, 96, 96),
+        width: 0.2,
+    });
     
     //print in svg version
-    fs::write("./target/432.svg", circle.to_svg().unwrap()).unwrap();  
+    fs::write("./target/432.svg", Shape::from(circle).to_svg().unwrap()).unwrap();
 }
