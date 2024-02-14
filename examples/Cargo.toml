@@ -15,8 +15,8 @@ name = "432technologies"
 path = "./432technologies.rs"
 
 [[example]]
-name = "simple"
-path = "./simple.rs"
+name = "red_circle_with_macro"
+path = "./red_circle_with_macro.rs"
 
 [[example]]
 name = "animation"
