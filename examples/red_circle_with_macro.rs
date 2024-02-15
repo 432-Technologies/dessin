@@ -4,7 +4,7 @@ use dessin::prelude::*;
 use dessin_svg::ToSVG;
 
 use dessin::{
-    nalgebra::{Point2, Rotation2, Translation2},
+    nalgebra::{Rotation2,},
 };
 
 fn main(){
@@ -12,7 +12,7 @@ fn main(){
     let circle: Shape = dessin!([
         Circle: #(
 
-        // choose a radius of 11
+        // chooses a radius of 11
         radius={11.}  //11. is like a proportion of the box allowed
 
         // paints the inside of the circle in red
@@ -26,6 +26,6 @@ fn main(){
 
    ]);
 
-   // print in svg version
-   fs::write("./target/432.svg", circle.to_svg().unwrap()).unwrap();
+   // prints in svg version
+   fs::write("./out/red_circle.svg", circle.to_svg().unwrap()).unwrap();
 }

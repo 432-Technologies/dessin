@@ -3,13 +3,8 @@ use std::fs;
 use dessin::prelude::*;
 use dessin_svg::ToSVG;
 
-use dessin::{
-    nalgebra::{Point2, Rotation2, Translation2},
-    prelude::*,
-};
-
 fn main() {
-    // create a circle with radius of 11
+    // creates a circle with radius of 11
     let circle = Circle::default().with_radius(11.);
 
     let mut circle = Style::new(circle);
@@ -28,6 +23,6 @@ fn main() {
         width: 0.2,
     });
     
-    //print in svg version
-    fs::write("./target/432.svg", Shape::from(circle).to_svg().unwrap()).unwrap();
+    //prints in svg version
+    fs::write("./out/red_circle.svg", Shape::from(circle).to_svg().unwrap()).unwrap();
 }
