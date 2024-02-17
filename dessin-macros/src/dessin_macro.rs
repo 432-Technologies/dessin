@@ -4,9 +4,8 @@ use syn::{
     braced, bracketed, parenthesized,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    token::{Bracket, Comma, Paren},
-    Expr, ExprAssign, ExprForLoop, ExprIndex, ExprParen, ExprStruct, FieldValue, Path, Result,
-    Token,
+    token::{Bracket, Comma},
+    Expr, ExprAssign, ExprForLoop, Path, Result, Token,
 };
 
 mod kw {
@@ -21,7 +20,7 @@ enum Action {
 impl Parse for Action {
     fn parse(input: ParseStream) -> Result<Self> {
         match input.fork().parse::<ExprAssign>() {
-            Ok(v) => input.parse().map(Action::WithArgs),
+            Ok(_) => input.parse().map(Action::WithArgs),
             Err(_) => input.parse().map(Action::WithoutArgs),
         }
     }
@@ -30,9 +29,9 @@ impl From<Action> for TokenStream {
     fn from(value: Action) -> Self {
         match value {
             Action::WithArgs(ExprAssign {
-                attrs,
+                attrs: _,
                 left,
-                eq_token,
+                eq_token: _,
                 right,
             }) => quote!(__current_shape__.#left(#right);),
             Action::WithoutArgs(member) => quote!(__current_shape__.#member();),
@@ -355,6 +354,6 @@ impl From<Dessin> for TokenStream {
             }
         }
 
-        quote!(#base)
+        quote!(::dessin::prelude::Shape::from(#base))
     }
 }

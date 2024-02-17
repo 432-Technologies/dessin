@@ -134,9 +134,7 @@ mod tests {
 
     #[test]
     fn one_element() {
-        let layout = dessin!(VerticalLayout: (
-            of={Text::default().with_font_size(10.)}
-        ) -> ());
+        let layout = dessin2!(VerticalLayout(of = Text::default().with_font_size(10.)) > ());
 
         let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
 
@@ -145,10 +143,12 @@ mod tests {
 
     #[test]
     fn two_distinct_elements() {
-        let layout = dessin!(VerticalLayout: (
-            of={Text::default().with_font_size(10.)}
-            of={Text::default().with_font_size(10.)}
-        ) -> ());
+        let layout = dessin2!(
+            VerticalLayout(
+                of = Text::default().with_font_size(10.),
+                of = Text::default().with_font_size(10.),
+            ) > ()
+        );
 
         let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
 
@@ -157,17 +157,12 @@ mod tests {
 
     #[test]
     fn two_elements_vec_with_gap() {
-        let layout = dessin!(VerticalLayout: (
-            of={dessin!([
-				Text: (
-					font_size={10.}
-				),
-				Text: (
-					font_size={10.}
-				),
-			])}
-			gap={4.}
-        ) -> ());
+        let layout = dessin2!(
+            VerticalLayout(
+                of = dessin2!([Text(font_size = { 10. }), Text(font_size = { 10. })]),
+                gap = 4.
+            ) > ()
+        );
 
         let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
 
@@ -196,7 +191,12 @@ mod tests {
             ])}
         ));
 
-        let Shape::Group(Group { local_transform: _, shapes, .. }) = Shape::from(layout) else {
+        let Shape::Group(Group {
+            local_transform: _,
+            shapes,
+            ..
+        }) = Shape::from(layout)
+        else {
             panic!("Not a group")
         };
 
@@ -219,7 +219,12 @@ mod tests {
             ])}
         ));
 
-        let Shape::Group (Group{ local_transform: _, shapes, .. }) = Shape::from(layout) else {
+        let Shape::Group(Group {
+            local_transform: _,
+            shapes,
+            ..
+        }) = Shape::from(layout)
+        else {
             panic!("Not a group")
         };
 
