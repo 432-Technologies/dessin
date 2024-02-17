@@ -92,12 +92,19 @@ where
 
         let bb = shape.local_bounding_box().straigthen();
 
-        dessin!([
-            Rectangle: (
-                scale={[bb.width() + padding_left + padding_right, bb.height() + padding_top + padding_bottom]}
-                translate={bb.center() + Vector2::new((padding_right - padding_left) / 2., (padding_top - padding_bottom) / 2.)}
+        dessin2!([
+            Rectangle(
+                scale = [
+                    bb.width() + padding_left + padding_right,
+                    bb.height() + padding_top + padding_bottom,
+                ],
+                translate = bb.center()
+                    + Vector2::new(
+                        (padding_right - padding_left) / 2.,
+                        (padding_top - padding_bottom) / 2.,
+                    ),
             ),
-            var(shape): (),
+            var[shape](),
         ])
     }
 }

@@ -44,11 +44,26 @@ impl From<ThickArc> for Shape {
             outer_radius,
         }: ThickArc,
     ) -> Self {
-        dessin!(Curve: (
-            transform={local_transform}
-            then={Curve::from(Arc {start_angle, end_angle, ..Default::default()}.with_radius(outer_radius))}
-            then={Curve::from(Arc {start_angle, end_angle, ..Default::default()}.with_radius(inner_radius)).reversed()}
-			closed
+        dessin2!(Curve(
+            transform = local_transform,
+            then = Curve::from(
+                Arc {
+                    start_angle,
+                    end_angle,
+                    ..Default::default()
+                }
+                .with_radius(outer_radius),
+            ),
+            then = Curve::from(
+                Arc {
+                    start_angle,
+                    end_angle,
+                    ..Default::default()
+                }
+                .with_radius(inner_radius),
+            )
+            .reversed(),
+            closed,
         ))
         .into()
     }

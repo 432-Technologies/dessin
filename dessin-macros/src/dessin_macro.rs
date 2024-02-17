@@ -4,7 +4,7 @@ use syn::{
     braced, bracketed, parenthesized,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    token::{Bracket, Comma},
+    token::{Brace, Bracket, Comma},
     Expr, ExprAssign, ExprForLoop, Path, Result, Token,
 };
 
@@ -16,12 +16,19 @@ mod kw {
 enum Action {
     WithArgs(ExprAssign),
     WithoutArgs(Ident),
+    SameName(Ident),
 }
 impl Parse for Action {
     fn parse(input: ParseStream) -> Result<Self> {
-        match input.fork().parse::<ExprAssign>() {
-            Ok(_) => input.parse().map(Action::WithArgs),
-            Err(_) => input.parse().map(Action::WithoutArgs),
+        if input.peek(Brace) {
+            let arg;
+            let _ = braced!(arg in input);
+            Ok(Action::SameName(arg.parse()?))
+        } else {
+            match input.fork().parse::<ExprAssign>() {
+                Ok(_) => input.parse().map(Action::WithArgs),
+                Err(_) => input.parse().map(Action::WithoutArgs),
+            }
         }
     }
 }
@@ -35,22 +42,31 @@ impl From<Action> for TokenStream {
                 right,
             }) => quote!(__current_shape__.#left(#right);),
             Action::WithoutArgs(member) => quote!(__current_shape__.#member();),
+            Action::SameName(name) => quote!(__current_shape__.#name(#name);),
         }
     }
 }
 
-struct Actions(Punctuated<Action, Comma>);
+struct Actions {
+    add_style: bool,
+    actions: Punctuated<Action, Comma>,
+}
 impl Parse for Actions {
     fn parse(input: ParseStream) -> Result<Self> {
+        let add_style = input.peek(Token![!]);
+        if add_style {
+            input.parse::<Token![!]>()?;
+        }
+
         let actions;
         let _ = parenthesized!(actions in input);
         let actions = actions.parse_terminated(Action::parse, Comma)?;
 
-        Ok(Actions(actions))
+        Ok(Actions { add_style, actions })
     }
 }
 impl From<Actions> for TokenStream {
-    fn from(Actions(actions): Actions) -> Self {
+    fn from(Actions { add_style, actions }: Actions) -> Self {
         actions
             .into_iter()
             .map(TokenStream::from)
@@ -72,16 +88,20 @@ impl Parse for DessinItem {
 }
 impl From<DessinItem> for TokenStream {
     fn from(DessinItem { item, actions }: DessinItem) -> Self {
-        if actions.0.is_empty() {
-            return quote!(
-                ::dessin::prelude::Style::new(<#item>::default())
-            );
+        let base = if actions.add_style {
+            quote!(::dessin::prelude::Style::new(<#item>::default()))
+        } else {
+            quote!(<#item>::default())
+        };
+
+        if actions.actions.is_empty() {
+            return base;
         }
 
         let actions = TokenStream::from(actions);
 
         quote!({
-            let mut __current_shape__ = ::dessin::prelude::Style::new(<#item>::default());
+            let mut __current_shape__ = #base;
             #actions
             __current_shape__
         })
@@ -106,7 +126,7 @@ impl Parse for DessinVar {
 }
 impl From<DessinVar> for TokenStream {
     fn from(DessinVar { var, actions }: DessinVar) -> Self {
-        if actions.0.is_empty() {
+        if actions.actions.is_empty() {
             quote!(#var)
         } else {
             let actions = TokenStream::from(actions);
@@ -138,7 +158,7 @@ impl Parse for DessinCloned {
 }
 impl From<DessinCloned> for TokenStream {
     fn from(DessinCloned { var, actions }: DessinCloned) -> Self {
-        if actions.0.is_empty() {
+        if actions.actions.is_empty() {
             quote!(#var)
         } else {
             let actions = TokenStream::from(actions);
@@ -340,20 +360,39 @@ impl Parse for Dessin {
     }
 }
 impl From<Dessin> for TokenStream {
-    fn from(value: Dessin) -> Self {
-        let base = TokenStream::from(value.dessin_type);
-        if let Some(actions) = value.erased_type_shape_actions {
-            if !actions.0.is_empty() {
-                let actions = TokenStream::from(actions);
+    fn from(
+        Dessin {
+            dessin_type,
+            erased_type_shape_actions,
+        }: Dessin,
+    ) -> Self {
+        let base = TokenStream::from(dessin_type);
 
-                return quote!({
-                    let mut __current_shape__ = ::dessin::prelude::Shape::from(#base);
-                    #actions
-                    __current_shape__
-                });
-            }
+        let Some(actions) = erased_type_shape_actions else {
+            return base;
+        };
+
+        let base = if actions.add_style {
+            quote!(::dessin::prelude::Style::new(
+                ::dessin::prelude::Shape::from(#base)
+            ))
+        } else {
+            quote!(::dessin::prelude::Shape::from(#base))
+        };
+
+        if actions.actions.is_empty() {
+            return base;
         }
 
-        quote!(::dessin::prelude::Shape::from(#base))
+        if actions.actions.is_empty() {
+            return base;
+        }
+
+        let actions = TokenStream::from(actions);
+        return quote!({
+            let mut __current_shape__ = #base;
+            #actions
+            __current_shape__
+        });
     }
 }

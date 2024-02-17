@@ -122,11 +122,7 @@ pub fn bounding_box_7() {
     assert_eq!(bb.width(), 14.);
     assert_eq!(bb.height(), 14.);
 
-    let group = dessin!([
-        Circle: (
-            radius={7.}
-        ),
-    ]);
+    let group = dessin2!([Circle(radius = 7.),]);
     let bb = group.local_bounding_box();
     assert_eq!(bb.width(), 14.);
     assert_eq!(bb.height(), 14.);

@@ -98,31 +98,27 @@ impl From<VerticalLayout> for Shape {
     ) -> Self {
         let mut y = 0.;
 
-        dessin!(for shape in (shapes) {
-            let mut shape = shape;
+        dessin2!(
+            for shape in (shapes) {
+                let mut shape = shape;
 
-            let bb = shape
-                .local_bounding_box().into_straight();
+                let bb = shape.local_bounding_box().into_straight();
 
-
-            let y_translation = if start_bottom {
-                -bb.bottom() // Recenter the bottom of the shape to be 0
+                let y_translation = if start_bottom {
+                    -bb.bottom() // Recenter the bottom of the shape to be 0
                 + y // And then, above all the others
-            } else {
-                -bb.top() // Recenter the top of the shape to be 0
+                } else {
+                    -bb.top() // Recenter the top of the shape to be 0
                 - y // And then, below all the others
+                };
 
-            };
+                shape.translate([0., y_translation]);
 
-            shape.translate([0., y_translation]);
+                y += bb.height() + gap;
 
-            y += bb.height() + gap;
-
-            shape
-        } -> (
-            transform={local_transform}
-            extend_metadata={metadata}
-        ))
+                shape
+            } > (transform = local_transform, extend_metadata = metadata)
+        )
     }
 }
 
@@ -171,11 +167,13 @@ mod tests {
 
     #[test]
     fn two_distinct_elements_with_gap() {
-        let layout = dessin!(VerticalLayout: (
-            of={Text::default().with_font_size(10.)}
-            of={Text::default().with_font_size(10.)}
-			gap={4.}
-        ) -> ());
+        let layout = dessin2!(
+            VerticalLayout(
+                of = Text::default().with_font_size(10.),
+                of = Text::default().with_font_size(10.),
+                gap = 4.,
+            ) > ()
+        );
 
         let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
 
@@ -184,11 +182,8 @@ mod tests {
 
     #[test]
     fn base_layout() {
-        let layout = dessin!(VerticalLayout: (
-            of={dessin!([
-                Circle: (radius={10.}),
-                Circle: (radius={10.}),
-            ])}
+        let layout = dessin2!(VerticalLayout(
+            of = { dessin2!([Circle(radius = 10.), Circle(radius = 10.),]) }
         ));
 
         let Shape::Group(Group {
@@ -211,12 +206,14 @@ mod tests {
 
     #[test]
     fn transformed_layout() {
-        let layout = dessin!(VerticalLayout: (
-            of={dessin!([
-                Circle: (radius={10.} translate={[0., 5.]}),
-                Circle: (radius={10.} translate={[0., -10.]}),
-                Circle: (radius={10.} translate={[0., 0.]}),
-            ])}
+        let layout = dessin2!(VerticalLayout(
+            of = {
+                dessin2!([
+                    Circle(radius = 10., translate = [0., 5.]),
+                    Circle(radius = 10., translate = [0., -10.]),
+                    Circle(radius = 10., translate = [0., 0.]),
+                ])
+            }
         ));
 
         let Shape::Group(Group {
@@ -247,12 +244,10 @@ mod tests {
 
         assert_float_absolute_eq!(height_triangle, 2. * (3f32.sqrt() / 2.), 10e-5);
 
-        let shape = dessin!([
-            VerticalLayout: (
-                of={dessin!(polygons::Triangle: () )}
-                of={dessin!(Circle: (radius={1.}))}
-            )
-        ]);
+        let shape = dessin2!([VerticalLayout(
+            of = { dessin2!(polygons::Triangle()) },
+            of = { dessin2!(Circle(radius = { 1. })) }
+        )]);
 
         let bb = shape.local_bounding_box();
 
@@ -267,29 +262,29 @@ mod tests {
         let text = "test\nwhy\nnot";
         let gap = 2.;
 
-        let first_text = dessin!(TextBox: #(
-            {text}
-            fill={Fill::Color(Color::BLACK)}
-            font_size={3.6}
-            align={TextAlign::Left}
-            width={115.}
-            line_spacing={2.}
+        let first_text = dessin2!(TextBox(
+            { text },
+            fill = Fill::Color(Color::BLACK),
+            font_size = 3.6,
+            align = TextAlign::Left,
+            width = 115.,
+            line_spacing = 2.,
         ));
 
-        let layout = dessin!(VerticalLayout: (
-            start_from_bottom
-            {gap}
-            of={dessin!([
-                var(first_text): (),
-                Text: #(
-                    text={"Notes"}
-                    fill={Color::BLACK}
-                    font_weight={FontWeight::Bold}
-                    font_size={3.6}
-                    align={TextAlign::Left}
+        let layout = dessin2!(VerticalLayout(
+            start_from_bottom,
+            { gap },
+            of = dessin2!([
+                var[first_text](),
+                Text(
+                    text = "Notes",
+                    fill = Color::BLACK,
+                    font_weight = FontWeight::Bold,
+                    font_size = 3.6,
+                    align = TextAlign::Left,
                 ),
-            ])}
-            translate={[-105. + 2., -148.5 + 5.]}
+            ]),
+            translate = [-105. + 2., -148.5 + 5.]
         ));
 
         let shape = Shape::from(layout);
