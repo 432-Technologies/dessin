@@ -17,3 +17,7 @@ path = "./432technologies.rs"
 [[example]]
 name = "animation"
 path = "./animation.rs"
+
+[[example]]
+name = "simple"
+path = "./simple.rs"

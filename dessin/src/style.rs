@@ -301,10 +301,14 @@ impl<T: Into<Shape>> From<Style<T>> for Shape {
             stroke,
         }: Style<T>,
     ) -> Self {
-        Shape::Style {
-            fill,
-            stroke,
-            shape: Box::new(shape.into()),
+        if fill.is_none() && stroke.is_none() {
+            shape.into()
+        } else {
+            Shape::Style {
+                fill,
+                stroke,
+                shape: Box::new(shape.into()),
+            }
         }
     }
 }

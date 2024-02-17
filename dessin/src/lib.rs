@@ -146,7 +146,7 @@ pub mod prelude {
     pub use crate::contrib::*;
     pub use crate::shapes::*;
     pub use crate::style::*;
-    pub use ::dessin_macros::{dessin, Shape};
+    pub use ::dessin_macros::{dessin, dessin2, Shape};
 }
 
 /// Everything related to fonts.

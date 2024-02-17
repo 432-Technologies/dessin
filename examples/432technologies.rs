@@ -22,18 +22,18 @@ impl From<InnerBubbleRing> for Shape {
         let ring_strip = dessin!(
             [
                 Circle: #(
-                    stroke={Stroke::Full { color: c(200), width: 0.1 }}
-                    radius={ 1. }
+                    stroke={Stroke::Full { color: c(200), width: 0.1 }},
+                    radius={ 1. },
                 ),
                 Circle: #(
-                    stroke={Stroke::Full { color: c(150), width: 0.1 }}
-                    radius={ 0.5 }
-                    translate={Translation2::new(2., 0.)}
+                    stroke={Stroke::Full { color: c(150), width: 0.1 }},
+                    radius={ 0.5 },
+                    translate={Translation2::new(2., 0.)},
                 ),
                 Circle: #(
-                    stroke={Stroke::Full { color: c(100), width: 0.1 }}
-                    radius={ 0.25 }
-                    translate={Translation2::new(3.2, 0.)}
+                    stroke={Stroke::Full { color: c(100), width: 0.1 }},
+                    radius={ 0.25 },
+                    translate={Translation2::new(3.2, 0.)},
                 ),
             ] -> ( translate={Translation2::new(14., 0.)} )
         );
