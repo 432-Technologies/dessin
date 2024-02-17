@@ -5,7 +5,7 @@ use dessin_image::*;
 use dessin_svg::*;
 
 fn main() {
-    let test_img = dessin2!(polygons::Triangle(fill = Color::BLUE) > (scale = [50., 50.]))
+    let test_img = dessin2!(polygons::Triangle!(fill = Color::BLUE) > (scale = [50., 50.]))
         .rasterize()
         .unwrap();
 
@@ -13,9 +13,9 @@ fn main() {
 
     let frame = dessin2!(
         [
-            Circle(stroke = (Color::RED, 0.5), radius = 5.),
+            Circle!(stroke = (Color::RED, 0.5), radius = 5.),
             Dynamic::<Image>(_ref = &triangle, image = test_img, scale = [3., 3.],),
-        ] > (scale = { [100., 100.] })
+        ] > (scale = [100., 100.])
     );
 
     loop {

@@ -262,7 +262,7 @@ mod tests {
         let text = "test\nwhy\nnot";
         let gap = 2.;
 
-        let first_text = dessin2!(TextBox(
+        let first_text = dessin2!(TextBox!(
             { text },
             fill = Fill::Color(Color::BLACK),
             font_size = 3.6,
@@ -276,7 +276,7 @@ mod tests {
             { gap },
             of = dessin2!([
                 var[first_text](),
-                Text(
+                Text!(
                     text = "Notes",
                     fill = Color::BLACK,
                     font_weight = FontWeight::Bold,
