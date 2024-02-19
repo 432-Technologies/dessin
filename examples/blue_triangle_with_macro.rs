@@ -20,7 +20,7 @@ fn main(){
         // paints the inside of the triangle in green
         fill={rgb(0,0,255)}
 
-        // creates a black margin of 0.2 (0.05 outside and the same inside the triangle)
+        // creates a black margin of 0.1 (0.05 outside and the same inside the triangle)
         stroke={Stroke::Full { color: rgb(0, 0, 0), width: 0.1 }}
 
         //chooses a rotation of 0 radians in the trigonometric direction

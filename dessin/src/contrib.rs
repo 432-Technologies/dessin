@@ -19,4 +19,5 @@ auto_import! {
     rectangle,
     textbox,
     thick_arc,
+    triangle,
 }

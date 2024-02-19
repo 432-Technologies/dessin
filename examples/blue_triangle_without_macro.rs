@@ -9,26 +9,28 @@ use dessin::{
 
 use dessin::prelude::polygons::Triangle;
 
-fn main(){
+fn main() {
 
-    let triangle: Shape = dessin!([
-        Triangle: #(
-        
-        // chooses an equilateral triangle [(x,x) => equilateral] with a size of 5. [if you want an isosceles triangle : (x,y)]
-        scale={Scale2::new(5., 5.)}
+    // creates a rectangle with a width of 11 and a height of 6
+    let triangle = Triangle::default();
 
-        // paints the inside of the triangle in green
-        fill={rgb(0,0,255)}
+    let mut triangle = Style::new(triangle);
 
-        // creates a black margin of 0.2 (0.05 outside and the same inside the triangle)
-        stroke={Stroke::Full { color: rgb(0, 0, 0), width: 0.1 }}
+    triangle.scale(Scale2::new(5., 5.));
 
-        //chooses a rotation of 0 radians in the trigonometric direction
-        rotate={Rotation2::new(0_f32.to_radians())}  
-    ),
+    // paints the inside of the triangle in blue
+    triangle.fill(Fill::Color(rgb(0, 0, 255)));
 
-   ]);
+    // creates a black margin of 0.2 (0.05 outside and 0.05 inside the triangle)
+    triangle.stroke(Stroke::Full {
+        color: rgb(0, 0, 0),
+        width: 0.1,
+    
+    });
 
-   // prints in svg version
-   fs::write("./out/blue_triangle.svg", triangle.to_svg().unwrap()).unwrap();
+    //chooses a rotation of 0 radians in the trigonometric direction
+    triangle.rotate(Rotation2::new(0_f32.to_radians()));
+    
+    //prints in svg version
+    fs::write("./out/blue_triangle.svg", Shape::from(triangle).to_svg().unwrap()).unwrap();
 }
