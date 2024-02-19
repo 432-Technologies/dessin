@@ -155,7 +155,7 @@ mod tests {
     fn two_elements_vec_with_gap() {
         let layout = dessin2!(
             VerticalLayout(
-                of = dessin2!([Text(font_size = { 10. }), Text(font_size = { 10. })]),
+                of = dessin2!([Text(font_size = 10.), Text(font_size = 10.)]),
                 gap = 4.
             ) > ()
         );
@@ -183,7 +183,7 @@ mod tests {
     #[test]
     fn base_layout() {
         let layout = dessin2!(VerticalLayout(
-            of = { dessin2!([Circle(radius = 10.), Circle(radius = 10.),]) }
+            of = dessin2!([Circle(radius = 10.), Circle(radius = 10.),]),
         ));
 
         let Shape::Group(Group {
@@ -245,8 +245,8 @@ mod tests {
         assert_float_absolute_eq!(height_triangle, 2. * (3f32.sqrt() / 2.), 10e-5);
 
         let shape = dessin2!([VerticalLayout(
-            of = { dessin2!(polygons::Triangle()) },
-            of = { dessin2!(Circle(radius = { 1. })) }
+            of = dessin2!(polygons::Triangle()),
+            of = dessin2!(Circle(radius = 1.)),
         )]);
 
         let bb = shape.local_bounding_box();
