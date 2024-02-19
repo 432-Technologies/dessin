@@ -141,19 +141,23 @@ impl From<TextBox> for Shape {
             TextVerticalAlign::Top => (TextVerticalAlign::Bottom, -1.),
         };
 
-        dessin!(VerticalLayout: (
-            extend={lines.into_iter().map(|text| dessin!(Text: (
-                text={text}
-                align={align}
-                vertical_align={vertical_align}
-                font_weight={font_weight}
-                font_size={font_size}
-                maybe_font={font_ref.clone()}
-            )).into())}
-            gap={line_spacing}
-            transform={local_transform}
-        ))
-        .into()
+        dessin2!(
+            VerticalLayout(
+                extend = lines.into_iter().map(|text| {
+                    dessin2!(Text(
+                        { text },
+                        { align },
+                        { vertical_align },
+                        { font_weight },
+                        { font_size },
+                        maybe_font = font_ref.clone(),
+                    ))
+                    .into()
+                }),
+                gap = line_spacing,
+                transform = local_transform,
+            ) > ()
+        )
     }
 }
 
@@ -163,13 +167,15 @@ fn one_line() {
 
     let text = "it should work, famous last word";
 
-    let shape: Shape = dessin!(TextBox: #(
-        {text}
-        fill={Fill::Color(Color::BLACK)}
-        font_size={5.}
-        align={TextAlign::Left}
-        line_spacing={2.}
-    ) -> ());
+    let shape: Shape = dessin2!(
+        TextBox!(
+            { text },
+            fill = Fill::Color(Color::BLACK),
+            font_size = 5.,
+            align = TextAlign::Left,
+            line_spacing = 2.,
+        ) > ()
+    );
 
     let bb = shape.local_bounding_box();
     assert_float_absolute_eq!(bb.height(), 5., 0.001);
@@ -181,12 +187,12 @@ fn two_lines() {
 
     let text = "it should work\nfamous last word";
 
-    let shape: Shape = dessin!(TextBox: #(
-        {text}
-        fill={Fill::Color(Color::BLACK)}
-        font_size={5.}
-        align={TextAlign::Left}
-        line_spacing={2.}
+    let shape: Shape = dessin2!(TextBox!(
+        { text },
+        fill = Fill::Color(Color::BLACK),
+        font_size = 5.,
+        align = TextAlign::Left,
+        line_spacing = 2.,
     ))
     .into();
 
@@ -202,20 +208,22 @@ fn should_break() {
 
     let text = "it should work, famous last word";
 
-    let mut shape: Shape = dessin!(TextBox: (
-        {text}
-        font_size={5.}
-		width={40.}
-        align={TextAlign::Left}
-    ) -> ());
+    let mut shape: Shape = dessin2!(
+        TextBox(
+            { text },
+            font_size = 5.,
+            width = 40.,
+            align = TextAlign::Left,
+        ) > ()
+    );
 
     let shapes = shape.get_or_mutate_as_group().shapes.clone();
     assert_eq!(shapes.len(), 2);
 
     {
         let Shape::Text(text) = shapes[0].clone() else {
-			unreachable!()
-		};
+            unreachable!()
+        };
 
         let lt = convert::<_, Transform2<f32>>(Translation2::new(0., (5. / 2.) * -1.));
 
@@ -236,8 +244,8 @@ fn should_break() {
 
     {
         let Shape::Text(text) = shapes[1].clone() else {
-			unreachable!()
-		};
+            unreachable!()
+        };
 
         let lt = convert::<_, Transform2<f32>>(Translation2::new(0., ((5. / 2.) + 5.) * -1.));
 

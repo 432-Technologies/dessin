@@ -146,7 +146,7 @@ pub mod prelude {
     pub use crate::contrib::*;
     pub use crate::shapes::*;
     pub use crate::style::*;
-    pub use ::dessin_macros::{dessin, Shape};
+    pub use ::dessin_macros::{dessin, dessin2, Shape};
 }
 
 /// Everything related to fonts.
@@ -164,59 +164,31 @@ mod tests {
         struct Component {}
         impl From<Component> for Shape {
             fn from(_: Component) -> Self {
-                dessin!()
+                dessin2!()
             }
         }
 
-        dessin!(Component: () -> (
-            translate={[1., 1.]}
-        ));
+        dessin2!(Component() > (translate = [1., 1.]));
     }
 
     #[test]
     fn group_bounding_box() {
-        let group = dessin!([
-            Octogon: (),
-            Circle: (
-                radius={7.}
-            ),
-        ]);
+        let group = dessin2!([Octogon(), Circle(radius = 7.),]);
         let bb = group.local_bounding_box();
         assert_eq!(bb.width(), 14.);
         assert_eq!(bb.height(), 14.);
 
-        let group = dessin!([
-            Octogon: (
-                scale={[12., 12.]}
-            ),
-            Circle: (
-                radius={7.}
-            ),
-        ]);
+        let group = dessin2!([Octogon(scale = [12., 12.]), Circle(radius = 7.),]);
         let bb = group.local_bounding_box();
         assert_eq!(bb.width(), 24.);
         assert_eq!(bb.height(), 24.);
 
-        let group = dessin!([
-            Octogon: (
-                scale={[15., 15.]}
-            ),
-            Circle: (
-                radius={7.}
-            ),
-        ]);
+        let group = dessin2!([Octogon(scale = [15., 15.]), Circle(radius = 7.),]);
         let bb = group.local_bounding_box();
         assert_eq!(bb.width(), 30.);
         assert_eq!(bb.height(), 30.);
 
-        let group = dessin!([
-            Octogon: (
-                scale={[13., 13.]}
-            ),
-            Circle: (
-                radius={7.}
-            ),
-        ]);
+        let group = dessin2!([Octogon(scale = [13., 13.]), Circle(radius = 7.),]);
         let bb = group.local_bounding_box();
         assert_eq!(bb.width(), 26.);
         assert_eq!(bb.height(), 26.);

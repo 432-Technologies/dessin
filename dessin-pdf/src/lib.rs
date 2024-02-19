@@ -5,8 +5,8 @@ use dessin::{
 };
 use nalgebra::Translation2;
 use printpdf::{
-    BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference,
-    PdfLayerReference, Point,
+    BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference,
+    Point,
 };
 use std::{
     collections::HashMap,
@@ -258,7 +258,7 @@ impl Exporter for PDFExporter {
                 Mm(text.reference_start.y).into_pt(),
                 rotation,
             ));
-        
+
         // self.layer.set_line_height(text.font_size);
         // self.layer.set_word_spacing(3000.0);
         // self.layer.set_character_spacing(10.0);

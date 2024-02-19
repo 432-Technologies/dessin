@@ -41,14 +41,16 @@ impl<const N: u32> From<Polygon<N>> for Shape {
     fn from(Polygon { local_transform }: Polygon<N>) -> Self {
         let step = Polygon::<N>::STEP;
 
-        dessin!(
-            Curve: (
-                extend={
-                    (0..N).map(|p| Point2::from([(p as f32 * step).cos(), (p as f32 * step).sin()]).into())
-                }
-                closed
-                transform={local_transform}
-            ) -> ()
+        dessin2!(
+            Curve(
+                extend = (0..N).map(|p| Point2::from([
+                    (p as f32 * step).cos(),
+                    (p as f32 * step).sin()
+                ])
+                .into()),
+                closed,
+                transform = local_transform,
+            ) > ()
         )
     }
 }
@@ -116,7 +118,12 @@ fn triangle_in_group() {
 
     let sqrt3_over_2 = 3f32.sqrt() / 2.;
 
-    let Shape::Group (Group{ local_transform, shapes, .. }) = dessin!([Triangle: ()]) else {
+    let Shape::Group(Group {
+        local_transform,
+        shapes,
+        ..
+    }) = dessin2!([Triangle()])
+    else {
         panic!("Not a group");
     };
     assert_eq!(shapes.len(), 1);
