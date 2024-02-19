@@ -275,7 +275,7 @@ mod tests {
             start_from_bottom,
             { gap },
             of = dessin2!([
-                var[first_text](),
+                { first_text }(),
                 Text!(
                     text = "Notes",
                     fill = Color::BLACK,

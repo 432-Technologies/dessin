@@ -15,5 +15,9 @@ name = "432technologies"
 path = "./432technologies.rs"
 
 [[example]]
+name = "text_rotation"
+path = "./text_rotation.rs"
+
+[[example]]
 name = "animation"
 path = "./animation.rs"

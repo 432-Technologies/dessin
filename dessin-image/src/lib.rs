@@ -98,11 +98,11 @@ impl Exporter for ImageExporter {
             top_right: _,
             bottom_right: _,
             bottom_left: _,
-            center,
-            width,
-            height,
-            rotation,
-            image,
+            center: _,
+            width: _,
+            height: _,
+            rotation: _,
+            image: _,
         }: ImagePosition,
     ) -> Result<(), Self::Error> {
         // let mut raw_image = Cursor::new(vec![]);
@@ -224,12 +224,12 @@ impl Exporter for ImageExporter {
         &mut self,
         TextPosition {
             text,
-            align,
+            align: _,
             font_weight,
-            on_curve,
+            on_curve: _,
             font_size,
             reference_start,
-            direction,
+            direction: _,
             font,
         }: TextPosition,
     ) -> Result<(), Self::Error> {

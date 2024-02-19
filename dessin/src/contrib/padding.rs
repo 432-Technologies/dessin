@@ -104,7 +104,7 @@ where
                         (padding_top - padding_bottom) / 2.,
                     ),
             ),
-            var[shape](),
+            { shape },
         ])
     }
 }

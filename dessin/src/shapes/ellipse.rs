@@ -2,7 +2,7 @@ use crate::{
     prelude::Circle,
     shapes::{Shape, ShapeOp},
 };
-use nalgebra::{Point2, Scale2, Transform2, Unit, Vector2};
+use nalgebra::{Point2, Scale2, Transform2, Vector2};
 
 use super::{BoundingBox, Curve, ShapeBoundingBox, UnParticular};
 
