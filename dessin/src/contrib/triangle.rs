@@ -20,17 +20,25 @@ pub struct Triangle_test {
 
 
 impl From<Triangle_test> for Curve {
-    fn from(Triangle_test { local_transform ,width_x_axis, size_axis_angle, angle}: Triangle_test) -> Self {
-        let origin = Point2::new(0., 0.);
+
+    //Create "from" where we note what we will ask when using Triangle_test
+    fn from(Triangle_test { 
+        local_transform,
+        width_x_axis, 
+        size_axis_angle, 
+        angle
+    }: Triangle_test) -> Self {
+        
+        let origin = Point2::new(0., 0.);  //create one point at the origin
+        let base = Point2::new(width_x_axis, 0.);  //create a second point on the x axis at a distance width_x_axis
         let top = Point2::new(size_axis_angle*angle.cos(), size_axis_angle*angle.sin());
-        let base = Point2::new(width_x_axis, 0.);
 
         dessin! {
             Curve: (
                 transform={local_transform}
                 then={origin}
-                then={top}
                 then={base}
+                then={top}
                 closed
             )
         }
