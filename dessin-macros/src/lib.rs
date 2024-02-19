@@ -113,7 +113,6 @@ use syn::{parse_macro_input, DataStruct, DeriveInput, Fields, FieldsNamed, Type}
 /// 	Component2: () -> ()
 /// }
 /// ```
-///
 #[proc_macro]
 #[deprecated]
 pub fn dessin(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {

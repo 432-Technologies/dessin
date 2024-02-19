@@ -260,8 +260,8 @@ impl From<Symbol432> for Shape {
                 text = "3",
                 font_size = 7.,
                 font_weight = FontWeight::Regular,
-                translate = [1., -2.],
-                vertical_align = TextVerticalAlign::Bottom,
+                translate = [1., 1.],
+                vertical_align = TextVerticalAlign::Center,
                 align = TextAlign::Left,
             ),
             Text!(
@@ -269,8 +269,8 @@ impl From<Symbol432> for Shape {
                 text = "2",
                 font_size = 7.,
                 font_weight = FontWeight::Regular,
-                translate = [1., -3.],
-                vertical_align = TextVerticalAlign::Top,
+                translate = [1., -5.6],
+                vertical_align = TextVerticalAlign::Center,
                 align = TextAlign::Left,
             ),
         ])
