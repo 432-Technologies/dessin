@@ -5,10 +5,10 @@ publish = false
 edition = "2021"
 
 [dev-dependencies]
-dessin = { version = "0.8.17-pre", path = "../dessin" }
-dessin-svg = { version = "0.8.17-pre", path = "../dessin-svg" }
-dessin-image = { version = "0.8.17-pre", path = "../dessin-image" }
-dessin-pdf = { version = "0.8.17-pre", path = "../dessin-pdf" }
+dessin = { version = "0.8.18-pre", path = "../dessin" }
+dessin-svg = { version = "0.8.18-pre", path = "../dessin-svg" }
+dessin-image = { version = "0.8.18-pre", path = "../dessin-image" }
+dessin-pdf = { version = "0.8.18-pre", path = "../dessin-pdf" }
 
 [[example]]
 name = "432technologies"
