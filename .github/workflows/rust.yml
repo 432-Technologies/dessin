@@ -1,9 +1,7 @@
 name: Rust
 
-on:
+on: 
   push:
-    - main
-    - v0.8-pre
   pull_request:
 
 env:
