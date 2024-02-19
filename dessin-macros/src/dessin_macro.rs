@@ -4,14 +4,9 @@ use syn::{
     braced, bracketed, parenthesized,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    token::{Brace, Bracket, Comma},
-    Expr, ExprAssign, ExprForLoop, Path, Result, Token,
+    token::{Brace, Bracket, Comma, Paren},
+    Expr, ExprAssign, ExprForLoop, ExprLet, Path, Result, Token,
 };
-
-mod kw {
-    syn::custom_keyword!(var);
-    syn::custom_keyword!(cloned);
-}
 
 enum Action {
     WithArgs(ExprAssign),
@@ -66,7 +61,12 @@ impl Parse for Actions {
     }
 }
 impl From<Actions> for TokenStream {
-    fn from(Actions { add_style, actions }: Actions) -> Self {
+    fn from(
+        Actions {
+            add_style: _,
+            actions,
+        }: Actions,
+    ) -> Self {
         actions
             .into_iter()
             .map(TokenStream::from)
@@ -110,22 +110,28 @@ impl From<DessinItem> for TokenStream {
 
 struct DessinVar {
     var: Expr,
-    actions: Actions,
+    actions: Option<Actions>,
 }
 impl Parse for DessinVar {
     fn parse(input: ParseStream) -> Result<Self> {
-        let _ = input.parse::<kw::var>()?;
         let var;
-        let _ = bracketed!(var in input);
+        let _ = braced!(var in input);
         let var = var.parse::<Expr>()?;
-
-        let actions = input.parse::<Actions>()?;
+        let actions = if input.peek(Paren) {
+            Some(input.parse::<Actions>()?)
+        } else {
+            None
+        };
 
         Ok(DessinVar { var, actions })
     }
 }
 impl From<DessinVar> for TokenStream {
     fn from(DessinVar { var, actions }: DessinVar) -> Self {
+        let Some(actions) = actions else {
+            return quote!(#var);
+        };
+
         if actions.actions.is_empty() {
             quote!(#var)
         } else {
@@ -133,38 +139,6 @@ impl From<DessinVar> for TokenStream {
 
             quote!({
                 let mut __current_shape__ = #var;
-                #actions
-                __current_shape__
-            })
-        }
-    }
-}
-
-struct DessinCloned {
-    var: Expr,
-    actions: Actions,
-}
-impl Parse for DessinCloned {
-    fn parse(input: ParseStream) -> Result<Self> {
-        let _ = input.parse::<kw::cloned>()?;
-        let var;
-        let _ = bracketed!(var in input);
-        let var = var.parse::<Expr>()?;
-
-        let actions = input.parse::<Actions>()?;
-
-        Ok(DessinCloned { var, actions })
-    }
-}
-impl From<DessinCloned> for TokenStream {
-    fn from(DessinCloned { var, actions }: DessinCloned) -> Self {
-        if actions.actions.is_empty() {
-            quote!(#var)
-        } else {
-            let actions = TokenStream::from(actions);
-
-            quote!({
-                let mut __current_shape__ = (#var).clone();
                 #actions
                 __current_shape__
             })
@@ -213,15 +187,48 @@ impl From<DessinFor> for TokenStream {
     }
 }
 
+enum DessinIfElseArg {
+    Let(ExprLet),
+    Ident(Ident),
+    Expr(Expr),
+}
+impl Parse for DessinIfElseArg {
+    fn parse(input: ParseStream) -> Result<Self> {
+        if input.peek(Token![let]) {
+            let let_exp: ExprLet = input.parse()?;
+            return Ok(DessinIfElseArg::Let(let_exp));
+        }
+
+        let is_ident = input.peek(syn::Ident) && input.peek2(Brace);
+        if is_ident {
+            let ident: Ident = input.parse()?;
+            return Ok(DessinIfElseArg::Ident(ident));
+        }
+
+        let expr: Expr = input.parse()?;
+        Ok(DessinIfElseArg::Expr(expr))
+    }
+}
+impl From<DessinIfElseArg> for TokenStream {
+    fn from(dessin_arg: DessinIfElseArg) -> Self {
+        match dessin_arg {
+            DessinIfElseArg::Let(v) => quote!(#v),
+            DessinIfElseArg::Ident(v) => quote!(#v),
+            DessinIfElseArg::Expr(v) => quote!(#v),
+        }
+    }
+}
+
 struct DessinIfElse {
-    condition: Expr,
+    condition: DessinIfElseArg,
     if_body: Box<Dessin>,
     else_body: Option<Box<Dessin>>,
 }
 impl Parse for DessinIfElse {
     fn parse(input: ParseStream) -> Result<Self> {
-        let _: Token![if] = input.parse()?;
-        let condition = input.parse::<Expr>()?;
+        let _ = input.parse::<Token![if]>()?;
+        let condition = input.parse::<DessinIfElseArg>()?;
+
         let if_body;
         let _ = braced!(if_body in input);
         let if_body: Dessin = if_body.parse()?;
@@ -254,6 +261,7 @@ impl From<DessinIfElse> for TokenStream {
             TokenStream::from(DessinType::Empty)
         };
 
+        let condition = TokenStream::from(condition);
         let if_body = TokenStream::from(*if_body);
 
         quote!(
@@ -298,7 +306,6 @@ enum DessinType {
     Empty,
     Item(DessinItem),
     Var(DessinVar),
-    Cloned(DessinCloned),
     Group(DessinGroup),
     For(DessinFor),
     IfElse(DessinIfElse),
@@ -307,10 +314,8 @@ impl Parse for DessinType {
     fn parse(input: ParseStream) -> Result<Self> {
         if input.is_empty() {
             Ok(DessinType::Empty)
-        } else if input.peek(kw::var) {
+        } else if input.peek(Brace) {
             input.parse().map(DessinType::Var)
-        } else if input.peek(kw::cloned) {
-            input.parse().map(DessinType::Cloned)
         } else if input.peek(Token![for]) {
             input.parse().map(DessinType::For)
         } else if input.peek(Token![if]) {
@@ -329,7 +334,6 @@ impl From<DessinType> for TokenStream {
             DessinType::Item(i) => i.into(),
             DessinType::Group(g) => g.into(),
             DessinType::Var(v) => v.into(),
-            DessinType::Cloned(v) => v.into(),
             DessinType::For(f) => f.into(),
             DessinType::IfElse(i) => i.into(),
         }
@@ -395,4 +399,217 @@ impl From<Dessin> for TokenStream {
             __current_shape__
         });
     }
+}
+
+#[test]
+fn simple() {
+    syn::parse_str::<Dessin>("Item()").unwrap();
+}
+#[test]
+fn simple_with_style() {
+    syn::parse_str::<Dessin>("Item!()").unwrap();
+}
+#[test]
+fn simple_and_actions() {
+    syn::parse_str::<Dessin>("Item( my_fn=(1., 1.), {close}, closed )").unwrap();
+}
+#[test]
+fn var_no_args() {
+    syn::parse_str::<Dessin>("{ v }").unwrap();
+}
+#[test]
+fn var_args() {
+    syn::parse_str::<Dessin>("{ v }( my_fn=(1., 1.), {close}, closed )").unwrap();
+}
+#[test]
+fn group() {
+    syn::parse_str::<Dessin>("[ Item(), Item() ]").unwrap();
+}
+#[test]
+fn as_shape() {
+    syn::parse_str::<Dessin>("Item() > ()").unwrap();
+}
+#[test]
+fn group_complex() {
+    syn::parse_str::<Dessin>("[ Item(), Item() ] > ()").unwrap();
+}
+#[test]
+fn for_loop() {
+    syn::parse_str::<Dessin>(
+        "for x in 0..10 {
+            let y = x as f32 * 2.;
+            dessin!(Circle( radius={y}) )
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn for_loop_par() {
+    syn::parse_str::<Dessin>(
+        "for x in (it) {
+            let y = x as f32 * 2.;
+            dessin!(Circle( radius={y}) )
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn for_loop_var() {
+    syn::parse_str::<Dessin>(
+        "for x in it {
+            let y = x as f32 * 2.;
+            dessin!(Circle ( radius={y}) )
+        }",
+    )
+    .unwrap();
+}
+// #[test]
+// fn for_loop_range_var() {
+//     syn::parse_str::<Dessin>(
+//         "for x in 0..n {
+//             let y = x as f32 * 2.;
+//             dessin!(Circle: ( radius={y}) )
+//         }",
+//     )
+//     .unwrap();
+// }
+#[test]
+fn simple_for_loop() {
+    syn::parse_str::<Dessin>(
+        "for x in xs {
+            let y = x as f32 * 2.;
+            dessin!(Circle( radius={y}) )
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn for_loop_range_var_par() {
+    syn::parse_str::<Dessin>(
+        "for x in 0..(n) {
+            let y = x as f32 * 2.;
+            dessin!(Circle( radius={y}) )
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn branch_if() {
+    syn::parse_str::<Dessin>(
+        "if test_fn() == 2 {
+            Circle()
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn branch_if_else() {
+    syn::parse_str::<Dessin>(
+        "if test_fn() == 2 {
+            Circle()
+        } else {
+            Ellipse()
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn combined_group_erased() {
+    syn::parse_str::<Dessin>(
+        "[
+			Shape(),
+			Shape() > (),
+			{ var } > (),
+		] > ()",
+    )
+    .unwrap();
+}
+#[test]
+fn simple_if() {
+    syn::parse_str::<Dessin>(
+        "if my_condition {
+            Circle()
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn if_let() {
+    syn::parse_str::<Dessin>(
+        "if let Some(x) = my_condition {
+            Circle()
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn combined_if() {
+    syn::parse_str::<Dessin>(
+        "if test_fn() == 2 {
+            Circle() > ()
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn mod_if() {
+    syn::parse_str::<Dessin>(
+        "if test_fn() == 2 {
+            my_mod::Circle() > ()
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn var_if() {
+    syn::parse_str::<Dessin>(
+        "if test_fn() == 2 {
+            { circle } > ()
+        }",
+    )
+    .unwrap();
+}
+#[test]
+fn if_if_group() {
+    syn::parse_str::<Dessin>(
+        "[
+			{ circle }(),
+			if test_fn() == 2 {
+            	{ circle } > ()
+        	},
+            for x in 0..1 {
+                dessin!()
+            },
+			Circle(),
+		]",
+    )
+    .unwrap();
+}
+#[test]
+fn group_in_group() {
+    syn::parse_str::<Dessin>(
+        "[
+			[
+				Circle(),
+				{ circle } > (),
+				if test_fn() == 2 {
+					{ circle } > ()
+				},
+				{ circle },
+			],
+			{ circle },
+            for x in (var) {
+                dessin!()
+            },
+			[],
+			if test_fn() == 2 {
+            	[
+					[],
+					{ circle },
+				]
+        	},
+			Circle(),
+		]",
+    )
+    .unwrap();
 }

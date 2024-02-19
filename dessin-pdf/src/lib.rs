@@ -8,11 +8,7 @@ use printpdf::{
     BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference,
     Point,
 };
-use std::{
-    collections::HashMap,
-    fmt,
-    sync::{Arc, OnceLock, RwLock},
-};
+use std::{collections::HashMap, fmt};
 
 #[derive(Debug)]
 pub enum PDFError {

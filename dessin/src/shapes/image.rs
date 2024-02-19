@@ -1,7 +1,7 @@
 use super::{BoundingBox, ShapeBoundingBox, UnParticular};
 use crate::shapes::{Shape, ShapeOp};
 use image::DynamicImage;
-use nalgebra::{Point2, Scale2, Transform2, Unit, Vector2};
+use nalgebra::{Point2, Scale2, Transform2, Vector2};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ImagePosition<'a> {
@@ -126,8 +126,6 @@ mod tests {
     use assert_float_eq::*;
     use nalgebra::{Point2, Rotation2, Scale2, Transform2, Translation2};
     use std::f32::consts::SQRT_2;
-
-    const EPS: f32 = 0.001;
 
     #[test]
     fn base() {

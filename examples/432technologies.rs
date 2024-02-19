@@ -49,7 +49,7 @@ impl From<InnerBubbleRing> for Shape {
 
         let angle = PI / 14_f32;
         dessin2!(for n in 0..28 {
-            dessin2!(cloned[ring_strip](
+            dessin2!({ ring_strip.clone() }(
                 rotate = Rotation2::new(n as f32 * angle)
             ))
         })
@@ -95,17 +95,17 @@ impl From<TimerRing> for Shape {
             [
                 Circle(radius = 36.),
                 for x in 0..8 {
-                    dessin2!(cloned[long_line](
+                    dessin2!({ long_line.clone() }(
                         rotate = Rotation2::new(x as f32 * FRAC_PI_4)
                     ))
                 },
                 for x in 0..8 {
-                    dessin2!(cloned[short_line](
+                    dessin2!({ short_line.clone() }(
                         rotate = Rotation2::new(x as f32 * FRAC_PI_4)
                     ))
                 },
                 for x in 0..160 {
-                    dessin2!(cloned[small_line](
+                    dessin2!({ small_line.clone() }(
                         rotate = Rotation2::new(x as f32 * PI / 160.)
                     ))
                 },
@@ -212,14 +212,14 @@ impl From<Squares> for Shape {
 
         let angle = 150_f32.to_radians() / 36.;
         let quarter = dessin2!(for x in 0..36 {
-            dessin2!(cloned[square_line](
+            dessin2!({ square_line.clone() }(
                 rotate = Rotation2::new(x as f32 * angle)
             ))
         });
 
         dessin2!([
-            cloned[quarter](rotate = Rotation2::new(15_f32.to_radians())),
-            var[quarter](rotate = Rotation2::new(195_f32.to_radians())),
+            { quarter.clone() }(rotate = Rotation2::new(15_f32.to_radians())),
+            { quarter }(rotate = Rotation2::new(195_f32.to_radians())),
         ])
     }
 }
@@ -314,7 +314,7 @@ fn main() {
     .unwrap();
 
     // Image
-    dessin2!(var[dessin](scale = [5., 5.]))
+    dessin2!({ dessin }(scale = [5., 5.]))
         .rasterize()
         .unwrap()
         .into_rgba8()

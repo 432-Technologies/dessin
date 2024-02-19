@@ -54,7 +54,7 @@ fn main() {
   });
 
   let dessin = dessin2!([
-    var[dessin](scale = [2., 2.]),
+    { dessin }(scale = [2., 2.]),
     MyShape(say_this = "Hello world"),
   ]);
 
