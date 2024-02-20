@@ -73,3 +73,11 @@ path = "./arc_with_macro.rs"
 [[example]]
 name = "arc_without_macro"
 path = "./arc_without_macro.rs"
+
+[[example]]
+name = "orange_octogon_with_macro"
+path = "./orange_octogon_with_macro.rs"
+
+[[example]]
+name = "orange_octogon_without_macro"
+path = "./orange_octogon_without_macro.rs"
