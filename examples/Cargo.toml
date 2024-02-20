@@ -81,3 +81,15 @@ path = "./orange_octogon_with_macro.rs"
 [[example]]
 name = "orange_octogon_without_macro"
 path = "./orange_octogon_without_macro.rs"
+
+[[example]]
+name = "textbox_with_macro"
+path = "./textbox_with_macro.rs"
+
+[[example]]
+name = "textbox_without_macro"
+path = "./textbox_without_macro.rs"
+
+[[example]]
+name = "diamond_with_macro"
+path = "./diamond_with_macro.rs"

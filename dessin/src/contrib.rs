@@ -20,4 +20,5 @@ auto_import! {
     textbox,
     thick_arc,
     triangle,
+    diamond,
 }
