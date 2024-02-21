@@ -9,7 +9,7 @@ use dessin::nalgebra::Rotation2;
 
 fn main() {
     // creates a octogon
-    let octogon = Triangle_test::default();
+    let octogon = Octogon::default();
 
     let mut octogon = Style::new(octogon);
 
