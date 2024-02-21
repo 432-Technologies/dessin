@@ -3,12 +3,9 @@ use std::fs;
 use dessin::prelude::*;
 use dessin_svg::ToSVG;
 
-use dessin::{
-    nalgebra::{Rotation2,},
-};
+use dessin::nalgebra::Rotation2;
 
 fn main() {
-
     // creates a rectangle with a width of 11 and a height of 6
     let rectangle = Rectangle::default().with_width(11.).with_height(6.);
 
@@ -21,12 +18,15 @@ fn main() {
     rectangle.stroke(Stroke::Full {
         color: rgb(96, 96, 96),
         width: 0.1,
-    
     });
 
     //chooses a rotation of 6 radians in the trigonometric direction
     rectangle.rotate(Rotation2::new(6_f32.to_radians()));
-    
+
     //prints in svg version
-    fs::write("./out/green_rectangle.svg", Shape::from(rectangle).to_svg().unwrap()).unwrap();
+    fs::write(
+        "./out/green_rectangle.svg",
+        Shape::from(rectangle).to_svg().unwrap(),
+    )
+    .unwrap();
 }

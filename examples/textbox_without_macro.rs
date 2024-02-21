@@ -1,9 +1,8 @@
-use std::fs;
-use dessin_svg::ToSVG;
 use dessin::{nalgebra::Rotation2, prelude::*};
+use dessin_svg::ToSVG;
+use std::fs;
 
-fn main(){
-
+fn main() {
     // creates a text
     let text = TextBox::default();
 
@@ -38,6 +37,6 @@ fn main(){
     // chooses a rotation of -6 radians in the trigonometric direction
     text.rotate(Rotation2::new(6_f32.to_radians()));
 
-   // prints in svg version
-   fs::write("./out/text.svg", Shape::from(text).to_svg().unwrap()).unwrap();
+    // prints in svg version
+    fs::write("./out/text.svg", Shape::from(text).to_svg().unwrap()).unwrap();
 }

@@ -18,11 +18,17 @@ fn main() {
         width: 0.2,
     });
 
-    let circle = Style::new(circle).with_fill(Fill::Color(rgb(255, 0, 0))).with_stroke(Stroke::Full {
-        color: rgb(96, 96, 96),
-        width: 0.2,
-    });
-    
+    let circle = Style::new(circle)
+        .with_fill(Fill::Color(rgb(255, 0, 0)))
+        .with_stroke(Stroke::Full {
+            color: rgb(96, 96, 96),
+            width: 0.2,
+        });
+
     //prints in svg version
-    fs::write("./out/red_circle.svg", Shape::from(circle).to_svg().unwrap()).unwrap();
+    fs::write(
+        "./out/red_circle.svg",
+        Shape::from(circle).to_svg().unwrap(),
+    )
+    .unwrap();
 }

@@ -5,8 +5,7 @@ use dessin_svg::ToSVG;
 
 use dessin::nalgebra::Rotation2;
 
-fn main(){
-
+fn main() {
     let arc: Shape = dessin!([
         Arc: #(
 
@@ -18,10 +17,10 @@ fn main(){
         stroke={Stroke::Full { color: rgb(0, 50, 75), width: 0.1}}
 
         // chooses a rotation of -10 radians in the trigonometric direction
-        rotate={Rotation2::new(-10_f32.to_radians())}  
+        rotate={Rotation2::new(-10_f32.to_radians())}
     ),
     ]);
 
-   // prints in svg version
-   fs::write("./out/arc.svg", arc.to_svg().unwrap()).unwrap();
+    // prints in svg version
+    fs::write("./out/arc.svg", arc.to_svg().unwrap()).unwrap();
 }

@@ -7,8 +7,7 @@ use dessin_svg::ToSVG;
 
 use dessin::nalgebra::Rotation2;
 
-fn main(){
-
+fn main() {
     // creates a octogon
     let octogon = Triangle_test::default();
 
@@ -28,6 +27,10 @@ fn main(){
     // chooses a rotation of -10 radians in the trigonometric direction
     octogon.rotate(Rotation2::new(-10_f32.to_radians()));
 
-   // prints in svg version
-   fs::write("./out/orange_octogon.svg", Shape::from(octogon).to_svg().unwrap()).unwrap();
+    // prints in svg version
+    fs::write(
+        "./out/orange_octogon.svg",
+        Shape::from(octogon).to_svg().unwrap(),
+    )
+    .unwrap();
 }
