@@ -1,7 +1,7 @@
 use super::{BoundingBox, ShapeBoundingBox, UnParticular};
 use crate::shapes::{Shape, ShapeOp};
 use image::DynamicImage;
-use nalgebra::{Point2, Scale2, Transform2, Unit, Vector2};
+use nalgebra::{Point2, Scale2, Transform2, Vector2};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ImagePosition<'a> {
@@ -121,13 +121,11 @@ impl ShapeBoundingBox for Image {
 
 #[cfg(test)]
 mod tests {
-    use std::f32::consts::SQRT_2;
-
     use crate::prelude::*;
     use ::image::DynamicImage;
+    use assert_float_eq::*;
     use nalgebra::{Point2, Rotation2, Scale2, Transform2, Translation2};
-
-    const EPS: f32 = 0.000001;
+    use std::f32::consts::SQRT_2;
 
     #[test]
     fn base() {
@@ -176,24 +174,10 @@ mod tests {
             rotate={Rotation2::new(-45_f32.to_radians())}
         ));
         let img_pos = img.position(&Transform2::default());
-        assert!(
-            (img_pos.rotation - 45_f32.to_radians()).abs() < EPS,
-            "left = {}, right = {}",
-            img_pos.rotation,
-            -45_f32.to_radians(),
-        );
-        assert!(
-            (img_pos.width - 1.).abs() < EPS,
-            "left = {}, right = {}",
-            img_pos.width,
-            1.,
-        );
-        assert!(
-            (img_pos.top_left - Point2::new(0., SQRT_2 / 2.)).magnitude() < EPS,
-            "left = {}, right = {}",
-            img_pos.top_left,
-            Point2::new(0., SQRT_2 / 2.),
-        );
+        assert_f32_near!(img_pos.rotation, -45_f32.to_radians());
+        assert_f32_near!(img_pos.width, 1.);
+        assert_f32_near!(img_pos.top_left.x, Point2::new(0., SQRT_2 / 2.).x);
+        assert_f32_near!(img_pos.top_left.y, Point2::new(0., SQRT_2 / 2.).y);
     }
 
     #[test]
@@ -202,24 +186,10 @@ mod tests {
         let parent_transform = Transform2::default() * Rotation2::new(-45_f32.to_radians());
         let img_pos = img.position(&parent_transform);
 
-        assert!(
-            (img_pos.rotation - 45_f32.to_radians()).abs() < EPS,
-            "left = {}, right = {}",
-            img_pos.rotation,
-            -45_f32.to_radians(),
-        );
-        assert!(
-            (img_pos.width - 1.).abs() < EPS,
-            "left = {}, right = {}",
-            img_pos.width,
-            1.,
-        );
-        assert!(
-            (img_pos.top_left - Point2::new(0., SQRT_2 / 2.)).magnitude() < EPS,
-            "left = {}, right = {}",
-            img_pos.top_left,
-            Point2::new(0., SQRT_2 / 2.),
-        );
+        assert_f32_near!(img_pos.rotation, -45_f32.to_radians());
+        assert_f32_near!(img_pos.width, 1.);
+        assert_f32_near!(img_pos.top_left.x, Point2::new(0., SQRT_2 / 2.).x);
+        assert_f32_near!(img_pos.top_left.y, Point2::new(0., SQRT_2 / 2.).y);
     }
 
     #[test]
@@ -246,67 +216,33 @@ mod tests {
         let img = dessin!(var(img): (rotate={ Rotation2::new(-45_f32.to_radians()) }));
         let img_pos = img.position(&Transform2::default());
         println!("Rot(-45deg) = {img_pos:?}\n");
-        assert!(
-            (img_pos.rotation - 45_f32.to_radians()).abs() < EPS,
-            "left = {}, right = {}",
-            img_pos.rotation,
-            -45_f32.to_radians(),
-        );
-        assert!(
-            (img_pos.width - 1.).abs() < EPS,
-            "left = {}, right = {}",
-            img_pos.width,
-            1.,
-        );
-        assert!(
-            (img_pos.top_left - Point2::new(0., SQRT_2 / 2.)).magnitude() < EPS,
-            "left = {}, right = {}",
-            img_pos.top_left,
-            Point2::new(0., SQRT_2 / 2.),
-        );
+        assert_f32_near!(img_pos.rotation, -45_f32.to_radians());
+        assert_f32_near!(img_pos.width, 1.);
+        assert_f32_near!(img_pos.top_left.x, Point2::new(0., SQRT_2 / 2.).x);
+        assert_f32_near!(img_pos.top_left.y, Point2::new(0., SQRT_2 / 2.).y);
 
         let img = dessin!(var(img): (translate = { Translation2::new(1., 0.) }));
         let img_pos = img.position(&Transform2::default());
         println!("Translate_x(1) = {img_pos:?}\n");
-        assert!(
-            (img_pos.rotation - 45_f32.to_radians()).abs() < EPS,
-            "left = {}, right = {}",
-            img_pos.rotation,
-            -45_f32.to_radians(),
-        );
-        assert!(
-            (img_pos.width - 1.).abs() < EPS,
-            "left = {}, right = {}",
-            img_pos.width,
-            1.,
-        );
-        assert!(
-            (img_pos.top_left - Point2::new(1., SQRT_2 / 2.)).magnitude() < EPS,
-            "left = {}, right = {}",
-            img_pos.top_left,
-            Point2::new(1., SQRT_2 / 2.),
-        );
-        assert!(
-            (img_pos.top_right - Point2::new(SQRT_2 / 2. + 1., 0.)).magnitude() < EPS,
-            "left = {}, right = {}",
-            img_pos.top_right,
-            Point2::new(SQRT_2 / 2. + 1., 0.),
-        );
+        assert_f32_near!(img_pos.rotation, -45_f32.to_radians());
+        assert_f32_near!(img_pos.width, 1.);
+        assert_f32_near!(img_pos.top_left.x, Point2::new(1., SQRT_2 / 2.).x);
+        assert_f32_near!(img_pos.top_left.y, Point2::new(1., SQRT_2 / 2.).y);
+        assert_f32_near!(img_pos.top_right.x, Point2::new(SQRT_2 / 2. + 1., 0.).x);
+        assert_f32_near!(img_pos.top_right.y, Point2::new(SQRT_2 / 2. + 1., 0.).y);
 
         let img = dessin!(var(img): (scale = { Scale2::new(3., 2.) }));
         let img_pos = img.position(&Transform2::default());
         println!("Scale(3, 2) = {img_pos:?}\n");
-        assert!(
-            (img_pos.top_left - Point2::new(3. * 1., 2. * SQRT_2 / 2.)).magnitude() < EPS,
-            "left = {}, right = {}",
-            img_pos.top_left,
-            Point2::new(3. * 1., 2. * SQRT_2 / 2.),
+        assert_f32_near!(img_pos.top_left.x, Point2::new(3. * 1., 2. * SQRT_2 / 2.).x);
+        assert_f32_near!(img_pos.top_left.y, Point2::new(3. * 1., 2. * SQRT_2 / 2.).y);
+        assert_f32_near!(
+            img_pos.top_right.x,
+            Point2::new(3. * (SQRT_2 / 2. + 1.), 2. * 0.).x
         );
-        assert!(
-            (img_pos.top_right - Point2::new(3. * (SQRT_2 / 2. + 1.), 2. * 0.)).magnitude() < EPS,
-            "left = {}, right = {}",
-            img_pos.top_right,
-            Point2::new(3. * (SQRT_2 / 2. + 1.), 2. * 0.),
+        assert_f32_near!(
+            img_pos.top_right.y,
+            Point2::new(3. * (SQRT_2 / 2. + 1.), 2. * 0.).y
         );
     }
 }

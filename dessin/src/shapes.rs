@@ -713,10 +713,7 @@ mod tests {
 
     #[test]
     fn parent_rotate_child_scale() {
-        let base = dessin!(Image: (
-            scale={[2., 4.]}
-            translate={[1., 2.]}
-        ));
+        let base = dessin2!(Image(scale = [2., 4.], translate = [1., 2.]));
 
         let base_position = base.position(&Transform2::default());
         assert!(

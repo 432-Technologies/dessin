@@ -43,16 +43,14 @@ impl From<Rectangle> for Curve {
         let bottom_right = Point2::new(0.5, -0.5);
         let bottom_left = Point2::new(-0.5, -0.5);
 
-        dessin! {
-            Curve: (
-                transform={local_transform}
-                then={top_left}
-                then={bottom_left}
-                then={bottom_right}
-                then={top_right}
-                closed
-            )
-        }
+        dessin2!(Curve(
+            transform = local_transform,
+            then = top_left,
+            then = bottom_left,
+            then = bottom_right,
+            then = top_right,
+            closed,
+        ))
     }
 }
 
@@ -72,21 +70,9 @@ mod tests {
 
     #[test]
     fn similar_op() {
-        let base = dessin!(Rectangle: (
-            width={2.}
-            height={3.}
-            translate={[1., 2.]}
-        ));
-
-        let base_2 = dessin!(Rectangle: (
-            scale={[2., 3.]}
-            translate={[1., 2.]}
-        ));
-
-        let base_3 = dessin!(Rectangle: (
-            translate={[1. / 2., 2. / 3.]}
-            scale={[2., 3.]}
-        ));
+        let base = dessin2!(Rectangle(width = 2., height = 3., translate = [1., 2.],));
+        let base_2 = dessin2!(Rectangle(scale = [2., 3.], translate = [1., 2.],));
+        let base_3 = dessin2!(Rectangle(translate = [1. / 2., 2. / 3.], scale = [2., 3.],));
 
         assert_eq!(base, base_2);
         assert_eq!(base, base_3);
@@ -94,11 +80,7 @@ mod tests {
 
     #[test]
     fn parent_rotate_text_scale() {
-        let base = dessin!(Rectangle: (
-            width={2.}
-            height={3.}
-            translate={[1., 2.]}
-        ));
+        let base = dessin2!(Rectangle(width = 2., height = 3., translate = [1., 2.],));
 
         let base_position: Vec<Point2<f32>> = base
             .clone()

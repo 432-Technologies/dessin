@@ -100,7 +100,7 @@ fn dynamic() {
     impl Exporter for TestExporter {
         type Error = ();
 
-        fn start_style(&mut self, style: StylePosition) -> Result<(), Self::Error> {
+        fn start_style(&mut self, _style: StylePosition) -> Result<(), Self::Error> {
             unimplemented!()
         }
 
@@ -108,7 +108,7 @@ fn dynamic() {
             unimplemented!()
         }
 
-        fn export_image(&mut self, image: ImagePosition) -> Result<(), Self::Error> {
+        fn export_image(&mut self, _image: ImagePosition) -> Result<(), Self::Error> {
             unimplemented!()
         }
 
@@ -119,23 +119,18 @@ fn dynamic() {
             Ok(())
         }
 
-        fn export_curve(&mut self, curve: CurvePosition) -> Result<(), Self::Error> {
+        fn export_curve(&mut self, _curve: CurvePosition) -> Result<(), Self::Error> {
             unimplemented!()
         }
 
-        fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> {
+        fn export_text(&mut self, _text: TextPosition) -> Result<(), Self::Error> {
             unimplemented!()
         }
     }
 
     let my_ref = Default::default();
 
-    let c = dessin!([
-        Dynamic<Circle>: (
-            _ref={&my_ref}
-            radius={2.}
-        )
-    ]);
+    let c = dessin2!([Dynamic::<Circle>(_ref = &my_ref, radius = 2.,)]);
     c.write_into_exporter(&mut TestExporter(2.), &Transform2::default())
         .unwrap();
 

@@ -3,7 +3,7 @@ use dessin::{
     export::{Export, Exporter},
     prelude::*,
 };
-use nalgebra::{Scale2, Transform2, Vector2};
+use nalgebra::{Scale2, Transform2};
 use std::{
     fmt::{self, Write},
     io::Cursor,
@@ -259,20 +259,21 @@ impl Exporter for SVGExporter {
     ) -> Result<(), Self::Error> {
         write!(
             self.acc,
-            r#"<ellipse cx="{cx}" cy="{cy}" rx="{semi_major_axis}" ry="{semi_minor_axis}" "#,
+            r#"<ellipse rx="{semi_major_axis}" ry="{semi_minor_axis}" transform=""#,
+        )?;
+
+        write!(
+            self.acc,
+            r#"translate({cx} {cy}) "#,
             cx = center.x,
             cy = center.y
         )?;
 
         if rotation.abs() > 10e-6 {
-            write!(
-                self.acc,
-                r#" transform="rotate({rot})" "#,
-                rot = -rotation.to_degrees()
-            )?;
+            write!(self.acc, r#"rotate({rot}) "#, rot = -rotation.to_degrees())?;
         }
 
-        write!(self.acc, "/>")?;
+        write!(self.acc, r#""/>"#)?;
 
         Ok(())
     }
@@ -322,21 +323,22 @@ impl Exporter for SVGExporter {
 
         write!(
             self.acc,
-            r#"<text x="{x}" y="{y}" font-family="{font}" text-anchor="{align}" font-size="{font_size}px" font-weight="{weight}" text-style="{text_style}""#,
-            x = reference_start.x,
-            y = reference_start.y,
+            r#"<text font-family="{font}" text-anchor="{align}" font-size="{font_size}px" font-weight="{weight}" text-style="{text_style}" transform=""#,
+        )?;
+
+        write!(
+            self.acc,
+            r#"translate({cx} {cy}) "#,
+            cx = reference_start.x,
+            cy = reference_start.y
         )?;
 
         let rotation = direction.y.atan2(direction.x);
         if rotation.abs() > 10e-6 {
-            write!(
-                self.acc,
-                r#" transform="rotate({rot})" "#,
-                rot = -rotation.to_degrees()
-            )?;
+            write!(self.acc, r#"rotate({rot}) "#, rot = rotation.to_degrees())?;
         }
 
-        write!(self.acc, r#">"#)?;
+        write!(self.acc, r#"">"#)?;
 
         if let Some(curve) = on_curve {
             write!(self.acc, r#"<path id="{id}" d=""#)?;

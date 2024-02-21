@@ -1,17 +1,14 @@
 use dessin::{
     export::{Export, Exporter},
+    font::FontGroup,
     prelude::*,
 };
 use nalgebra::Translation2;
-use once_cell::sync::OnceCell;
-use printpdf::{Mm, PdfDocument, PdfDocumentReference, PdfLayerReference};
-use std::{
-    fmt,
-    sync::{Arc, RwLock},
+use printpdf::{
+    BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference,
+    Point,
 };
-
-static FONT_HOLDER: OnceCell<Arc<RwLock<Vec<dessin::font::FontGroup<printpdf::IndirectFontRef>>>>> =
-    OnceCell::new();
+use std::{collections::HashMap, fmt};
 
 #[derive(Debug)]
 pub enum PDFError {
@@ -31,17 +28,27 @@ impl From<printpdf::Error> for PDFError {
     }
 }
 
+type PDFFontHolder = HashMap<String, FontGroup<IndirectFontRef>>;
+
 #[derive(Default)]
 pub struct PDFOptions {
     pub size: Option<(f32, f32)>,
+    pub fonts: PDFFontHolder,
 }
 
 pub struct PDFExporter {
     layer: PdfLayerReference,
+    fonts: PDFFontHolder,
 }
 impl PDFExporter {
-    pub fn new(layer: PdfLayerReference) -> Self {
-        PDFExporter { layer }
+    pub fn new(layer: PdfLayerReference, fonts: PDFFontHolder) -> Self {
+        PDFExporter { layer, fonts }
+    }
+    pub fn new_with_default_font(layer: PdfLayerReference) -> Self {
+        PDFExporter {
+            layer,
+            fonts: PDFFontHolder::default(),
+        }
     }
 }
 
@@ -55,7 +62,7 @@ impl Exporter for PDFExporter {
     ) -> Result<(), Self::Error> {
         if let Some(fill) = fill {
             let (r, g, b) = match fill {
-                Fill::Color(c) => c.as_rgb_f64(),
+                Fill::Color(c) => c.as_rgb_f32(),
             };
 
             self.layer
@@ -69,7 +76,7 @@ impl Exporter for PDFExporter {
 
         if let Some(stroke) = stroke {
             let ((r, g, b), w) = match stroke {
-                Stroke::Full { color, width } => (color.as_rgb_f64(), width),
+                Stroke::Full { color, width } => (color.as_rgb_f32(), width),
                 Stroke::Dashed {
                     color,
                     width,
@@ -86,7 +93,7 @@ impl Exporter for PDFExporter {
                         gap_3: None,
                     });
 
-                    (color.as_rgb_f64(), width)
+                    (color.as_rgb_f32(), width)
                 }
             };
 
@@ -99,7 +106,7 @@ impl Exporter for PDFExporter {
                 }));
 
             self.layer
-                .set_outline_thickness(printpdf::Mm(w as f64).into_pt().0);
+                .set_outline_thickness(printpdf::Mm(w).into_pt().0);
         }
 
         Ok(())
@@ -162,29 +169,97 @@ impl Exporter for PDFExporter {
         printpdf::Image::from_dynamic_image(image).add_to_layer(
             self.layer.clone(),
             printpdf::ImageTransform {
-                translate_x: Some(Mm(bottom_left.x as f64)),
-                translate_y: Some(Mm(bottom_left.y as f64)),
+                translate_x: Some(Mm(bottom_left.x)),
+                translate_y: Some(Mm(bottom_left.y)),
                 rotate: Some(printpdf::ImageRotation {
-                    angle_ccw_degrees: rotation.to_degrees() as f64,
+                    angle_ccw_degrees: rotation.to_degrees(),
                     rotation_center_x: printpdf::Px((width_px / 2) as usize),
                     rotation_center_y: printpdf::Px((height_px / 2) as usize),
                 }),
-                scale_x: Some(scale_width as f64),
-                scale_y: Some(scale_height as f64),
-                dpi: Some(dpi as f64),
+                scale_x: Some(scale_width),
+                scale_y: Some(scale_height),
+                dpi: Some(dpi),
             },
         );
 
         Ok(())
     }
 
-    fn export_curve(&mut self, _curve: CurvePosition) -> Result<(), Self::Error> {
-        // TODO
+    fn export_curve(&mut self, curve: CurvePosition) -> Result<(), Self::Error> {
+        let points1 = curve
+            .keypoints
+            .iter()
+            .enumerate()
+            .flat_map(|(i, key_point)| {
+                let next_control = matches!(curve.keypoints.get(i + 1), Some(KeypointPosition::Bezier(b)) if b.start.is_none());
+                match key_point {
+                    KeypointPosition::Point(p) => {
+                        vec![(Point::new(Mm(p.x), Mm(p.y)), next_control)]
+                    }
+                    KeypointPosition::Bezier(b) => {
+                        let mut res = vec![];
+                        if let Some(start) = b.start {
+                            res.push((Point::new(Mm(start.x), Mm(start.y)), true));
+                        }
+                        res.append(&mut vec![
+                                (
+                                    Point::new(Mm(b.start_control.x), Mm(b.start_control.y)),
+                                    true,
+                                ),
+                                (Point::new(Mm(b.end_control.x), Mm(b.end_control.y)), false),
+                                (Point::new(Mm(b.end.x), Mm(b.end.y)), next_control),
+                            ]);
+                        res
+                    }
+                }
+            })
+            .collect();
+
+        let line = Line {
+            points: points1,
+            is_closed: curve.closed,
+        };
+        self.layer.add_line(line);
         Ok(())
     }
 
-    fn export_text(&mut self, _text: TextPosition) -> Result<(), Self::Error> {
-        // TODO
+    fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> {
+        let font = text
+            .font
+            .as_ref()
+            .map(|f| f.font_family())
+            .unwrap_or("default");
+        let font = self
+            .fonts
+            .get(font)
+            .and_then(|font| match text.font_weight {
+                FontWeight::Regular => Some(font.regular.clone()),
+                FontWeight::Bold => font.bold.clone(),
+                FontWeight::Italic => font.italic.clone(),
+                FontWeight::BoldItalic => font.bold_italic.clone(),
+            })
+            .unwrap();
+        self.layer.begin_text_section();
+        self.layer.set_font(&font, text.font_size);
+        // if let Some(te) = text.on_curve {
+        //     self.layer.add_polygon()
+        //     todo!()
+        // }
+        let rotation = text.direction.y.atan2(text.direction.x).to_degrees();
+        self.layer
+            .set_text_rendering_mode(printpdf::TextRenderingMode::Fill);
+        self.layer
+            .set_text_matrix(printpdf::TextMatrix::TranslateRotate(
+                Mm(text.reference_start.x).into_pt(),
+                Mm(text.reference_start.y).into_pt(),
+                rotation,
+            ));
+
+        // self.layer.set_line_height(text.font_size);
+        // self.layer.set_word_spacing(3000.0);
+        // self.layer.set_character_spacing(10.0);
+        self.layer.write_text(text.text, &font);
+        self.layer.end_text_section();
         Ok(())
     }
 }
@@ -225,8 +300,7 @@ impl ToPDF for Shape {
             let bb = self.local_bounding_box();
             (bb.width(), bb.height())
         });
-
-        let mut exporter = PDFExporter::new(layer);
+        let mut exporter = PDFExporter::new(layer, options.fonts);
         let translation = Translation2::new(width / 2., height / 2.);
         let parent_transform = nalgebra::convert(translation);
 
@@ -237,43 +311,38 @@ impl ToPDF for Shape {
         &self,
         mut options: PDFOptions,
     ) -> Result<PdfDocumentReference, PDFError> {
-        let size = options.size.unwrap_or_else(|| {
+        let size = options.size.get_or_insert_with(|| {
             let bb = self.local_bounding_box();
             (bb.width(), bb.height())
         });
-        options.size = Some(size);
-
-        let (doc, page, layer) =
-            PdfDocument::new("", Mm(size.0 as f64), Mm(size.1 as f64), "Layer 1");
+        let (doc, page, layer) = PdfDocument::new("", Mm(size.0), Mm(size.1), "Layer 1");
         let layer = doc.get_page(page).get_layer(layer);
+        let default_regular = doc.add_builtin_font(BuiltinFont::Helvetica).unwrap();
+        let default_bold = doc.add_builtin_font(BuiltinFont::HelveticaBold).unwrap();
+        let default_italic = doc.add_builtin_font(BuiltinFont::HelveticaOblique).unwrap();
+        let default_bold_italic = doc
+            .add_builtin_font(BuiltinFont::HelveticaBoldOblique)
+            .unwrap();
+        options.fonts.insert(
+            "default".to_string(),
+            dessin::font::FontGroup {
+                regular: default_regular,
+                bold: Some(default_bold),
+                bold_italic: Some(default_bold_italic),
+                italic: Some(default_italic),
+            },
+        );
 
-        for dessin::font::FontGroup {
-            regular,
-            bold,
-            italic,
-            bold_italic,
-        } in dessin::font::fonts().values()
+        for (
+            key,
+            dessin::font::FontGroup {
+                regular,
+                bold,
+                italic,
+                bold_italic,
+            },
+        ) in dessin::font::fonts()
         {
-            // fn find_builtin_font(f: &str) -> Result<printpdf::BuiltinFont, PDFError> {
-            //     match f {
-            //         "TimesRoman" => Ok(printpdf::BuiltinFont::TimesRoman),
-            //         "TimesBold" => Ok(printpdf::BuiltinFont::TimesBold),
-            //         "TimesItalic" => Ok(printpdf::BuiltinFont::TimesItalic),
-            //         "TimesBoldItalic" => Ok(printpdf::BuiltinFont::TimesBoldItalic),
-            //         "Helvetica" => Ok(printpdf::BuiltinFont::Helvetica),
-            //         "HelveticaBold" => Ok(printpdf::BuiltinFont::HelveticaBold),
-            //         "HelveticaOblique" => Ok(printpdf::BuiltinFont::HelveticaOblique),
-            //         "HelveticaBoldOblique" => Ok(printpdf::BuiltinFont::HelveticaBoldOblique),
-            //         "Courier" => Ok(printpdf::BuiltinFont::Courier),
-            //         "CourierOblique" => Ok(printpdf::BuiltinFont::CourierOblique),
-            //         "CourierBold" => Ok(printpdf::BuiltinFont::CourierBold),
-            //         "CourierBoldOblique" => Ok(printpdf::BuiltinFont::CourierBoldOblique),
-            //         "Symbol" => Ok(printpdf::BuiltinFont::Symbol),
-            //         "ZapfDingbats" => Ok(printpdf::BuiltinFont::ZapfDingbats),
-            //         _ => Err(PDFError::UnknownBuiltinFont(f.to_string())),
-            //     }
-            // }
-
             let regular = match regular {
                 // dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
                 dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
@@ -310,16 +379,14 @@ impl ToPDF for Shape {
                 }
                 None => None,
             };
-
-            let fh = FONT_HOLDER.get_or_init(|| Arc::new(RwLock::new(vec![])));
-            fh.write().unwrap().push(dessin::font::FontGroup {
+            let fonts_group = dessin::font::FontGroup {
                 regular,
                 bold,
                 bold_italic,
                 italic,
-            });
+            };
+            options.fonts.insert(key, fonts_group);
         }
-
         self.write_to_pdf_with_options(layer, options)?;
 
         Ok(doc)

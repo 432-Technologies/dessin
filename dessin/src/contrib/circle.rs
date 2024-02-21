@@ -84,7 +84,7 @@ pub fn bounding_box() {
     use assert_float_eq::*;
     use std::f32::consts::FRAC_PI_4;
 
-    let mut circle: Shape = Circle::default().with_radius(10.).into();
+    let circle: Shape = Circle::default().with_radius(10.).into();
 
     let bb = circle.local_bounding_box();
     assert_eq!(bb.width(), 20.);
@@ -116,17 +116,13 @@ pub fn bounding_box() {
 pub fn bounding_box_7() {
     use crate::prelude::*;
 
-    let mut circle: Shape = Circle::default().with_radius(7.).into();
+    let circle: Shape = Circle::default().with_radius(7.).into();
 
     let bb = circle.local_bounding_box();
     assert_eq!(bb.width(), 14.);
     assert_eq!(bb.height(), 14.);
 
-    let group = dessin!([
-        Circle: (
-            radius={7.}
-        ),
-    ]);
+    let group = dessin2!([Circle(radius = 7.),]);
     let bb = group.local_bounding_box();
     assert_eq!(bb.width(), 14.);
     assert_eq!(bb.height(), 14.);

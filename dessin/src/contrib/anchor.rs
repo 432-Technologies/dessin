@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn base() {
-        let Shape::Image(img) = Shape::from(dessin!(Anchor<Image>: ())) else {
+        let Shape::Image(img) = Shape::from(dessin2!(Anchor::<Image>())) else {
             unreachable!()
         };
 
@@ -139,9 +139,7 @@ mod tests {
 
     #[test]
     fn anchor() {
-        let Shape::Image(img) = Shape::from(dessin!(Anchor<Image>: (
-            anchor={[1., 1.]}
-        ))) else {
+        let Shape::Image(img) = Shape::from(dessin2!(Anchor::<Image>(anchor = [1., 1.]))) else {
             unreachable!()
         };
 
@@ -165,9 +163,7 @@ mod tests {
 
     #[test]
     fn translate() {
-        let Shape::Image(img) = Shape::from(dessin!(Anchor<Image>: (
-            anchor={[1., 1.]}
-        ))) else {
+        let Shape::Image(img) = Shape::from(dessin2!(Anchor::<Image>(anchor = [1., 1.]))) else {
             unreachable!()
         };
 
