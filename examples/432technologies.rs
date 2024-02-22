@@ -307,14 +307,14 @@ fn main() {
     let path = get_project_root().unwrap().join("examples/out/");
 
     // SVG
-    fs::write(path.join("432technologies.svg"), dessin.to_svg().unwrap()).unwrap();
+    // fs::write(path.join("432technologies.svg"), dessin.to_svg().unwrap()).unwrap();
 
-    // PDF
-    fs::write(
-        path.join("432technologies.pdf"),
-        dessin.to_pdf().unwrap().save_to_bytes().unwrap(),
-    )
-    .unwrap();
+    // // PDF
+    // fs::write(
+    //     path.join("432technologies.pdf"),
+    //     dessin.to_pdf().unwrap().save_to_bytes().unwrap(),
+    // )
+    // .unwrap();
 
     // Image
     dessin2!({ dessin }(scale = [5., 5.]))
