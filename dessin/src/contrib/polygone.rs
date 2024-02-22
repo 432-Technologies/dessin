@@ -57,12 +57,12 @@ impl<const N: u32> From<Polygon<N>> for Shape {
 
 #[test]
 fn triangle() {
-    use crate::prelude::{polygons::*, *};
+    use crate::prelude::*;
     use assert_float_eq::*;
 
     let sqrt3_over_2 = 3f32.sqrt() / 2.;
 
-    let Shape::Curve(triangle) = Triangle::default().as_shape() else {
+    let Shape::Curve(triangle) = polygons::Triangle::default().as_shape() else {
         panic!("Not a curve");
     };
 
@@ -122,7 +122,7 @@ fn triangle_in_group() {
         local_transform,
         shapes,
         ..
-    }) = dessin2!([Triangle()])
+    }) = dessin2!([polygons::Triangle()])
     else {
         panic!("Not a group");
     };
@@ -152,15 +152,15 @@ fn triangle_in_group() {
 
 #[test]
 fn bounding_box() {
-    use crate::prelude::{polygons::*, *};
+    use crate::prelude::*;
     use nalgebra::Rotation2;
     use std::f32::consts::FRAC_PI_4;
 
     let polys: [(usize, Shape); 4] = [
-        (3, Triangle::default().into()),
-        (4, Square::default().into()),
-        (8, Octogon::default().into()),
-        (10, Decagon::default().into()),
+        (3, polygons::Triangle::default().into()),
+        (4, polygons::Square::default().into()),
+        (8, polygons::Octogon::default().into()),
+        (10, polygons::Decagon::default().into()),
     ];
 
     for (n, mut poly) in polys.into_iter() {
