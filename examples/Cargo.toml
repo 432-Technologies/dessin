@@ -21,3 +21,79 @@ path = "./text_rotation.rs"
 [[example]]
 name = "animation"
 path = "./animation.rs"
+
+[[example]]
+name = "red_circle_with_macro"
+path = "./red_circle_with_macro.rs"
+
+[[example]]
+name = "red_circle_without_macro"
+path = "./red_circle_without_macro.rs"
+
+[[example]]
+name = "green_rectangle_with_macro"
+path = "./green_rectangle_with_macro.rs"
+
+[[example]]
+name = "green_rectangle_without_macro"
+path = "./green_rectangle_without_macro.rs"
+
+[[example]]
+name = "blue_triangle_with_macro"
+path = "./blue_triangle_with_macro.rs"
+
+[[example]]
+name = "blue_triangle_without_macro"
+path = "./blue_triangle_without_macro.rs"
+
+[[example]]
+name = "yellow_thick_arc_with_macro"
+path = "./yellow_thick_arc_with_macro.rs"
+
+[[example]]
+name = "yellow_thick_arc_without_macro"
+path = "./yellow_thick_arc_without_macro.rs"
+
+[[example]]
+name = "right_angle_triangle_with_macro"
+path = "./right_angle_triangle_with_macro.rs"
+
+[[example]]
+name = "right_angle_triangle_without_macro"
+path = "./right_angle_triangle_without_macro.rs"
+
+[[example]]
+name = "any_triangle_with_macro"
+path = "./any_triangle_with_macro.rs"
+
+[[example]]
+name = "any_triangle_without_macro"
+path = "./any_triangle_without_macro.rs"
+
+[[example]]
+name = "arc_with_macro"
+path = "./arc_with_macro.rs"
+
+[[example]]
+name = "arc_without_macro"
+path = "./arc_without_macro.rs"
+
+[[example]]
+name = "orange_octogon_with_macro"
+path = "./orange_octogon_with_macro.rs"
+
+[[example]]
+name = "orange_octogon_without_macro"
+path = "./orange_octogon_without_macro.rs"
+
+[[example]]
+name = "textbox_with_macro"
+path = "./textbox_with_macro.rs"
+
+[[example]]
+name = "textbox_without_macro"
+path = "./textbox_without_macro.rs"
+
+[[example]]
+name = "diamond_with_macro"
+path = "./diamond_with_macro.rs"
