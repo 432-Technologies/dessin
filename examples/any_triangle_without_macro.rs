@@ -7,7 +7,7 @@ use dessin::nalgebra::Rotation2;
 
 fn main() {
     // creates a triangle
-    let triangle = Triangle_test::default();
+    let triangle = Triangle::default();
 
     let mut triangle = Style::new(triangle);
 

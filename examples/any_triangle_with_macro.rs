@@ -7,7 +7,7 @@ use dessin::nalgebra::Rotation2;
 
 fn main() {
     let triangle: Shape = dessin!([
-         Triangle_test: #(
+         Triangle: #(
 
          //chooses the size of the first side of the triangle which is on the x axis without rotation : 4
          width_x_axis={4.}
