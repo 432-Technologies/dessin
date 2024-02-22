@@ -114,7 +114,10 @@ use syn::{parse_macro_input, DataStruct, DeriveInput, Fields, FieldsNamed, Type}
 /// }
 /// ```
 #[proc_macro]
-#[deprecated]
+#[deprecated(
+    since = "0.8.18-pre",
+    note = "A new macro `dessin2` was built to replace it"
+)]
 pub fn dessin(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let dessin = parse_macro_input!(tokens as dessin_macro_old::Dessin);
 
