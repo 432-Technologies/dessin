@@ -1,9 +1,8 @@
 use std::fs;
 
-use dessin::prelude::*;
+use dessin::{nalgebra::Rotation2, prelude::*};
 use dessin_svg::ToSVG;
-
-use dessin::nalgebra::Rotation2;
+use project_root::get_project_root;
 
 fn main() {
     // creates a rectangle with a width of 11 and a height of 6
@@ -25,7 +24,9 @@ fn main() {
 
     //prints in svg version
     fs::write(
-        "./out/green_rectangle.svg",
+        get_project_root()
+            .unwrap()
+            .join("examples/out/green_rectangle.svg"),
         Shape::from(rectangle).to_svg().unwrap(),
     )
     .unwrap();

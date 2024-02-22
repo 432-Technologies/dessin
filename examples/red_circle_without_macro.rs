@@ -2,6 +2,7 @@ use std::fs;
 
 use dessin::prelude::*;
 use dessin_svg::ToSVG;
+use project_root::get_project_root;
 
 fn main() {
     // creates a circle with radius of 11
@@ -27,7 +28,9 @@ fn main() {
 
     //prints in svg version
     fs::write(
-        "./out/red_circle.svg",
+        get_project_root()
+            .unwrap()
+            .join("examples/out/red_circle.svg"),
         Shape::from(circle).to_svg().unwrap(),
     )
     .unwrap();

@@ -5,6 +5,7 @@ use dessin::{
 use dessin_image::ToImage;
 use dessin_pdf::ToPDF;
 use dessin_svg::ToSVG;
+use project_root::get_project_root;
 use std::{
     f32::consts::{FRAC_PI_4, FRAC_PI_8, PI},
     fs,
@@ -303,12 +304,14 @@ impl From<Logo432> for Shape {
 fn main() {
     let dessin = Shape::from(Logo432);
 
+    let path = get_project_root().unwrap().join("examples/out/");
+
     // SVG
-    fs::write("./target/432.svg", dessin.to_svg().unwrap()).unwrap();
+    fs::write(path.join("432technologies.svg"), dessin.to_svg().unwrap()).unwrap();
 
     // PDF
     fs::write(
-        "./target/432.pdf",
+        path.join("432technologies.pdf"),
         dessin.to_pdf().unwrap().save_to_bytes().unwrap(),
     )
     .unwrap();
@@ -318,6 +321,6 @@ fn main() {
         .rasterize()
         .unwrap()
         .into_rgba8()
-        .save("./target/432.png")
+        .save(path.join("432technologies.png"))
         .unwrap();
 }

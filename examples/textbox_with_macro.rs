@@ -1,8 +1,8 @@
 use std::fs;
 
-use dessin_svg::ToSVG;
-
 use dessin::{nalgebra::Rotation2, prelude::*};
+use dessin_svg::ToSVG;
+use project_root::get_project_root;
 
 fn main() {
     let text: Shape = dessin!([
@@ -40,5 +40,9 @@ fn main() {
     ]);
 
     // prints in svg version
-    fs::write("./out/text.svg", text.to_svg().unwrap()).unwrap();
+    fs::write(
+        get_project_root().unwrap().join("examples/out/text.svg"),
+        text.to_svg().unwrap(),
+    )
+    .unwrap();
 }
