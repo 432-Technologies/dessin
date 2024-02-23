@@ -97,3 +97,31 @@ path = "./textbox_without_macro.rs"
 [[example]]
 name = "diamond_with_macro"
 path = "./diamond_with_macro.rs"
+
+[[example]]
+name = "diamond_without_macro"
+path = "./diamond_without_macro.rs"
+
+[[example]]
+name = "optical_effect_with_macro"
+path = "./optical_effect_with_macro.rs"
+
+[[example]]
+name = "optical_effect_without_macro"
+path = "./optical_effect_without_macro.rs"
+
+[[example]]
+name = "basque_cross_with_macro"
+path = "./basque_cross_with_macro.rs"
+
+[[example]]
+name = "basque_cross_without_macro"
+path = "./basque_cross_without_macro.rs"
+
+[[example]]
+name = "line_with_macro"
+path = "./line_with_macro.rs"
+
+[[example]]
+name = "line_without_macro"
+path = "./line_without_macro.rs"

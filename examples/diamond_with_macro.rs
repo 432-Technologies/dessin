@@ -33,6 +33,7 @@ fn main() {
          // chooses a rotation of -10 radians in the trigonometric direction
          rotate={Rotation2::new(-10_f32.to_radians())}
 
+         // moves of 15 following the x axis and 5 following the y axis
          translate={[15.,5.]}
      ),
 
