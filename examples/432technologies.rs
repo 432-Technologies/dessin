@@ -4,8 +4,7 @@ use dessin::{
 };
 use dessin_image::ToImage;
 use dessin_pdf::ToPDF;
-use dessin_svg::ToSVG;
-use project_root::get_project_root;
+use dessin_svg::SVG;
 use std::{
     f32::consts::{FRAC_PI_4, FRAC_PI_8, PI},
     fs,
@@ -307,7 +306,11 @@ fn main() {
     let path = get_project_root().unwrap().join("examples/out/");
 
     // SVG
-    // fs::write(path.join("432technologies.svg"), dessin.to_svg().unwrap()).unwrap();
+    fs::write(
+        "./target/432.svg",
+        SVG::from(dessin.clone()).to_string().unwrap(),
+    )
+    .unwrap();
 
     // // PDF
     // fs::write(

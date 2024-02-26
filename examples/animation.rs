@@ -22,18 +22,8 @@ fn main() {
     );
 
     loop {
-        let final_image = frame.to_svg().unwrap();
-        fs::write(
-            get_project_root()
-                .unwrap()
-                .join("examples/out/animation.svg"),
-            final_image,
-        )
-        .unwrap();
-
-        if skip_animation {
-            break;
-        }
+        let final_image = SVG::from(frame.clone()).to_string().unwrap();
+        fs::write("test.svg", final_image).unwrap();
 
         std::thread::sleep(Duration::from_millis(100));
         let mut t = triangle.write().unwrap();

@@ -1,7 +1,7 @@
 use std::fs;
 
 use dessin::{nalgebra::Point2, prelude::*};
-use dessin_svg::ToSVG;
+use dessin_svg::SVG;
 
 fn main() {
     let line: Shape = dessin2!([
@@ -24,5 +24,5 @@ fn main() {
     ]);
 
     // prints in svg version
-    fs::write("./out/line.svg", line.to_svg().unwrap()).unwrap();
+    fs::write("./out/line.svg", SVG::from(line).to_string().unwrap()).unwrap();
 }

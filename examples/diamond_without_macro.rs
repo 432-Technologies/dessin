@@ -1,7 +1,7 @@
 use std::fs;
 
 use dessin::{prelude::*, shapes};
-use dessin_svg::ToSVG;
+use dessin_svg::SVG;
 
 use dessin::nalgebra::Rotation2;
 
@@ -48,5 +48,9 @@ fn main() {
     group.shapes = vec![diamond, circle];
 
     // prints in svg version with Shape::from(...) -> Shape::Group(group) because of the group
-    fs::write("./out/diamond.svg", Shape::Group(group).to_svg().unwrap()).unwrap();
+    fs::write(
+        "./out/diamond.svg",
+        SVG::from(Shape::Group(group)).to_string().unwrap(),
+    )
+    .unwrap();
 }

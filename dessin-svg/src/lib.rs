@@ -7,6 +7,7 @@ use nalgebra::{Scale2, Transform2};
 use std::{
     fmt::{self, Write},
     io::Cursor,
+    ops::Deref,
 };
 
 #[derive(Debug)]
@@ -44,7 +45,7 @@ pub enum ViewPort {
     AutoBoundingBox,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct SVGOptions {
     pub viewport: ViewPort,
 }
@@ -355,16 +356,13 @@ impl Exporter for SVGExporter {
     }
 }
 
-pub trait ToSVG {
-    fn to_svg_with_options(&self, options: SVGOptions) -> Result<String, SVGError>;
-
-    fn to_svg(&self) -> Result<String, SVGError> {
-        self.to_svg_with_options(SVGOptions::default())
-    }
+pub struct SVG {
+    pub input_dessin: Shape,
+    pub options: SVGOptions,
 }
 
-impl ToSVG for Shape {
-    fn to_svg_with_options(&self, options: SVGOptions) -> Result<String, SVGError> {
+impl SVG {
+    pub fn to_string_with_options(&self, options: SVGOptions) -> Result<String, SVGError> {
         let (min_x, min_y, span_x, span_y) = match options.viewport {
             ViewPort::ManualCentered { width, height } => {
                 (-width / 2., -height / 2., width, height)
@@ -376,7 +374,7 @@ impl ToSVG for Shape {
                 height,
             } => (x - width / 2., y - height / 2., width, height),
             ViewPort::AutoCentered => {
-                let bb = self.local_bounding_box().straigthen();
+                let bb = self.input_dessin.local_bounding_box().straigthen();
 
                 let mirror_bb = bb
                     .transform(&nalgebra::convert::<_, Transform2<f32>>(Scale2::new(
@@ -394,7 +392,7 @@ impl ToSVG for Shape {
                 )
             }
             ViewPort::AutoBoundingBox => {
-                let bb = self.local_bounding_box().straigthen();
+                let bb = self.input_dessin.local_bounding_box().straigthen();
 
                 (bb.top_left().x, -bb.top_left().y, bb.width(), bb.height())
             }
@@ -403,8 +401,22 @@ impl ToSVG for Shape {
         let mut exporter = SVGExporter::new(min_x, min_y, span_x, span_y);
 
         let parent_transform = nalgebra::convert(Scale2::new(1., -1.));
-        self.write_into_exporter(&mut exporter, &parent_transform)?;
+        self.input_dessin
+            .write_into_exporter(&mut exporter, &parent_transform)?;
 
         Ok(exporter.finish())
+    }
+
+    pub fn to_string(&self) -> Result<String, SVGError> {
+        self.to_string_with_options(self.options.clone())
+    }
+}
+
+impl<T: Into<Shape>> From<T> for SVG {
+    fn from(value: T) -> Self {
+        SVG {
+            input_dessin: value.into(),
+            options: SVGOptions::default(),
+        }
     }
 }

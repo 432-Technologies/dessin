@@ -1,7 +1,7 @@
 use std::{f32::consts::PI, fs};
 
 use dessin::{nalgebra::Rotation2, prelude::*};
-use dessin_svg::{SVGOptions, ToSVG};
+use dessin_svg::{SVGOptions, SVG};
 
 fn main() {
     let rectangle1 = Rectangle::default();
@@ -10,9 +10,12 @@ fn main() {
     let mut rectangle1 = Style::new(rectangle1);
 
     rectangle1.width(15.);
+    rectangle1.width(15.);
 
     rectangle1.height(15.);
+    rectangle1.height(15.);
 
+    rectangle1.fill(Fill::Color(rgb(150, 150, 150)));
     rectangle1.fill(Fill::Color(rgb(150, 150, 150)));
 
     let rectangle1 = Shape::from(rectangle1);
@@ -23,6 +26,7 @@ fn main() {
     group.shapes = vec![];
 
     // add rectangle1 in the group at first to let it be the font
+    group.shapes.push(Shape::from(rectangle1));
     group.shapes.push(Shape::from(rectangle1));
 
     // creates the optical effect
@@ -36,14 +40,17 @@ fn main() {
         optical_effect.inner_radius(0.);
 
         optical_effect.span_angle(PI / 10_f32);
+        optical_effect.span_angle(PI / 10_f32);
 
         // paints the inside of the thick arc in black
         optical_effect.fill(Fill::Color(rgb(0, 0, 0)));
 
         // chooses a rotation of (n*PI)/5 radians in the trigonometric direction
         optical_effect.rotate(Rotation2::new(PI * (n as f32) / 5_f32));
+        optical_effect.rotate(Rotation2::new(PI * (n as f32) / 5_f32));
 
         // add the nth optical effect in the group
+        group.shapes.push(Shape::from(optical_effect));
         group.shapes.push(Shape::from(optical_effect));
     }
 
@@ -53,9 +60,15 @@ fn main() {
     let mut rectangle2 = Style::new(rectangle2);
 
     rectangle2.width(15.);
+    rectangle2.width(15.);
 
     rectangle2.height(15.);
+    rectangle2.height(15.);
 
+    rectangle2.stroke(Stroke::Full {
+        color: rgb(0, 0, 0),
+        width: 1.,
+    });
     rectangle2.stroke(Stroke::Full {
         color: rgb(0, 0, 0),
         width: 1.,
@@ -67,6 +80,7 @@ fn main() {
     let mut circle = Style::new(circle);
 
     circle.fill(rgb(255, 255, 255));
+    circle.fill(rgb(255, 255, 255));
 
     // transforms rectangle2 and circle into Shape
     let rectangle2 = Shape::from(rectangle2);
@@ -74,12 +88,14 @@ fn main() {
 
     group.shapes.push(Shape::from(rectangle2));
     group.shapes.push(Shape::from(circle));
+    group.shapes.push(Shape::from(rectangle2));
+    group.shapes.push(Shape::from(circle));
 
     // prints in svg version with Shape::from(...) -> Shape::Group(group) because of the group
     fs::write(
         "./out/optical_effect.svg",
-        Shape::Group(group)
-            .to_svg_with_options(SVGOptions {
+        SVG::from(Shape::Group(group))
+            .to_string_with_options(SVGOptions {
                 viewport: dessin_svg::ViewPort::ManualCentered {
                     width: 14.,
                     height: 14.,
@@ -90,7 +106,9 @@ fn main() {
     .unwrap();
 }
 //.to_svg_with_options(SVGOptions{viewport:dessin_svg::ViewPort::ManualCentered permits to choose how we will see the svg
+//.to_svg_with_options(SVGOptions{viewport:dessin_svg::ViewPort::ManualCentered permits to choose how we will see the svg
 
 // Note :
+// (1) This solution is not be optimal because we can merge these two renctangles into one.
 // (1) This solution is not be optimal because we can merge these two renctangles into one.
 // (2) This code micht not return what we expect if you use "microsoft edge" but there is no same case with others like "google chrome" or "firefox"
