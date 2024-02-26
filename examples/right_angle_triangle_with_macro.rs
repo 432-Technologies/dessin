@@ -1,9 +1,8 @@
 use std::{f32::consts::PI, fs};
 
-use dessin::prelude::*;
+use dessin::{nalgebra::Rotation2, prelude::*};
 use dessin_svg::ToSVG;
-
-use dessin::nalgebra::Rotation2;
+use project_root::get_project_root;
 
 fn main() {
     let triangle: Shape = dessin!([
@@ -33,5 +32,11 @@ fn main() {
     ]);
 
     // prints in svg version
-    fs::write("./out/right_angle_triangle.svg", triangle.to_svg().unwrap()).unwrap();
+    fs::write(
+        get_project_root()
+            .unwrap()
+            .join("examples/out/right_angle_triangle.svg"),
+        triangle.to_svg().unwrap(),
+    )
+    .unwrap();
 }

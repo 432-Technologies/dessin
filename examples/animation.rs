@@ -3,8 +3,11 @@ use std::{fs, time::Duration};
 use dessin::{nalgebra::Rotation2, prelude::*};
 use dessin_image::*;
 use dessin_svg::*;
+use project_root::get_project_root;
 
 fn main() {
+    let skip_animation = std::env::var("NO_ANIMATION") == Ok("1".to_string());
+
     let test_img = dessin2!(polygons::Triangle!(fill = Color::BLUE) > (scale = [50., 50.]))
         .rasterize()
         .unwrap();
@@ -20,7 +23,17 @@ fn main() {
 
     loop {
         let final_image = frame.to_svg().unwrap();
-        fs::write("test.svg", final_image).unwrap();
+        fs::write(
+            get_project_root()
+                .unwrap()
+                .join("examples/out/animation.svg"),
+            final_image,
+        )
+        .unwrap();
+
+        if skip_animation {
+            break;
+        }
 
         std::thread::sleep(Duration::from_millis(100));
         let mut t = triangle.write().unwrap();

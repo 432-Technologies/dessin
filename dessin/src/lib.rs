@@ -143,9 +143,7 @@ pub use ::nalgebra;
 /// Prelude module includes everyting you need to build a dessin.
 /// You can of courses cherry pick what you need by importing directly from other modules.
 pub mod prelude {
-    pub use crate::contrib::*;
-    pub use crate::shapes::*;
-    pub use crate::style::*;
+    pub use crate::{contrib::*, shapes::*, style::*};
     pub use ::dessin_macros::{dessin, dessin2, Shape};
 }
 

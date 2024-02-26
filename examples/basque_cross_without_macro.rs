@@ -62,14 +62,12 @@ fn main() {
 
         little_half_circle.rotate(Rotation2::new(PI * (n as f32) / 2_f32));
 
-
-        
         let large_half_circle = Shape::from(large_half_circle);
         let small_red_circle = Shape::from(small_red_circle);
         let little_half_circle = Shape::from(little_half_circle);
-    
+
         // add each figures in the group
-        
+
         group.shapes.push(large_half_circle);
         group.shapes.push(small_red_circle);
         group.shapes.push(little_half_circle);

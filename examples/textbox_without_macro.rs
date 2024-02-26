@@ -1,5 +1,6 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
 use dessin_svg::ToSVG;
+use project_root::get_project_root;
 use std::fs;
 
 fn main() {
@@ -38,5 +39,9 @@ fn main() {
     text.rotate(Rotation2::new(6_f32.to_radians()));
 
     // prints in svg version
-    fs::write("./out/text.svg", Shape::from(text).to_svg().unwrap()).unwrap();
+    fs::write(
+        get_project_root().unwrap().join("examples/out/text.svg"),
+        Shape::from(text).to_svg().unwrap(),
+    )
+    .unwrap();
 }

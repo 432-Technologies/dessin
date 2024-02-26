@@ -1,9 +1,8 @@
 use std::fs;
 
-use dessin::prelude::*;
+use dessin::{nalgebra::Rotation2, prelude::*};
 use dessin_svg::ToSVG;
-
-use dessin::nalgebra::Rotation2;
+use project_root::get_project_root;
 
 fn main() {
     let circle: Shape = dessin!([
@@ -24,5 +23,11 @@ fn main() {
     ]);
 
     // prints in svg version
-    fs::write("./out/red_circle.svg", circle.to_svg().unwrap()).unwrap();
+    fs::write(
+        get_project_root()
+            .unwrap()
+            .join("examples/out/red_circle.svg"),
+        circle.to_svg().unwrap(),
+    )
+    .unwrap();
 }

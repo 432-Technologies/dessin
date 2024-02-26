@@ -1,9 +1,8 @@
 use std::{f32::consts::PI, fs};
 
-use dessin::prelude::*;
+use dessin::{nalgebra::Rotation2, prelude::*};
 use dessin_svg::ToSVG;
-
-use dessin::nalgebra::Rotation2;
+use project_root::get_project_root;
 
 fn main() {
     // creates a triangle
@@ -25,5 +24,9 @@ fn main() {
     arc.rotate(Rotation2::new(-10_f32.to_radians()));
 
     // prints in svg version
-    fs::write("./out/arc.svg", Shape::from(arc).to_svg().unwrap()).unwrap();
+    fs::write(
+        get_project_root().unwrap().join("examples/out/arc.svg"),
+        Shape::from(arc).to_svg().unwrap(),
+    )
+    .unwrap();
 }
