@@ -112,7 +112,7 @@ fn square() {
 
 #[test]
 fn triangle_in_group() {
-    use crate::prelude::{polygons::*, *};
+    use crate::prelude::*;
     use assert_float_eq::*;
     use nalgebra::Transform2;
 
