@@ -22,7 +22,6 @@ Documentation on [docs.rs](https://docs.rs/dessin/0.8.2-pre/)
 
 ```rust
 use dessin::prelude::*;
-use dessin_svg::ToSVG;
 
 #[derive(Default, Shape)]
 struct MyShape {
@@ -58,7 +57,7 @@ fn main() {
     MyShape(say_this = "Hello world"),
   ]);
 
-  let svg = dessin.to_svg().unwrap();
+  let svg = dessin_svg::to_string(&dessin).unwrap();
 }
 
 ```

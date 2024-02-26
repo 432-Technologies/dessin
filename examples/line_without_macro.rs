@@ -1,7 +1,6 @@
-use std::fs;
-
 use dessin::{nalgebra::Point2, prelude::*};
-use dessin_svg::ToSVG;
+use project_root::get_project_root;
+use std::fs;
 
 fn main() {
     let circle_point = Circle::default().with_radius(0.1);
@@ -29,5 +28,9 @@ fn main() {
     group.shapes = vec![circle_point, line];
 
     // prints in svg version
-    fs::write("./out/line.svg", Shape::Group(group).to_svg().unwrap()).unwrap();
+    fs::write(
+        get_project_root().unwrap().join("examples/out/out.svg"),
+        dessin_svg::to_string(&Shape::Group(group)).unwrap(),
+    )
+    .unwrap();
 }

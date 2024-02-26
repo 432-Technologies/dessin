@@ -4,12 +4,8 @@ use dessin::{
 };
 use dessin_image::ToImage;
 use dessin_pdf::ToPDF;
-use dessin_svg::ToSVG;
 use project_root::get_project_root;
-use std::{
-    f32::consts::{FRAC_PI_4, FRAC_PI_8, PI},
-    fs,
-};
+use std::f32::consts::{FRAC_PI_4, FRAC_PI_8, PI};
 
 const C: Color = rgb(0x3b, 0x54, 0x85);
 fn c(a: u8) -> Color {
@@ -305,16 +301,6 @@ fn main() {
     let dessin = Shape::from(Logo432);
 
     let path = get_project_root().unwrap().join("examples/out/");
-
-    // SVG
-    // fs::write(path.join("432technologies.svg"), dessin.to_svg().unwrap()).unwrap();
-
-    // // PDF
-    // fs::write(
-    //     path.join("432technologies.pdf"),
-    //     dessin.to_pdf().unwrap().save_to_bytes().unwrap(),
-    // )
-    // .unwrap();
 
     // Image
     dessin2!({ dessin }(scale = [5., 5.]))

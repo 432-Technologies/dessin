@@ -44,7 +44,7 @@ pub enum ViewPort {
     AutoBoundingBox,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct SVGOptions {
     pub viewport: ViewPort,
 }
@@ -355,56 +355,48 @@ impl Exporter for SVGExporter {
     }
 }
 
-pub trait ToSVG {
-    fn to_svg_with_options(&self, options: SVGOptions) -> Result<String, SVGError>;
+pub fn to_string_with_options(shape: &Shape, options: SVGOptions) -> Result<String, SVGError> {
+    let (min_x, min_y, span_x, span_y) = match options.viewport {
+        ViewPort::ManualCentered { width, height } => (-width / 2., -height / 2., width, height),
+        ViewPort::ManualViewport {
+            x,
+            y,
+            width,
+            height,
+        } => (x - width / 2., y - height / 2., width, height),
+        ViewPort::AutoCentered => {
+            let bb = shape.local_bounding_box().straigthen();
 
-    fn to_svg(&self) -> Result<String, SVGError> {
-        self.to_svg_with_options(SVGOptions::default())
-    }
+            let mirror_bb = bb
+                .transform(&nalgebra::convert::<_, Transform2<f32>>(Scale2::new(
+                    -1., -1.,
+                )))
+                .into_straight();
+
+            let overall_bb = bb.join(mirror_bb);
+
+            (
+                -overall_bb.width() / 2.,
+                -overall_bb.height() / 2.,
+                overall_bb.width(),
+                overall_bb.height(),
+            )
+        }
+        ViewPort::AutoBoundingBox => {
+            let bb = shape.local_bounding_box().straigthen();
+
+            (bb.top_left().x, -bb.top_left().y, bb.width(), bb.height())
+        }
+    };
+
+    let mut exporter = SVGExporter::new(min_x, min_y, span_x, span_y);
+
+    let parent_transform = nalgebra::convert(Scale2::new(1., -1.));
+    shape.write_into_exporter(&mut exporter, &parent_transform)?;
+
+    Ok(exporter.finish())
 }
 
-impl ToSVG for Shape {
-    fn to_svg_with_options(&self, options: SVGOptions) -> Result<String, SVGError> {
-        let (min_x, min_y, span_x, span_y) = match options.viewport {
-            ViewPort::ManualCentered { width, height } => {
-                (-width / 2., -height / 2., width, height)
-            }
-            ViewPort::ManualViewport {
-                x,
-                y,
-                width,
-                height,
-            } => (x - width / 2., y - height / 2., width, height),
-            ViewPort::AutoCentered => {
-                let bb = self.local_bounding_box().straigthen();
-
-                let mirror_bb = bb
-                    .transform(&nalgebra::convert::<_, Transform2<f32>>(Scale2::new(
-                        -1., -1.,
-                    )))
-                    .into_straight();
-
-                let overall_bb = bb.join(mirror_bb);
-
-                (
-                    -overall_bb.width() / 2.,
-                    -overall_bb.height() / 2.,
-                    overall_bb.width(),
-                    overall_bb.height(),
-                )
-            }
-            ViewPort::AutoBoundingBox => {
-                let bb = self.local_bounding_box().straigthen();
-
-                (bb.top_left().x, -bb.top_left().y, bb.width(), bb.height())
-            }
-        };
-
-        let mut exporter = SVGExporter::new(min_x, min_y, span_x, span_y);
-
-        let parent_transform = nalgebra::convert(Scale2::new(1., -1.));
-        self.write_into_exporter(&mut exporter, &parent_transform)?;
-
-        Ok(exporter.finish())
-    }
+pub fn to_string(shape: &Shape) -> Result<String, SVGError> {
+    to_string_with_options(shape, SVGOptions::default())
 }

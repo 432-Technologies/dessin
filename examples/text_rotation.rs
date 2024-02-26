@@ -1,7 +1,7 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
 use dessin_image::ToImage;
 use dessin_pdf::ToPDF;
-use dessin_svg::ToSVG;
+use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
 
 #[derive(Shape, Default)]
@@ -41,13 +41,12 @@ fn main() {
         }
     );
 
-    // SVG
-    fs::write("./target/text_rotation.svg", dessin.to_svg().unwrap()).unwrap();
+    let path = get_project_root().unwrap().join("examples/out/");
 
-    // PDF
+    // SVG
     fs::write(
-        "./target/text_rotation.pdf",
-        dessin.to_pdf().unwrap().save_to_bytes().unwrap(),
+        path.join("text_rotation.svg"),
+        dessin_svg::to_string(&dessin.clone()).unwrap(),
     )
     .unwrap();
 
@@ -56,6 +55,6 @@ fn main() {
         .rasterize()
         .unwrap()
         .into_rgba8()
-        .save("./target/text_rotation.png")
+        .save(path.join("text_rotation.png"))
         .unwrap();
 }
