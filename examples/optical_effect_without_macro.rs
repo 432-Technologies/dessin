@@ -27,7 +27,6 @@ fn main() {
 
     // add rectangle1 in the group at first to let it be the font
     group.shapes.push(Shape::from(rectangle1));
-    group.shapes.push(Shape::from(rectangle1));
 
     // creates the optical effect
     let optical_effect = ThickArc::default();
@@ -50,7 +49,6 @@ fn main() {
         optical_effect.rotate(Rotation2::new(PI * (n as f32) / 5_f32));
 
         // add the nth optical effect in the group
-        group.shapes.push(Shape::from(optical_effect));
         group.shapes.push(Shape::from(optical_effect));
     }
 
@@ -86,8 +84,6 @@ fn main() {
     let rectangle2 = Shape::from(rectangle2);
     let circle = Shape::from(circle);
 
-    group.shapes.push(Shape::from(rectangle2));
-    group.shapes.push(Shape::from(circle));
     group.shapes.push(Shape::from(rectangle2));
     group.shapes.push(Shape::from(circle));
 

@@ -7,7 +7,6 @@ fn main() {
     let optical_effect: Shape = dessin2!([
         for n in 0..11 {
             dessin2!([ThickArc!(
-            dessin2!([ThickArc!(
                 outer_radius = 10.,
                 inner_radius = 0.,
                 span_angle = PI / 10_f32,
@@ -18,22 +17,13 @@ fn main() {
                 // chooses a rotation of (n*PI)/5 radians in the trigonometric direction
                 rotate = Rotation2::new(PI * (n as f32) / 5_f32)
             )])
-                rotate = Rotation2::new(PI * (n as f32) / 5_f32)
-            )])
         },
         Circle!(
             // chooses a radius of 10
             radius = 1.,
-            fill = rgb(255, 255, 255)
-            fill = rgb(255, 255, 255)
+            fill = rgb(255, 255, 255),
         ),
         Rectangle!(
-            width = 15.,
-            height = 15.,
-            stroke = Stroke::Full {
-                color: rgb(0, 0, 0),
-                width: 1.
-            }
             width = 15.,
             height = 15.,
             stroke = Stroke::Full {
@@ -52,11 +42,9 @@ fn main() {
         Rectangle!(
             width = fond.width(),
             height = fond.height(),
-            fill = rgb(150, 150, 150)
-            fill = rgb(150, 150, 150)
+            fill = rgb(150, 150, 150),
         ),
         // Add optical_effect before the new Rectangle
-        { optical_effect }
         { optical_effect }
     ]);
 

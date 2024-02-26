@@ -5,6 +5,7 @@ use dessin::{
 use dessin_image::ToImage;
 use dessin_pdf::ToPDF;
 use dessin_svg::SVG;
+use project_root::get_project_root;
 use std::{
     f32::consts::{FRAC_PI_4, FRAC_PI_8, PI},
     fs,

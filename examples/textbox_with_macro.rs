@@ -1,7 +1,7 @@
 use std::fs;
 
 use dessin::{nalgebra::Rotation2, prelude::*};
-use dessin_svg::ToSVG;
+use dessin_svg::SVG;
 use project_root::get_project_root;
 
 fn main() {
@@ -42,7 +42,7 @@ fn main() {
     // prints in svg version
     fs::write(
         get_project_root().unwrap().join("examples/out/text.svg"),
-        text.to_svg().unwrap(),
+        SVG::from(text).to_string().unwrap(),
     )
     .unwrap();
 }

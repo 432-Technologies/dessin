@@ -1,7 +1,7 @@
 use std::fs;
 
 use dessin::prelude::*;
-use dessin_svg::ToSVG;
+use dessin_svg::SVG;
 use project_root::get_project_root;
 
 fn main() {
@@ -31,7 +31,7 @@ fn main() {
         get_project_root()
             .unwrap()
             .join("examples/out/red_circle.svg"),
-        Shape::from(circle).to_svg().unwrap(),
+        SVG::from(circle).to_string().unwrap(),
     )
     .unwrap();
 }

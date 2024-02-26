@@ -1,9 +1,10 @@
 use std::fs;
 
-use dessin::{prelude::*, shapes};
+use dessin::prelude::*;
 use dessin_svg::SVG;
 
 use dessin::nalgebra::Rotation2;
+use project_root::get_project_root;
 
 fn main() {
     // here we use the circle as a point to have a reference to use when moving the diamond
@@ -49,7 +50,7 @@ fn main() {
 
     // prints in svg version with Shape::from(...) -> Shape::Group(group) because of the group
     fs::write(
-        "./out/diamond.svg",
+        get_project_root().unwrap().join("examples/out/diamond.svg"),
         SVG::from(Shape::Group(group)).to_string().unwrap(),
     )
     .unwrap();
