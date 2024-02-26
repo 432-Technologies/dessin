@@ -1,7 +1,6 @@
-use std::{f32::consts::PI, fs};
-
 use dessin::{nalgebra::Rotation2, prelude::*};
-use dessin_svg::SVG;
+use project_root::get_project_root;
+use std::{f32::consts::PI, fs};
 
 fn main() {
     let circle_point = Circle::default().with_radius(0.01);
@@ -75,8 +74,10 @@ fn main() {
 
     // prints in svg version with Shape::from(...) -> Shape::Group(group) because of the group
     fs::write(
-        "./out/basque_cross.svg",
-        SVG::from(Shape::Group(group)).to_string().unwrap(),
+        get_project_root()
+            .unwrap()
+            .join("examples/out/basque_cross.svg"),
+        dessin_svg::to_string(&Shape::Group(group)).unwrap(),
     )
     .unwrap();
 }

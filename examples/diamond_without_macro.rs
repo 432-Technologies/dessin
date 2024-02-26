@@ -1,7 +1,6 @@
 use std::fs;
 
 use dessin::prelude::*;
-use dessin_svg::SVG;
 
 use dessin::nalgebra::Rotation2;
 use project_root::get_project_root;
@@ -51,7 +50,7 @@ fn main() {
     // prints in svg version with Shape::from(...) -> Shape::Group(group) because of the group
     fs::write(
         get_project_root().unwrap().join("examples/out/diamond.svg"),
-        SVG::from(Shape::Group(group)).to_string().unwrap(),
+        dessin_svg::to_string(&Shape::Group(group)).unwrap(),
     )
     .unwrap();
 }

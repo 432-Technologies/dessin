@@ -1,7 +1,7 @@
-use std::{f32::consts::PI, fs};
-
 use dessin::{nalgebra::Rotation2, prelude::*};
-use dessin_svg::{SVGOptions, SVG};
+use dessin_svg::SVGOptions;
+use project_root::get_project_root;
+use std::{f32::consts::PI, fs};
 
 fn main() {
     let rectangle1 = Rectangle::default();
@@ -89,15 +89,19 @@ fn main() {
 
     // prints in svg version with Shape::from(...) -> Shape::Group(group) because of the group
     fs::write(
-        "./out/optical_effect.svg",
-        SVG::from(Shape::Group(group))
-            .to_string_with_options(SVGOptions {
+        get_project_root()
+            .unwrap()
+            .join("examples/out/optical_effect.svg"),
+        dessin_svg::to_string_with_options(
+            &Shape::Group(group),
+            SVGOptions {
                 viewport: dessin_svg::ViewPort::ManualCentered {
                     width: 14.,
                     height: 14.,
                 },
-            })
-            .unwrap(),
+            },
+        )
+        .unwrap(),
     )
     .unwrap();
 }

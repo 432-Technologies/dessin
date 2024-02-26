@@ -1,7 +1,6 @@
 use std::{f32::consts::PI, fs};
 
 use dessin::{nalgebra::Rotation2, prelude::*};
-use dessin_svg::SVG;
 use project_root::get_project_root;
 
 fn main() {
@@ -31,7 +30,7 @@ fn main() {
         get_project_root()
             .unwrap()
             .join("examples/out/green_rectangle.svg"),
-        SVG::from(rectangle).to_string().unwrap(),
+        dessin_svg::to_string(&rectangle).unwrap(),
     )
     .unwrap();
 }

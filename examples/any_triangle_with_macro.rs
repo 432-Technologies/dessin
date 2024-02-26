@@ -1,7 +1,6 @@
 use std::fs;
 
 use dessin::{nalgebra::Rotation2, prelude::*};
-use dessin_svg::SVG;
 use project_root::get_project_root;
 
 fn main() {
@@ -36,7 +35,7 @@ fn main() {
         get_project_root()
             .unwrap()
             .join("examples/out/any_triangle.svg"),
-        SVG::from(triangle).to_string().unwrap(),
+        dessin_svg::to_string(&triangle).unwrap(),
     )
     .unwrap();
 }

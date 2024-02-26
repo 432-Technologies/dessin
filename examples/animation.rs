@@ -8,6 +8,10 @@ use project_root::get_project_root;
 fn main() {
     let skip_animation = std::env::var("NO_ANIMATION") == Ok("1".to_string());
 
+    let path = get_project_root()
+        .unwrap()
+        .join("examples/out/animation.svg");
+
     let test_img = dessin2!(polygons::Triangle!(fill = Color::BLUE) > (scale = [50., 50.]))
         .rasterize()
         .unwrap();
@@ -22,8 +26,12 @@ fn main() {
     );
 
     loop {
-        let final_image = SVG::from(frame.clone()).to_string().unwrap();
-        fs::write("test.svg", final_image).unwrap();
+        let final_image = to_string(&frame.clone()).unwrap();
+        fs::write(&path, final_image).unwrap();
+
+        if skip_animation {
+            break;
+        }
 
         std::thread::sleep(Duration::from_millis(100));
         let mut t = triangle.write().unwrap();

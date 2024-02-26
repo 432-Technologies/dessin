@@ -1,7 +1,6 @@
 //Attention ! It is the same way to make all polygons, you just have to replace : "Octogon" by "Polygon< the number of side you want >"
 
 use dessin::{contrib::polygons::Octogon, nalgebra::Rotation2, prelude::*};
-use dessin_svg::SVG;
 use project_root::get_project_root;
 use std::fs;
 
@@ -30,7 +29,7 @@ fn main() {
         get_project_root()
             .unwrap()
             .join("examples/out/orange_octogon.svg"),
-        SVG::from(octogon).to_string().unwrap(),
+        dessin_svg::to_string(&octogon.into()).unwrap(),
     )
     .unwrap();
 }

@@ -4,7 +4,6 @@ use dessin::{
     nalgebra::{Rotation2, Scale2},
     prelude::{polygons::Triangle, *},
 };
-use dessin_svg::SVG;
 use project_root::get_project_root;
 
 fn main() {
@@ -32,7 +31,7 @@ fn main() {
         get_project_root()
             .unwrap()
             .join("examples/out/blue_triangle.svg"),
-        SVG::from(triangle).to_string().unwrap(),
+        dessin_svg::to_string(&triangle.into()).unwrap(),
     )
     .unwrap();
 }

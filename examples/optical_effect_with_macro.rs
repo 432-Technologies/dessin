@@ -1,7 +1,7 @@
-use std::{f32::consts::PI, fs};
-
 use dessin::{nalgebra::Rotation2, prelude::*};
-use dessin_svg::{SVGOptions, SVG};
+use dessin_svg::SVGOptions;
+use project_root::get_project_root;
+use std::{f32::consts::PI, fs};
 
 fn main() {
     let optical_effect: Shape = dessin2!([
@@ -50,22 +50,19 @@ fn main() {
 
     // prints in svg version
     fs::write(
-        "./out/optical_effect.svg",
-        SVG::from(truc)
-            .to_string_with_options(SVGOptions {
+        get_project_root()
+            .unwrap()
+            .join("examples/out/optical_effect.svg"),
+        dessin_svg::to_string_with_options(
+            &truc,
+            SVGOptions {
                 viewport: dessin_svg::ViewPort::ManualCentered {
                     width: 14.,
                     height: 14.,
                 },
-            })
-            .unwrap(),
+            },
+        )
+        .unwrap(),
     )
     .unwrap();
 }
-//.to_svg_with_options(SVGOptions{viewport:dessin_svg::ViewPort::ManualCentered permits to choose how we will see the svg
-//.to_svg_with_options(SVGOptions{viewport:dessin_svg::ViewPort::ManualCentered permits to choose how we will see the svg
-
-// Note :
-// (1) This solution is not be optimal because we can merge these two renctangles into one.
-// (1) This solution is not be optimal because we can merge these two renctangles into one.
-// (2) This code micht not return what we expect if you use "microsoft edge" but there is no same case with others like "google chrome" or "firefox"

@@ -7,7 +7,6 @@ use nalgebra::{Scale2, Transform2};
 use std::{
     fmt::{self, Write},
     io::Cursor,
-    ops::Deref,
 };
 
 #[derive(Debug)]
@@ -356,67 +355,48 @@ impl Exporter for SVGExporter {
     }
 }
 
-pub struct SVG {
-    pub input_dessin: Shape,
-    pub options: SVGOptions,
-}
+pub fn to_string_with_options(shape: &Shape, options: SVGOptions) -> Result<String, SVGError> {
+    let (min_x, min_y, span_x, span_y) = match options.viewport {
+        ViewPort::ManualCentered { width, height } => (-width / 2., -height / 2., width, height),
+        ViewPort::ManualViewport {
+            x,
+            y,
+            width,
+            height,
+        } => (x - width / 2., y - height / 2., width, height),
+        ViewPort::AutoCentered => {
+            let bb = shape.local_bounding_box().straigthen();
 
-impl SVG {
-    pub fn to_string_with_options(&self, options: SVGOptions) -> Result<String, SVGError> {
-        let (min_x, min_y, span_x, span_y) = match options.viewport {
-            ViewPort::ManualCentered { width, height } => {
-                (-width / 2., -height / 2., width, height)
-            }
-            ViewPort::ManualViewport {
-                x,
-                y,
-                width,
-                height,
-            } => (x - width / 2., y - height / 2., width, height),
-            ViewPort::AutoCentered => {
-                let bb = self.input_dessin.local_bounding_box().straigthen();
+            let mirror_bb = bb
+                .transform(&nalgebra::convert::<_, Transform2<f32>>(Scale2::new(
+                    -1., -1.,
+                )))
+                .into_straight();
 
-                let mirror_bb = bb
-                    .transform(&nalgebra::convert::<_, Transform2<f32>>(Scale2::new(
-                        -1., -1.,
-                    )))
-                    .into_straight();
+            let overall_bb = bb.join(mirror_bb);
 
-                let overall_bb = bb.join(mirror_bb);
-
-                (
-                    -overall_bb.width() / 2.,
-                    -overall_bb.height() / 2.,
-                    overall_bb.width(),
-                    overall_bb.height(),
-                )
-            }
-            ViewPort::AutoBoundingBox => {
-                let bb = self.input_dessin.local_bounding_box().straigthen();
-
-                (bb.top_left().x, -bb.top_left().y, bb.width(), bb.height())
-            }
-        };
-
-        let mut exporter = SVGExporter::new(min_x, min_y, span_x, span_y);
-
-        let parent_transform = nalgebra::convert(Scale2::new(1., -1.));
-        self.input_dessin
-            .write_into_exporter(&mut exporter, &parent_transform)?;
-
-        Ok(exporter.finish())
-    }
-
-    pub fn to_string(&self) -> Result<String, SVGError> {
-        self.to_string_with_options(self.options.clone())
-    }
-}
-
-impl<T: Into<Shape>> From<T> for SVG {
-    fn from(value: T) -> Self {
-        SVG {
-            input_dessin: value.into(),
-            options: SVGOptions::default(),
+            (
+                -overall_bb.width() / 2.,
+                -overall_bb.height() / 2.,
+                overall_bb.width(),
+                overall_bb.height(),
+            )
         }
-    }
+        ViewPort::AutoBoundingBox => {
+            let bb = shape.local_bounding_box().straigthen();
+
+            (bb.top_left().x, -bb.top_left().y, bb.width(), bb.height())
+        }
+    };
+
+    let mut exporter = SVGExporter::new(min_x, min_y, span_x, span_y);
+
+    let parent_transform = nalgebra::convert(Scale2::new(1., -1.));
+    shape.write_into_exporter(&mut exporter, &parent_transform)?;
+
+    Ok(exporter.finish())
+}
+
+pub fn to_string(shape: &Shape) -> Result<String, SVGError> {
+    to_string_with_options(shape, SVGOptions::default())
 }
