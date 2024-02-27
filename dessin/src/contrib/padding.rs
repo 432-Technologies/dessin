@@ -12,6 +12,7 @@ pub struct Padding<T> {
     pub padding_top: f32,
     pub padding_bottom: f32,
 }
+
 impl<T> Default for Padding<T>
 where
     T: Default,
@@ -158,6 +159,7 @@ impl<T: ShapeOp> ShapeOp for Padding<T> {
     }
 }
 
+// creates 2 tests to check that the code works
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;

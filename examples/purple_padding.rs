@@ -3,8 +3,6 @@ use project_root::get_project_root;
 use std::fs;
 
 fn main() {
-    // let circle = dessin2!(Circle!(radius = 0.01));
-
     let rectangle_1 = dessin2!(Rectangle!(
         width = 3.,
         height = 2.,
@@ -32,7 +30,6 @@ fn main() {
         translate = [0.75, -0.1]
     ));
 
-    // let circle = Shape::from(circle);
     let base = Shape::from(base);
     let rectangle_1 = Shape::from(rectangle_1);
     let rectangle_2 = Shape::from(rectangle_2);
@@ -42,7 +39,6 @@ fn main() {
 
     group.shapes = vec![];
 
-    // group.shapes.push(circle);
     group.shapes.push(base);
     group.shapes.push(rectangle_1);
     group.shapes.push(rectangle_2);
