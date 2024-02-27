@@ -126,3 +126,7 @@ path = "./line_with_macro.rs"
 [[example]]
 name = "line_without_macro"
 path = "./line_without_macro.rs"
+
+[[example]]
+name = "purple_padding"
+path = "./purple_padding.rs"

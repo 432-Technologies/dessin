@@ -29,7 +29,11 @@ fn main() {
             stroke = Stroke::Full {
                 color: rgb(0, 0, 0),
                 width: 1.
+<<<<<<< Updated upstream
             }
+=======
+            },
+>>>>>>> Stashed changes
         ),
     ]);
 
