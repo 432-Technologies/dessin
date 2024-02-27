@@ -12,7 +12,6 @@ pub struct Padding<T> {
     pub padding_top: f32,
     pub padding_bottom: f32,
 }
-
 impl<T> Default for Padding<T>
 where
     T: Default,
@@ -109,6 +108,8 @@ where
 
         let bb = shape.local_bounding_box().straigthen();
 
+        //------------------------------------------------------------------------------------------------------------------
+
         dessin2!([
             Rectangle(
                 scale = [
@@ -123,6 +124,8 @@ where
             ),
             { shape },
         ])
+
+        //-----------------------------------------------------------------------------------------------------------------
     }
 }
 
