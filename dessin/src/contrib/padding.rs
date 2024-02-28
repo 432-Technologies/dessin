@@ -4,6 +4,7 @@ use std::ops::{Deref, DerefMut};
 
 #[derive(Debug, Clone, PartialEq, Shape)]
 pub struct Padding<T> {
+    #[shape(into)]
     pub shape: T,
 
     pub padding_left: f32,
@@ -11,6 +12,22 @@ pub struct Padding<T> {
     pub padding_top: f32,
     pub padding_bottom: f32,
 }
+
+impl<T> Default for Padding<T>
+where
+    T: Default,
+{
+    fn default() -> Self {
+        Padding {
+            shape: T::default(),
+            padding_left: 0.,
+            padding_right: 0.,
+            padding_top: 0.,
+            padding_bottom: 0.,
+        }
+    }
+}
+
 impl<T> Padding<T> {
     /// Wrap a [`Shape`] with Padding
     #[inline]
@@ -139,5 +156,76 @@ impl<T: ShapeOp> ShapeOp for Padding<T> {
     #[inline]
     fn global_transform(&self, parent_transform: &Transform2<f32>) -> Transform2<f32> {
         self.shape.global_transform(parent_transform)
+    }
+}
+
+// creates 2 tests to check that the code works
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+
+    #[test]
+    fn similar_op_1() {
+        let rectangle_1 = dessin2!(Rectangle!(width = 3., height = 2., translate = [1., 0.]));
+
+        let base_1 = dessin2!(Padding<Style<Rectangle>>(
+            shape = rectangle_1,
+            padding_left = 1.5,
+            padding_right = 1.,
+            padding_top = 0.8,
+            padding_bottom = 1.,
+        ));
+
+        let rectangle_2 = dessin2!(Rectangle!(scale = [5.5, 3.8], translate = [0.75, -0.1]));
+
+        let base_2 = dessin2!(Padding<Style<Rectangle>>(
+            shape = rectangle_2,
+            padding_left = 0.,
+            padding_right = 0.,
+            padding_top = 0.,
+            padding_bottom = 0.,
+        ));
+
+        let base_1 = Shape::from(base_1);
+        let base_2 = Shape::from(base_2);
+
+        assert_eq!(
+            base_1.local_bounding_box().straigthen(),
+            base_2.local_bounding_box().straigthen()
+        );
+    }
+
+    #[test]
+    fn similar_op_2() {
+        let test_1 = dessin2!([
+            Circle!(radius = 1., translate = [0.5, 0.]),
+            Rectangle!(width = 1., height = 0.4, translate = [2., 0.])
+        ]);
+
+        let base_1 = dessin2!(Padding<Shape>(
+            shape = test_1,
+            padding_left = 1.5,
+            padding_right = 1.,
+            padding_top = 0.8,
+            padding_bottom = 1.,
+        ));
+
+        let rectangle = dessin2!(Rectangle!(scale = [5.5, 3.8], translate = [0.75, -0.1]));
+
+        let base_2 = dessin2!(Padding<Style<Rectangle>>(
+            shape = rectangle,
+            padding_left = 0.,
+            padding_right = 0.,
+            padding_top = 0.,
+            padding_bottom = 0.,
+        ));
+
+        let base_1 = Shape::from(base_1);
+        let base_2 = Shape::from(base_2);
+
+        assert_eq!(
+            base_1.local_bounding_box().straigthen(),
+            base_2.local_bounding_box().straigthen()
+        );
     }
 }
