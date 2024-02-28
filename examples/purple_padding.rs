@@ -10,8 +10,8 @@ fn main() {
         fill = rgb(255, 0, 0)
     ));
 
-    let base = dessin2!(Padding<Style<Rectangle>>(
-
+    let base = dessin2!(Padding<Shape>( // here, we can replace 'Shape' with 'Rectangle' but in case we want to use the
+                                                        // Padding to a multiple geometric form, using Shape become a must
         shape = rectangle_1.clone(),
         padding_left = 1.5,
         padding_right = 1.,

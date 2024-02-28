@@ -198,8 +198,8 @@ mod tests {
     #[test]
     fn similar_op_2() {
         let test_1 = dessin2!([
-            Circle!(radius = 1.),
-            Rectangle!(width = 1., height = 0.4, translate = [1.5, 0.])
+            Circle!(radius = 1., translate = [0.5, 0.]),
+            Rectangle!(width = 1., height = 0.4, translate = [2., 0.])
         ]);
 
         let base_1 = dessin2!(Padding<Shape>(
