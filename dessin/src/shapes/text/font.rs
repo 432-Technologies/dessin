@@ -1,22 +1,19 @@
 use super::FontWeight;
-use once_cell::sync::OnceCell;
-use std::{
-    collections::HashMap,
-    sync::{Arc, RwLock},
-};
+use std::sync::OnceLock;
+use std::{collections::HashMap, sync::RwLock};
 
-static FONT_HOLDER: OnceCell<Arc<RwLock<FontHolder>>> = OnceCell::new();
+static FONT_HOLDER: OnceLock<RwLock<FontHolder>> = OnceLock::new();
 
 fn font_holder<T, F: FnOnce(&FontHolder) -> T>(f: F) -> T {
     f(&FONT_HOLDER
-        .get_or_init(|| Arc::new(RwLock::new(FontHolder::new())))
+        .get_or_init(|| RwLock::new(FontHolder::new()))
         .read()
         .unwrap())
 }
 
 fn font_holder_mut<T, F: FnOnce(&mut FontHolder) -> T>(f: F) -> T {
     f(&mut FONT_HOLDER
-        .get_or_init(|| Arc::new(RwLock::new(FontHolder::new())))
+        .get_or_init(|| RwLock::new(FontHolder::new())) // RwLock is needed to have a mutable case
         .write()
         .unwrap())
 }
