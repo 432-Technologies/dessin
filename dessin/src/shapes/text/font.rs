@@ -1,5 +1,7 @@
 use super::FontWeight;
 use once_cell::sync::OnceCell;
+use std::hash::Hash;
+use std::hash::Hasher;
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
@@ -85,7 +87,38 @@ impl Font {
             Font::OTF(b) | Font::TTF(b) => b.as_slice(),
         }
     }
+
+    pub fn new() -> Font {
+        let mut raw_font = Font::new();
+        raw_font
+    }
+
+    pub fn unwrap(&self) -> Option<Font> {
+        let raw_font = &self.unwrap();
+        raw_font.clone()
+    }
 }
+
+impl Hash for Font {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        // implémentation de la méthode hash
+        // en utilisant self.field1.hash(state);
+        // et les autres champs si nécessaire
+    }
+}
+
+impl PartialEq for Font {
+    fn eq(&self, other: &Self) -> bool {
+        let partialeq: bool;
+        match self {
+            other => partialeq = true,
+            _ => partialeq = false,
+        }
+        partialeq
+    }
+}
+
+impl Eq for Font {}
 
 #[derive(Clone)]
 pub struct FontGroup<T> {
