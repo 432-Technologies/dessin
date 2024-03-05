@@ -1,7 +1,7 @@
 use ::image::ImageFormat;
 use dessin::{
     export::{Export, Exporter},
-    font::Font,
+    font::{Font, FontRef},
     prelude::*,
 };
 use nalgebra::{Scale2, Transform2};
@@ -55,10 +55,6 @@ pub struct SVGExporter {
     start: String,
     acc: String,
     stock: HashSet<(String, Font)>,
-    regular: Font,
-    bold: Option<Font>,
-    bold_italic: Option<Font>,
-    italic: Option<Font>,
 }
 
 impl SVGExporter {
@@ -67,29 +63,16 @@ impl SVGExporter {
         const SCHEME: &str =
             r#"xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink""#;
 
-        // .iter()
-
         //-----------------------------------------------------------------------------------------------------------------------------
-
+        println!("not bug yet");
         let start = format!(r#"<svg viewBox="{min_x} {min_y} {span_x} {span_y}" {SCHEME}>"#,);
-        let acc = format!(r#"<svg viewBox="{min_x} {min_y} {span_x} {span_y}" {SCHEME}>"#,);
+        let acc = String::new();
         let stock: HashSet<(String, Font)> = HashSet::default();
-        let regular = Font::new();
-        let bold = Font::new().unwrap();
-        let bold_italic = Font::new().unwrap();
-        let italic = Font::new().unwrap();
+        println!("not bug yet");
 
         //-----------------------------------------------------------------------------------------------------------------------------
 
-        SVGExporter {
-            start,
-            acc,
-            stock,
-            regular,
-            bold,
-            bold_italic,
-            italic,
-        }
+        SVGExporter { start, acc, stock }
     }
 
     fn write_style(&mut self, style: StylePosition) -> Result<(), SVGError> {
@@ -171,70 +154,24 @@ impl SVGExporter {
     }
 
     fn finish(self) -> String {
-        let fonts: HashSet<(String, Font)>;
+        let return_fonts = self.stock.into_iter()
 
-        for (index, font) in self.stock.into_iter() {
-            // each round (before using them in the boule round) we will kill index and font
+        .filter_map(move |(font_family, font)| {
+            let (mime, bytes) = match font {
+                dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
+                dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
+            };
 
-            fonts.into_iter()
-            .map(|index, font| match index {  // imports type which match with the index
-                Regular => ("Regular", Some(&font.regular)),  //// not sure of the "font" used ////
-                Bold => ("Bold", font.bold.as_ref()),                                          ////
-                BoldItalic => ("BoldItalic", font.bold_italic.as_ref()),                       ////
-                Italic => ("BoldItalic", font.bold_italic.as_ref()),                           ////
-            })
-            .into_iter()
-            .filter_map(|(variant, font)| font.map(|v| (variant, v)))  ////don't understand very well this part ////
-            .filter_map(move |(variant, font)| {  // imports the Font wich match with the font
-                let (mime, bytes) = match font {
-                    dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
-                    dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
-                };
+            // creates a base 64 ending font using previous imports
+            let ending_font = data_encoding::BASE64.encode(&bytes);
+            Some(format!(r#"<style>@font-face{{font-family:{font_family};src:url("data:{mime};base64,{ending_font}");}}</style>"#))
+        })
+        .collect::<String>();
 
-                // creates a base 64 ending font using previous imports
-                let ending_font = data_encoding::BASE64.encode(&bytes);
-                Some(format!(r#"<style>@font-face{{font-family:{index}{variant};src:url("data:{mime};base64,{ending_font}");}}</style>"#))
-            })
-            .flatten()
-            .collect::<String>();
-        }
-
-        todo!();
-
-        //// fonts = self.stock.into_iter() ////
-
-        // .map(|(font_name, font_data)| {
-        //     [
-        //         //-----------------------------------------------------------------------------------
-        //         // on stocke les font qu'on repère
-        //         let font: String = font // FontRef
-        //         .as_ref()
-        //         .map(|v| v.name(font_weight))
-        //         .unwrap_or_else(|| dessin::font::FontRef::default().name(font_weight));
-        //         let font = dessin::font::get(font_ref);
-        //         self.font_set.push(...);
-        //         //-----------------------------------------------------------------------------------
-
-        //         // ("Regular", Some(&font_data.regular)),
-        //         // ("Bold", font_data.bold.as_ref()),
-        //         // ("Italic", font_data.italic.as_ref()),
-        //         // ("BoldItalic", font_data.bold_italic.as_ref()),
-        //     ]
-        //     .into_iter()
-        //     .filter_map(|(variant, data)| data.map(|v| (variant, v)))
-        //     .filter_map(move |(variant, data)| {
-        //         let (mime, bytes) = match data {
-        //             dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
-        //             dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
-        //             // dessin::font::Font::ByName(_) => return None,
-        //         };
-
-        //         let font = data_encoding::BASE64.encode(&bytes);
-        //         Some(format!(r#"<style>@font-face{{font-family:{font_name}{variant};src:url("data:{mime};base64,{font}");}}</style>"#))
-        //     })
-        // //})
-        // .flatten()
-        // .collect::<String>();
+        format!(
+            "{}<defs>{return_fonts}</defs>{}</svg>",
+            self.start, self.acc
+        )
     }
 }
 
@@ -381,21 +318,35 @@ impl Exporter for SVGExporter {
         };
 
         let text = text.replace("<", "&lt;").replace(">", "&gt;");
-        let font = font
-            .as_ref()
-            .map(|v| v.name(font_weight))
-            .unwrap_or_else(|| dessin::font::FontRef::default().name(font_weight)); // return font which is an Option<String>
 
+        let font = font.clone().unwrap_or(FontRef::default());
+
+        let font_group = font::get(font.clone());
+
+        let font = font.name(font_weight);
         //-------------------------------------------------------
 
         let raw_font = match font_weight {
-            FontWeight::Regular => &self.regular,
-            FontWeight::Bold => self.bold.as_ref().unwrap_or_else(|| &self.regular),
-            FontWeight::BoldItalic => self.bold_italic.as_ref().unwrap_or_else(|| &self.regular),
-            FontWeight::Italic => self.italic.as_ref().unwrap_or_else(|| &self.regular),
+            FontWeight::Regular => font_group.regular,
+            FontWeight::Bold => font_group
+                .bold
+                .as_ref()
+                .unwrap_or_else(|| &font_group.regular)
+                .clone(),
+            FontWeight::BoldItalic => font_group
+                .bold_italic
+                .as_ref()
+                .unwrap_or_else(|| &font_group.regular)
+                .clone(),
+            FontWeight::Italic => font_group
+                .italic
+                .as_ref()
+                .unwrap_or_else(|| &font_group.regular)
+                .clone(),
         };
-
+        println!("stok ten is: {}", self.stock.len());
         self.stock.insert((font.clone(), raw_font.clone()));
+        println!("stok ten is: {}", self.stock.len());
 
         //---------------------------------------------------------
 
