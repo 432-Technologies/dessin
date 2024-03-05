@@ -14,14 +14,14 @@ fn main() {
 
     // creates a grey margin of 0.2 (0.1 outside and 0.1 inside the circle)
     circle.stroke(Stroke::Full {
-        color: rgb(96, 96, 96),
+        color: rgb(0x96, 0x96, 0x96),
         width: 0.2,
     });
 
     let circle = Style::new(circle)
         .with_fill(Fill::Color(rgb(255, 0, 0)))
         .with_stroke(Stroke::Full {
-            color: rgb(96, 96, 96),
+            color: rgb(0x96, 0x96, 0x96),
             width: 0.2,
         });
 

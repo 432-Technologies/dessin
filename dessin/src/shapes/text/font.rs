@@ -97,11 +97,7 @@ impl Font {
 }
 
 impl Hash for Font {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        // implémentation de la méthode hash
-        // en utilisant self.field1.hash(state);
-        // et les autres champs si nécessaire
-    }
+    fn hash<H: Hasher>(&self, state: &mut H) {}
 }
 
 impl PartialEq for Font {

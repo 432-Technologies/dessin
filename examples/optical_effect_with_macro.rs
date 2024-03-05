@@ -23,18 +23,15 @@ fn main() {
             radius = 1.,
             fill = rgb(255, 255, 255),
         ),
-        Rectangle!(
-            width = 15.,
-            height = 15.,
-            stroke = Stroke::Full {
-                color: rgb(0, 0, 0),
-                width: 1.
-<<<<<<< Updated upstream
-            }
-=======
-            },
->>>>>>> Stashed changes
-        ),
+        // we can add other objects after to let them be in the front
+        // Rectangle!(
+        //     width = 15.,
+        //     height = 15.,
+        //     stroke = Stroke::Full {
+        //         color: rgb(0, 0, 0),
+        //         width: 1.
+        //     }
+        // ),
     ]);
 
     let fond = optical_effect.local_bounding_box();
@@ -70,3 +67,5 @@ fn main() {
     )
     .unwrap();
 }
+
+// there is a slight difference between the optical effect with and without the macro, but it's not certain that you'll see it

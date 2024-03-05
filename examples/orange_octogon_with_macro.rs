@@ -14,8 +14,8 @@ fn main() {
          // We decide to not use stroke but it is possible
          // stroke={Stroke::Dashed { color: rgb(0, 0, 0), width: 0.1, on: 0.2, off: 0.1}}
 
-         // chooses a rotation of -2 radians in the trigonometric direction
-         rotate={Rotation2::new(-2_f32.to_radians())}
+         // chooses a rotation of -10 radians in the trigonometric direction
+         rotate={Rotation2::new(-10_f32.to_radians())}
      ) -> ()
          // here, the hypotenuse should be 5
 

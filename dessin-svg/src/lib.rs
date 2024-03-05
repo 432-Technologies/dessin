@@ -63,14 +63,9 @@ impl SVGExporter {
         const SCHEME: &str =
             r#"xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink""#;
 
-        //-----------------------------------------------------------------------------------------------------------------------------
-        println!("not bug yet");
         let start = format!(r#"<svg viewBox="{min_x} {min_y} {span_x} {span_y}" {SCHEME}>"#,);
         let acc = String::new();
         let stock: HashSet<(String, Font)> = HashSet::default();
-        println!("not bug yet");
-
-        //-----------------------------------------------------------------------------------------------------------------------------
 
         SVGExporter { start, acc, stock }
     }
@@ -324,7 +319,6 @@ impl Exporter for SVGExporter {
         let font_group = font::get(font.clone());
 
         let font = font.name(font_weight);
-        //-------------------------------------------------------
 
         let raw_font = match font_weight {
             FontWeight::Regular => font_group.regular,
@@ -344,11 +338,8 @@ impl Exporter for SVGExporter {
                 .unwrap_or_else(|| &font_group.regular)
                 .clone(),
         };
-        println!("stok ten is: {}", self.stock.len());
-        self.stock.insert((font.clone(), raw_font.clone()));
-        println!("stok ten is: {}", self.stock.len());
 
-        //---------------------------------------------------------
+        self.stock.insert((font.clone(), raw_font.clone()));
 
         write!(
             self.acc,
