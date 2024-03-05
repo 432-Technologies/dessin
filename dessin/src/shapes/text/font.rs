@@ -1,4 +1,6 @@
 use super::FontWeight;
+use std::hash::Hash;
+use std::hash::Hasher;
 use std::sync::OnceLock;
 use std::{collections::HashMap, sync::RwLock};
 
