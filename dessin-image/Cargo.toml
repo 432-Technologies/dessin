@@ -16,11 +16,11 @@ edition = "2021"
 license = "MIT"
 name = "dessin-image"
 repository = "https://github.com/432-technologies/dessin"
-version = "0.8.18-pre"
+version = "0.8.19-pre"
 
 [dependencies]
 data-encoding = "^2.3.3"
-dessin = { version = "0.8.18-pre", path = "../dessin" }
+dessin = { version = "0.8.19-pre", path = "../dessin" }
 font-kit = "0.11.0"
 image = "^0.24.6"
 imageproc = "^0.23.0"
