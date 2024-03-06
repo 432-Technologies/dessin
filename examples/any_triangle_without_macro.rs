@@ -1,6 +1,7 @@
 use std::fs;
 
 use dessin::{nalgebra::Rotation2, prelude::*};
+use palette::Srgb;
 use project_root::get_project_root;
 
 fn main() {
@@ -19,7 +20,7 @@ fn main() {
     triangle.angle(0.5);
 
     // paints the inside of the triangle in bright pink
-    triangle.fill(Fill::Color(rgb(255, 20, 147)));
+    triangle.fill(Srgb::new(1.0, 0.6, 0.0).into_format());
 
     // creates a black margin of 0.1 (0.05 outside and 0.05 inside the triangle)
     triangle.stroke(Stroke::Dashed {

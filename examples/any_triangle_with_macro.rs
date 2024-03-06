@@ -1,7 +1,8 @@
-use std::fs;
-
 use dessin::{nalgebra::Rotation2, prelude::*};
+use palette::named;
+use palette::{LinSrgb, Srgb};
 use project_root::get_project_root;
+use std::fs;
 
 fn main() {
     let triangle: Shape = dessin!([
@@ -38,4 +39,8 @@ fn main() {
         dessin_svg::to_string(&triangle).unwrap(),
     )
     .unwrap();
+
+    let orangeish = Srgb::new(1.0, 0.6, 0.0).into_linear();
+    let blueish = Srgb::new(0.0, 0.2, 1.0).into_linear();
+    // let result = do_something(orangeish, blueish);
 }
