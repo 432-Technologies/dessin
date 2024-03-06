@@ -149,26 +149,31 @@ impl SVGExporter {
     }
 
     fn finish(self) -> String {
-        let return_fonts = self.stock.into_iter()
+        let return_fonts = self
+            .stock
+            .into_iter()
+            .map(move |(font_ref, font_weight)| {
+                let string = font_ref.name(font_weight);
+                let font_group: FontGroup<Font> = font::get(font_ref);
+                let (mime, bytes) = match font_group.get(font_weight) {
+                    dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
+                    dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
+                };
 
-        .map(move |(font_ref, font_weight)| {
-            let string = font_ref.name(font_weight);
-            let font_group: FontGroup<Font> = font::get(font_ref);
-            let (mime, bytes) = match font_group.get(font_weight) {
-                dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
-                dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
-            };
+                // creates a base 64 ending font using previous imports
+                let ending_font = data_encoding::BASE64.encode(&bytes);
+                format!(r#"{{font-family:{string};src:url("data:{mime};base64,{ending_font}");}}"#)
+            })
+            .collect::<String>();
 
-            // creates a base 64 ending font using previous imports
-            let ending_font = data_encoding::BASE64.encode(&bytes);
-            format!(r#"<style>@font-face{{font-family:{string};src:url("data:{mime};base64,{ending_font}");}}</style>"#)
-        })
-        .collect::<String>();
-
-        format!(
-            "{}<defs>{return_fonts}</defs>{}</svg>",
-            self.start, self.acc
-        )
+        if return_fonts.is_empty() {
+            format!("{}{}</svg>", self.start, self.acc)
+        } else {
+            format!(
+                "{}<defs><style>@font-face{return_fonts}</style></defs>{}</svg>",
+                self.start, self.acc
+            )
+        }
     }
 }
 
