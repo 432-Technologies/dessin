@@ -14,7 +14,7 @@ fn main() {
 
     // creates a grey margin of 0.2 (0.05 outside and 0.05 inside the rectangle)
     rectangle.stroke(Stroke::Full {
-        color: rgb(150, 150, 150),
+        color: rgb(0x150, 0x150, 0x150),
         width: 0.1,
     });
 

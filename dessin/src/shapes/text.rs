@@ -24,7 +24,7 @@ pub(crate) fn size_of(font: &fontdue::Font, s: &str, font_size: f32) -> f32 {
 }
 
 /// Weight of a font
-#[derive(Default, Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Hash, Eq)]
 pub enum FontWeight {
     #[default]
     /// Regular

@@ -1,7 +1,7 @@
 use ::image::ImageFormat;
 use dessin::{
     export::{Export, Exporter},
-    font::{Font, FontRef},
+    font::{Font, FontGroup, FontRef},
     prelude::*,
 };
 use nalgebra::{Scale2, Transform2};
@@ -54,7 +54,7 @@ pub struct SVGOptions {
 pub struct SVGExporter {
     start: String,
     acc: String,
-    stock: HashSet<(String, Font)>,
+    stock: HashSet<(FontRef, FontWeight)>,
 }
 
 impl SVGExporter {
@@ -65,7 +65,7 @@ impl SVGExporter {
 
         let start = format!(r#"<svg viewBox="{min_x} {min_y} {span_x} {span_y}" {SCHEME}>"#,);
         let acc = String::new();
-        let stock: HashSet<(String, Font)> = HashSet::default();
+        let stock: HashSet<(FontRef, FontWeight)> = HashSet::default();
 
         SVGExporter { start, acc, stock }
     }
@@ -151,15 +151,17 @@ impl SVGExporter {
     fn finish(self) -> String {
         let return_fonts = self.stock.into_iter()
 
-        .filter_map(move |(font_family, font)| {
-            let (mime, bytes) = match font {
+        .map(move |(font_ref, font_weight)| {
+            let string = font_ref.name(font_weight);
+            let font_group: FontGroup<Font> = font::get(font_ref);
+            let (mime, bytes) = match font_group.get(font_weight) {
                 dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
                 dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
             };
 
             // creates a base 64 ending font using previous imports
             let ending_font = data_encoding::BASE64.encode(&bytes);
-            Some(format!(r#"<style>@font-face{{font-family:{font_family};src:url("data:{mime};base64,{ending_font}");}}</style>"#))
+            format!(r#"<style>@font-face{{font-family:{string};src:url("data:{mime};base64,{ending_font}");}}</style>"#)
         })
         .collect::<String>();
 
@@ -316,30 +318,30 @@ impl Exporter for SVGExporter {
 
         let font = font.clone().unwrap_or(FontRef::default());
 
-        let font_group = font::get(font.clone());
+        self.stock.insert((font.clone(), font_weight));
+
+        // let font_group = font::get(font.clone());
 
         let font = font.name(font_weight);
 
-        let raw_font = match font_weight {
-            FontWeight::Regular => font_group.regular,
-            FontWeight::Bold => font_group
-                .bold
-                .as_ref()
-                .unwrap_or_else(|| &font_group.regular)
-                .clone(),
-            FontWeight::BoldItalic => font_group
-                .bold_italic
-                .as_ref()
-                .unwrap_or_else(|| &font_group.regular)
-                .clone(),
-            FontWeight::Italic => font_group
-                .italic
-                .as_ref()
-                .unwrap_or_else(|| &font_group.regular)
-                .clone(),
-        };
-
-        self.stock.insert((font.clone(), raw_font.clone()));
+        // let raw_font = match font_weight {
+        //     FontWeight::Regular => font_group.regular,
+        //     FontWeight::Bold => font_group
+        //         .bold
+        //         .as_ref()
+        //         .unwrap_or_else(|| &font_group.regular)
+        //         .clone(),
+        //     FontWeight::BoldItalic => font_group
+        //         .bold_italic
+        //         .as_ref()
+        //         .unwrap_or_else(|| &font_group.regular)
+        //         .clone(),
+        //     FontWeight::Italic => font_group
+        //         .italic
+        //         .as_ref()
+        //         .unwrap_or_else(|| &font_group.regular)
+        //         .clone(),
+        // };
 
         write!(
             self.acc,
