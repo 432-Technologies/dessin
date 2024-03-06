@@ -2,6 +2,7 @@ use ::image::ImageFormat;
 use dessin::{
     export::{Export, Exporter},
     font::FontRef,
+    palette::Srgb,
     prelude::*,
 };
 use nalgebra::{Scale2, Transform2};
@@ -76,7 +77,13 @@ impl SVGExporter {
 
     fn write_style(&mut self, style: StylePosition) -> Result<(), SVGError> {
         match style.fill {
-            Some(Fill::Color(color)) => write!(self.acc, "fill='{color}' ")?,
+            Some(Fill::Color(color)) => write!(
+                self.acc,
+                "fill='#{:X}{:X}{:X}' ",
+                color.into_format().red,
+                color.into_format().green,
+                color.into_format().blue
+            )?,
             None => write!(self.acc, "fill='none' ")?,
         }
 

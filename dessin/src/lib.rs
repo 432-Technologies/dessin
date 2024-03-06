@@ -172,6 +172,7 @@ pub mod style;
 
 pub use ::image;
 pub use ::nalgebra;
+pub use ::palette;
 
 /// Prelude module includes everyting you need to build a dessin.
 /// You can of courses cherry pick what you need by importing directly from other modules.

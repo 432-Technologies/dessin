@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
+use palette::Srgb;
 use std::{
     f32::consts::FRAC_1_SQRT_2,
     fmt,
@@ -181,11 +182,11 @@ pub struct StylePosition {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Fill {
-    Color(Color),
+    Color(Srgb),
 }
 
-impl From<Color> for Fill {
-    fn from(c: Color) -> Self {
+impl From<Srgb> for Fill {
+    fn from(c: Srgb) -> Self {
         Fill::Color(c)
     }
 }
@@ -352,3 +353,7 @@ impl<T: ShapeBoundingBox> ShapeBoundingBox for Style<T> {
         self.shape.local_bounding_box()
     }
 }
+
+//---------------------------------------------------------------------------------------------------------------------------------
+// The horrors of the apprentice---------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
