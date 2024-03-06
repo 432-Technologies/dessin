@@ -162,7 +162,7 @@ impl SVGExporter {
 
                 // creates a base 64 ending font using previous imports
                 let ending_font = data_encoding::BASE64.encode(&bytes);
-                format!(r#"{{font-family:{string};src:url("data:{mime};base64,{ending_font}");}}"#)
+                format!(r#"@font-face{{font-family:{string};src:url("data:{mime};base64,{ending_font}");}}"#)
             })
             .collect::<String>();
 
@@ -170,7 +170,7 @@ impl SVGExporter {
             format!("{}{}</svg>", self.start, self.acc)
         } else {
             format!(
-                "{}<defs><style>@font-face{return_fonts}</style></defs>{}</svg>",
+                "{}<defs><style>{return_fonts}</style></defs>{}</svg>",
                 self.start, self.acc
             )
         }
