@@ -5,20 +5,16 @@ use project_root::get_project_root;
 use std::fs;
 
 fn main() {
-    let octogon: Shape = dessin!(
-         Octogon: #(
+    let octogon: Shape = dessin2!(
+        Octogon!(
+            // paints the inside of the octogon in bright orange
+            fill = rgb(255, 191, 0),
+            // We decide to not use stroke but it is possible
+            // stroke={Stroke::Dashed { color: rgb(0, 0, 0), width: 0.1, on: 0.2, off: 0.1}}
 
-         // paints the inside of the octogon in bright orange
-         fill={rgb(255,191,0)}
-
-         // We decide to not use stroke but it is possible
-         // stroke={Stroke::Dashed { color: rgb(0, 0, 0), width: 0.1, on: 0.2, off: 0.1}}
-
-         // chooses a rotation of -10 radians in the trigonometric direction
-         rotate={Rotation2::new(-10_f32.to_radians())}
-     ) -> ()
-         // here, the hypotenuse should be 5
-
+            // chooses a rotation of -2 radians in the trigonometric direction
+            rotate = Rotation2::new(-2_f32.to_radians())
+        ) > ()
     );
 
     // prints in svg version
