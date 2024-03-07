@@ -1,7 +1,7 @@
 use ::image::ImageFormat;
 use dessin::{
     export::{Export, Exporter},
-    font::{Font, FontGroup, FontRef},
+    font::FontRef,
     prelude::*,
 };
 use nalgebra::{Scale2, Transform2};
@@ -54,7 +54,7 @@ pub struct SVGOptions {
 pub struct SVGExporter {
     start: String,
     acc: String,
-    stock: HashSet<(FontRef, FontWeight)>,
+    used_font: HashSet<(FontRef, FontWeight)>,
 }
 
 impl SVGExporter {
@@ -67,7 +67,11 @@ impl SVGExporter {
         let acc = String::new();
         let stock: HashSet<(FontRef, FontWeight)> = HashSet::default();
 
-        SVGExporter { start, acc, stock }
+        SVGExporter {
+            start,
+            acc,
+            used_font: stock,
+        }
     }
 
     fn write_style(&mut self, style: StylePosition) -> Result<(), SVGError> {
@@ -150,19 +154,19 @@ impl SVGExporter {
 
     fn finish(self) -> String {
         let return_fonts = self
-            .stock
+            .used_font
             .into_iter()
             .map(move |(font_ref, font_weight)| {
-                let string = font_ref.name(font_weight);
-                let font_group: FontGroup<Font> = font::get(font_ref);
+                let font_name = font_ref.name(font_weight);
+                let font_group = font::get(font_ref);
                 let (mime, bytes) = match font_group.get(font_weight) {
                     dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
                     dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
                 };
 
                 // creates a base 64 ending font using previous imports
-                let ending_font = data_encoding::BASE64.encode(&bytes);
-                format!(r#"@font-face{{font-family:{string};src:url("data:{mime};base64,{ending_font}");}}"#)
+                let encoded_font_bytes = data_encoding::BASE64.encode(&bytes);
+                format!(r#"@font-face{{font-family:{font_name};src:url("data:{mime};base64,{encoded_font_bytes}");}}"#)
             })
             .collect::<String>();
 
@@ -323,7 +327,7 @@ impl Exporter for SVGExporter {
 
         let font = font.clone().unwrap_or(FontRef::default());
 
-        self.stock.insert((font.clone(), font_weight));
+        self.used_font.insert((font.clone(), font_weight));
 
         // let font_group = font::get(font.clone());
 
