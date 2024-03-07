@@ -29,7 +29,7 @@ fn main() {
 
     // prints in svg version
     fs::write(
-        get_project_root().unwrap().join("examples/out/out.svg"),
+        get_project_root().unwrap().join("examples/out/line.svg"),
         dessin_svg::to_string(&Shape::Group(group)).unwrap(),
     )
     .unwrap();
