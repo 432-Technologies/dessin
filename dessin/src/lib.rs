@@ -9,7 +9,7 @@
 //! # fn main () {
 //! use dessin::prelude::*;
 //!
-//! let dessin = dessin!();
+//! let dessin = dessin2!();
 //! # }
 //! ```
 //!
@@ -33,14 +33,14 @@
 //!
 //! impl From<MyComponent> for Shape {
 //! 	fn from(my_component: MyComponent) -> Shape {
-//! 		dessin!(
+//! 		dessin2!(
 //! 			// Implementation...
 //! 		)
 //! 	}
 //! }
 //! ```
 //!
-//! Since the [dessin!][`dessin_macros::dessin`] macro is only syntactic sugar for creating a [Shape][crate::shapes::Shape],
+//! Since the [dessin2!][`dessin_macros::dessin2`] macro is only syntactic sugar for creating a [Shape][crate::shapes::Shape],
 //! all parameters are simply rust function with the following signature: `fn (&mut self, argument_value: ArgumentType) {...}`.
 //!
 //! It can be tedious to create these function for all parameters, so the derive macro [Shape][`dessin_macro::shape`]

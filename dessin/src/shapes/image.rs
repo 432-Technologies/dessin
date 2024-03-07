@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn base() {
-        let img = dessin!(Image: ());
+        let img = dessin2!(Image());
 
         let empty_image = DynamicImage::default();
 
@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn bounding_box() {
-        let img = dessin!(Image: ());
+        let img = dessin2!(Image());
         let bb = img.local_bounding_box();
 
         assert_eq!(bb.width(), 1.);
@@ -170,9 +170,7 @@ mod tests {
 
     #[test]
     fn local_transform() {
-        let img = dessin!(Image: (
-            rotate={Rotation2::new(-45_f32.to_radians())}
-        ));
+        let img = dessin2!(Image(rotate = Rotation2::new(-45_f32.to_radians())));
         let img_pos = img.position(&Transform2::default());
         assert_f32_near!(img_pos.rotation, -45_f32.to_radians());
         assert_f32_near!(img_pos.width, 1.);
@@ -182,7 +180,7 @@ mod tests {
 
     #[test]
     fn global_transform() {
-        let img = dessin!(Image: ());
+        let img = dessin2!(Image());
         let parent_transform = Transform2::default() * Rotation2::new(-45_f32.to_radians());
         let img_pos = img.position(&parent_transform);
 
@@ -194,7 +192,7 @@ mod tests {
 
     #[test]
     fn combined_transform() {
-        let img = dessin!(Image: ());
+        let img = dessin2!(Image());
         let img_pos = img.position(&Transform2::default());
         let empty_image = DynamicImage::default();
         println!("Base = {img_pos:?}\n");
@@ -213,7 +211,7 @@ mod tests {
             }
         );
 
-        let img = dessin!(var(img): (rotate={ Rotation2::new(-45_f32.to_radians()) }));
+        let img = dessin2!({ img }(rotate = Rotation2::new(-45_f32.to_radians())));
         let img_pos = img.position(&Transform2::default());
         println!("Rot(-45deg) = {img_pos:?}\n");
         assert_f32_near!(img_pos.rotation, -45_f32.to_radians());
@@ -221,7 +219,7 @@ mod tests {
         assert_f32_near!(img_pos.top_left.x, Point2::new(0., SQRT_2 / 2.).x);
         assert_f32_near!(img_pos.top_left.y, Point2::new(0., SQRT_2 / 2.).y);
 
-        let img = dessin!(var(img): (translate = { Translation2::new(1., 0.) }));
+        let img = dessin2!({ img }(translate = Translation2::new(1., 0.)));
         let img_pos = img.position(&Transform2::default());
         println!("Translate_x(1) = {img_pos:?}\n");
         assert_f32_near!(img_pos.rotation, -45_f32.to_radians());
@@ -231,9 +229,9 @@ mod tests {
         assert_f32_near!(img_pos.top_right.x, Point2::new(SQRT_2 / 2. + 1., 0.).x);
         assert_f32_near!(img_pos.top_right.y, Point2::new(SQRT_2 / 2. + 1., 0.).y);
 
-        let img = dessin!(var(img): (scale = { Scale2::new(3., 2.) }));
+        let img = dessin2!({ img }(scale = Scale2::new(3., 2.)));
         let img_pos = img.position(&Transform2::default());
-        println!("Scale(3, 2) = {img_pos:?}\n");
+        println!("Scale(3, 2) =img_pos:?\n");
         assert_f32_near!(img_pos.top_left.x, Point2::new(3. * 1., 2. * SQRT_2 / 2.).x);
         assert_f32_near!(img_pos.top_left.y, Point2::new(3. * 1., 2. * SQRT_2 / 2.).y);
         assert_f32_near!(
