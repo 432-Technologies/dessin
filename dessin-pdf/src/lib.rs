@@ -62,7 +62,11 @@ impl Exporter for PDFExporter {
     ) -> Result<(), Self::Error> {
         if let Some(fill) = fill {
             let (r, g, b) = match fill {
-                Fill::Color(c) => c.into_format(),
+                Fill::Color(c) => (
+                    c.into_format::<f32, f32>().red,
+                    c.into_format::<f32, f32>().green,
+                    c.into_format::<f32, f32>().blue,
+                ),
             };
 
             self.layer

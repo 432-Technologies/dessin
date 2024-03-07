@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
-use palette::Srgb;
+use palette::{IntoColor, Srgb, Srgba};
 use std::{
     f32::consts::FRAC_1_SQRT_2,
     fmt,
@@ -177,19 +177,20 @@ impl fmt::Display for Color {
 
 pub struct StylePosition {
     pub stroke: Option<Stroke>,
-    pub fill: Option<Fill>,
+    pub fill: Option<Srgba>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Fill {
-    Color(Srgb),
-}
+// #[derive(Debug, Clone, Copy, PartialEq)]
+// pub enum Fill {
+//     Color(Srgba),
+//     // Color(Srgb),
+// }
 
-impl From<Srgb> for Fill {
-    fn from(c: Srgb) -> Self {
-        Fill::Color(c)
-    }
-}
+// impl From<Srgba> for Fill {
+//     fn from(c: Srgba) -> Self {
+//         Fill::Color(c)
+//     }
+// }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Stroke {
@@ -241,7 +242,7 @@ impl Mul<Stroke> for Transform2<f32> {
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Style<T> {
     pub shape: T,
-    pub fill: Option<Fill>,
+    pub fill: Option<Srgba>,
     pub stroke: Option<Stroke>,
 }
 impl<T> Style<T> {
@@ -266,12 +267,12 @@ impl<T> Style<T> {
     }
 
     #[inline]
-    pub fn fill<F: Into<Fill>>(&mut self, fill: F) -> &mut Self {
-        self.fill = Some(fill.into());
+    pub fn fill<F: IntoColor<Srgba>>(&mut self, fill: F) -> &mut Self {
+        self.fill = Some(fill.into_color());
         self
     }
     #[inline]
-    pub fn with_fill<F: Into<Fill>>(mut self, fill: F) -> Self {
+    pub fn with_fill<F: IntoColor<Srgba>>(mut self, fill: F) -> Self {
         self.fill(fill);
         self
     }
