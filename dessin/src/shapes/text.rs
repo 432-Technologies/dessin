@@ -184,31 +184,29 @@ mod tests {
 
     #[test]
     fn rotate_group() {
-        let dessin = dessin!([
-            Circle: (
-                translate={[0., 25.]}
-            ),
-            Text: (
-                text={"1"}
-                font_size={30.}
-                vertical_align={TextVerticalAlign::Center}
-                translate={[0., 25.]}
-            ),
-            Text: (
-                text={"2"}
-                font_size={40.}
-                vertical_align={TextVerticalAlign::Center}
-                translate={[0., 0.]}
-            ),
-            Text: (
-                text={"3"}
-                font_size={15.}
-                vertical_align={TextVerticalAlign::Center}
-                translate={[0., -30.]}
-            ),
-        ] -> (
-            rotate={Rotation2::new(FRAC_PI_4)}
-        ));
+        let dessin = dessin2!(
+            [
+                Circle(translate = [0., 25.]),
+                Text(
+                    text = "1",
+                    font_size = 30.,
+                    vertical_align = TextVerticalAlign::Center,
+                    translate = [0., 25.],
+                ),
+                Text(
+                    text = "2",
+                    font_size = 40.,
+                    vertical_align = TextVerticalAlign::Center,
+                    translate = [0., 0.]
+                ),
+                Text(
+                    text = "3",
+                    font_size = 15.,
+                    vertical_align = TextVerticalAlign::Center,
+                    translate = [0., -30.]
+                ),
+            ] > (rotate = Rotation2::new(FRAC_PI_4))
+        );
 
         struct Exp;
         impl Exporter for Exp {

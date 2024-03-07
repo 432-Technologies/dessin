@@ -42,7 +42,7 @@ where
     /// 	);
     /// }
     ///
-    /// export_shape(dessin!());
+    /// export_shape(dessin2!());
     /// # }
     /// ```
     fn write_into_exporter(
@@ -163,7 +163,7 @@ where
 /// }
 ///
 /// fn main() {
-/// 	let svg = dessin!().to_svg();
+/// 	let svg = dessin2!().to_svg();
 /// }
 /// ```
 pub trait Exporter {
