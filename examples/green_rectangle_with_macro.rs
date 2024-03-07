@@ -1,4 +1,4 @@
-use std::{f32::consts::PI, fs};
+use std::fs;
 
 use dessin::{nalgebra::Rotation2, prelude::*};
 use project_root::get_project_root;
