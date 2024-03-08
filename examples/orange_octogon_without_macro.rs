@@ -1,6 +1,7 @@
 //Attention ! It is the same way to make all polygons, you just have to replace : "Octogon" by "Polygon< the number of side you want >"
 
 use dessin::{contrib::polygons::Octogon, nalgebra::Rotation2, prelude::*};
+use palette::Srgba;
 use project_root::get_project_root;
 use std::fs;
 
@@ -11,7 +12,7 @@ fn main() {
     let mut octogon = Style::new(octogon);
 
     // paints the inside of the octogon in bright orange
-    octogon.fill(Fill::Color(rgb(255, 191, 0)));
+    octogon.fill(Srgba::new(1.0, 0.749, 0.0, 1.0));
 
     // We decide to not use stroke but it is possible
     // octogon.stroke(Stroke::Dashed {

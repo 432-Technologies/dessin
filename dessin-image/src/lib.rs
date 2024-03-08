@@ -167,12 +167,12 @@ impl Exporter for ImageExporter {
 
         let style = self.style();
 
-        if let Some(Fill::Color(c)) = style.fill {
+        if let Some(color) = style.fill {
             let (r, g, b, a) = (
-                c.into_format::<u8, f32>().red, //-----------------------------------------------------------------------------
-                c.into_format::<u8, f32>().green, //before : c.rgba();
-                c.into_format::<u8, f32>().blue, //rgba() modification should be better
-                c.into_format::<u8, u8>().alpha, //-----------------------------------------------------------------------------
+                color.into_format::<u8, f32>().red,
+                color.into_format::<u8, f32>().green,
+                color.into_format::<u8, f32>().blue,
+                color.into_format::<u8, u8>().alpha,
             );
             self.buffer.fill(
                 &path,
@@ -183,7 +183,12 @@ impl Exporter for ImageExporter {
 
         match style.stroke {
             Some(Stroke::Full { color, width }) => {
-                let (r, g, b, a) = color.rgba();
+                let (r, g, b, a) = (
+                    color.into_format::<u8, f32>().red,
+                    color.into_format::<u8, f32>().green,
+                    color.into_format::<u8, f32>().blue,
+                    color.into_format::<u8, u8>().alpha,
+                );
                 self.buffer.stroke(
                     &path,
                     &Source::Solid(SolidSource { r: b, g, b: r, a }),
@@ -204,7 +209,12 @@ impl Exporter for ImageExporter {
                 on,
                 off,
             }) => {
-                let (r, g, b, a) = color.rgba();
+                let (r, g, b, a) = (
+                    color.into_format::<u8, f32>().red,
+                    color.into_format::<u8, f32>().green,
+                    color.into_format::<u8, f32>().blue,
+                    color.into_format::<u8, u8>().alpha,
+                );
                 self.buffer.stroke(
                     &path,
                     &Source::Solid(SolidSource { r: b, g, b: r, a }),
@@ -246,7 +256,7 @@ impl Exporter for ImageExporter {
         // dt.set_transform(&Transform::rotation(euclid::Angle::degrees(15.0)));
 
         let color = match self.style().fill {
-            Some(Fill::Color(c)) => c,
+            Some(color) => color,
             None => return Ok(()),
         };
         let (r, g, b, a) = (

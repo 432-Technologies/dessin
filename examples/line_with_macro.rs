@@ -1,4 +1,5 @@
 use dessin::{nalgebra::Point2, prelude::*};
+use palette::Srgba;
 use project_root::get_project_root;
 use std::fs;
 
@@ -13,9 +14,9 @@ fn main() {
             // chooses the ending point of the line
             to = Point2::new(12., 5.2),
             // not needed here
-            fill = rgb(255, 100, 100),
+            fill = Srgba::new(1.0, 0.392, 0.392, 1.0),
             stroke = Stroke::Full {
-                color: rgb(255, 100, 100),
+                color: Srgba::new(1.0, 0.392, 0.392, 1.0),
                 width: 0.05
             },
             translate = [5., 1.]

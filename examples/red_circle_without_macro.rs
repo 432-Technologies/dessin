@@ -1,7 +1,8 @@
-use std::fs;
-
 use dessin::prelude::*;
+use palette::Srgb;
+use palette::Srgba;
 use project_root::get_project_root;
+use std::fs;
 
 fn main() {
     // creates a circle with radius of 11
@@ -10,11 +11,11 @@ fn main() {
     let mut circle = Style::new(circle);
 
     // paints the inside of the circle in red
-    circle.fill(Fill::Color(rgb(255, 0, 0)));
+    circle.fill(Srgba::new(1.0, 0.0, 0.0, 0.8));
 
     // creates a grey margin of 0.2 (0.1 outside and 0.1 inside the circle)
     circle.stroke(Stroke::Full {
-        color: rgb(96, 96, 96),
+        color: Srgba::new(0.376, 0.376, 0.376, 1.0),
         width: 0.2,
     });
 
