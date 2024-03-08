@@ -56,8 +56,8 @@
 //!
 //! dessin2!(
 //! 	Dynamic<Ellipse>(
-//! 		_ref={&ellipse_ref}
-//! 		semi_major_axis={2.}
+//! 		_ref = &ellipse_ref,
+//! 		semi_major_axis = 2.
 //! 	)
 //! );
 //!
