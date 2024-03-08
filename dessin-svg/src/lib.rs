@@ -1,4 +1,5 @@
 use ::image::ImageFormat;
+use dessin::palette::IntoColor;
 use dessin::{
     export::{Export, Exporter},
     font::FontRef,
@@ -79,16 +80,13 @@ impl SVGExporter {
         match style.fill {
             Some(color) => write!(
                 self.acc,
-                "fill='rgba({:.3},{:.3},{:.3},{:.3})' ",
-                color.red, color.green, color.blue, color.alpha
-            )?,
-            // Some(Fill::Color(color)) => write!(
-            //     self.acc,
-            //     "fill='#{:X}{:X}{:X}' ",
-            //     color.into_format<u8>().red,
-            //     color.into_format().green,
-            //     color.into_format().blue
-            // )?,
+                "fill='rgb({} {} {} / {:.3})' ",
+                color.red * 255.,
+                color.green * 255.,
+                color.blue * 255.,
+                color.alpha
+            )?, // pass [0;1] number to [0;255] for a working CSS code (not needed for alpha)
+
             None => write!(self.acc, "fill='none' ")?,
         }
 
@@ -100,10 +98,14 @@ impl SVGExporter {
                 off,
             }) => write!(
                 self.acc,
-                "stroke='{color}' stroke-width='{width}' stroke-dasharray='{on},{off}' "
+                "stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' stroke-dasharray='{on},{off}' ",
+                color.red * 255.,
+                color.green * 255.,
+                color.blue * 255.,
+                color.alpha
             )?,
             Some(Stroke::Full { color, width }) => {
-                write!(self.acc, "stroke='{color}' stroke-width='{width}' ")?
+                write!(self.acc, "stroke='{:?}' stroke-width='{width}' ", color)?
             }
 
             None => {}

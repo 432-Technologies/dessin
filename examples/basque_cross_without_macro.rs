@@ -1,4 +1,5 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
+use palette::Srgba;
 use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
 
@@ -27,7 +28,7 @@ fn main() {
 
         large_half_circle.span_angle(PI);
 
-        large_half_circle.fill(rgb(255, 0, 0));
+        large_half_circle.fill(Srgba::new(1.0, 0.0, 0.0, 1.0));
 
         large_half_circle.translate([0., 20.]);
 
@@ -38,7 +39,7 @@ fn main() {
 
         small_red_circle.radius(10.);
 
-        small_red_circle.fill(rgb(255, 0, 0));
+        small_red_circle.fill(Srgba::new(1.0, 0.0, 0.0, 1.0));
 
         small_red_circle.translate([0., 30.]);
 
@@ -55,7 +56,7 @@ fn main() {
 
         little_half_circle.span_angle(PI);
 
-        little_half_circle.fill(rgb(255, 255, 255));
+        little_half_circle.fill(Srgba::new(1.0, 1.0, 1.0, 1.0));
 
         little_half_circle.translate([0., 10.]);
 

@@ -195,22 +195,39 @@ pub struct StylePosition {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Stroke {
     Full {
-        color: Color,
+        color: Srgba,
         width: f32,
     },
     Dashed {
-        color: Color,
+        color: Srgba,
         width: f32,
         on: f32,
         off: f32,
     },
 }
 
-impl From<(Color, f32)> for Stroke {
-    fn from((color, width): (Color, f32)) -> Self {
-        Stroke::Full { color, width }
+impl Stroke {
+    pub fn new_full<F: IntoColor<Srgba>>(color: F, width: f32) -> Self {
+        let color = color.into_color();
+        Self::Full { color, width }
+    }
+
+    pub fn new_dashed<F: IntoColor<Srgba>>(color: F, width: f32, on: f32, off: f32) -> Self {
+        let color = color.into_color();
+        Self::Dashed {
+            color,
+            width,
+            on,
+            off,
+        }
     }
 }
+
+// impl From<(Srgba, f32)> for Stroke {
+//     fn from((color, width): (Srgba, f32)) -> Self {
+//         Stroke::Full { color, width }
+//     }
+// }
 
 impl Mul<Stroke> for Transform2<f32> {
     type Output = Stroke;

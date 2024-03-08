@@ -1,7 +1,7 @@
-use std::{f32::consts::PI, fs};
-
 use dessin::{nalgebra::Rotation2, prelude::*};
+use palette::Srgba;
 use project_root::get_project_root;
+use std::{f32::consts::PI, fs};
 
 fn main() {
     // creates a rectangle with a width of 11 and a height of 6
@@ -19,11 +19,11 @@ fn main() {
     thick_arc.span_angle(PI);
 
     // paints the inside of the thick_arc in yellow
-    thick_arc.fill(Fill::Color(rgb(255, 255, 0)));
+    thick_arc.fill(Srgba::new(1.0, 1.0, 0.0, 1.0));
 
     // creates a black margin of 0.1 (0.05 outside and 0.05 inside the thick_arc)
     thick_arc.stroke(Stroke::Full {
-        color: rgb(0, 0, 0),
+        color: Srgba::new(0.0, 0.0, 0.0, 0.5),
         width: 0.1,
     });
 

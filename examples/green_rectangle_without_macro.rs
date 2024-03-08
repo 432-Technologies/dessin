@@ -1,7 +1,7 @@
-use std::fs;
-
 use dessin::{nalgebra::Rotation2, prelude::*};
+use palette::Srgba;
 use project_root::get_project_root;
+use std::fs;
 
 fn main() {
     // creates a rectangle with a width of 11 and a height of 6
@@ -10,11 +10,11 @@ fn main() {
     let mut rectangle = Style::new(rectangle);
 
     // paints the inside of the rectangle in green
-    rectangle.fill(Fill::Color(rgb(0, 255, 0)));
+    rectangle.fill(Srgba::new(0.0, 1.0, 0.0, 1.0));
 
     // creates a grey margin of 0.2 (0.05 outside and 0.05 inside the rectangle)
     rectangle.stroke(Stroke::Full {
-        color: rgb(0x96, 0x96, 0x96),
+        color: Srgba::new(0.376, 0.376, 0.376, 1.0),
         width: 0.1,
     });
 

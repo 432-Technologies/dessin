@@ -1,4 +1,5 @@
 use dessin::prelude::*;
+use palette::Srgba;
 use project_root::get_project_root;
 use std::fs;
 
@@ -7,7 +8,7 @@ fn main() {
         width = 3.,
         height = 2.,
         translate = [1., 0.],
-        fill = rgb(255, 0, 0)
+        fill = Srgba::new(1.0, 0.0, 0.0, 1.0)
     ));
 
     let base = dessin2!(Padding<Shape>( // here, we can replace 'Shape' with 'Rectangle' but in case we want to use the
@@ -24,7 +25,7 @@ fn main() {
         width = 5.5,
         height = 3.8,
         stroke = Stroke::Full {
-            color: rgb(0, 150, 0),
+            color: Srgba::new(0.588, 0.0, 0.0, 0.5),
             width: 0.1
         },
         translate = [0.75, -0.1]

@@ -5,8 +5,8 @@ use dessin::{
 };
 use nalgebra::Translation2;
 use printpdf::{
-    BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference,
-    Point,
+    color, BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference,
+    PdfLayerReference, Point,
 };
 use std::{collections::HashMap, fmt};
 
@@ -62,10 +62,10 @@ impl Exporter for PDFExporter {
     ) -> Result<(), Self::Error> {
         if let Some(fill) = fill {
             let (r, g, b) = match fill {
-                Fill::Color(c) => (
-                    c.into_format::<f32, f32>().red,
-                    c.into_format::<f32, f32>().green,
-                    c.into_format::<f32, f32>().blue,
+                color => (
+                    color.into_format::<f32, f32>().red,
+                    color.into_format::<f32, f32>().green,
+                    color.into_format::<f32, f32>().blue,
                 ),
             };
 
@@ -80,7 +80,14 @@ impl Exporter for PDFExporter {
 
         if let Some(stroke) = stroke {
             let ((r, g, b), w) = match stroke {
-                Stroke::Full { color, width } => (color.as_rgb_f32(), width),
+                Stroke::Full { color, width } => (
+                    (
+                        color.into_format::<f32, f32>().red,
+                        color.into_format::<f32, f32>().green,
+                        color.into_format::<f32, f32>().blue,
+                    ),
+                    width,
+                ),
                 Stroke::Dashed {
                     color,
                     width,
@@ -97,7 +104,14 @@ impl Exporter for PDFExporter {
                         gap_3: None,
                     });
 
-                    (color.as_rgb_f32(), width)
+                    (
+                        (
+                            color.into_format::<f32, f32>().red,
+                            color.into_format::<f32, f32>().green,
+                            color.into_format::<f32, f32>().blue,
+                        ),
+                        width,
+                    )
                 }
             };
 
