@@ -1,19 +1,47 @@
-// #![warn(missing_docs)]
-#![allow(clippy::tabs_in_doc_comments)]
-
-//! **dessin is library aimed at building complex drawings, combine them, move them and export them as PDF or SVG.**
+//! **dessin** is library aimed at building complex drawings, combine them, move them and export them as PDF or SVG.
+//!
+//! Details about the [macro][`crate::macros`].
 //!
 //! ## Example
 //!
 //! ```
-//! # fn main () {
 //! use dessin::prelude::*;
 //!
-//! let dessin = dessin2!();
-//! # }
-//! ```
+//! #[derive(Default, Shape)]
+//! struct MyShape {
+//!   text: String,
+//! }
+//! impl MyShape {
+//!   fn say_this(&mut self, what: &str) {
+//!     self.text = format!("{} And check this out: `{what}`", self.text);
+//!   }
+//! }
+//! impl From<MyShape> for Shape {
+//!   fn from(MyShape { text }: MyShape) -> Self {
+//!     dessin2!(Text!(fill = Color::RED, { text })).into()
+//!   }
+//! }
 //!
-//! Details about the [`dessin_macros`] macro.
+//! fn main() {
+//!   let dessin = dessin2!(for x in 0..10 {
+//!     let radius = x as f32 * 10.;
+//!
+//!     dessin2!([
+//!       Circle!(
+//!         fill = Color::RED,
+//!         { radius },
+//!         translate = [x as f32 * 5., 10.],
+//!       ),
+//!       Text!(fill = Color::BLACK, font_size = 10., text = "Hi !",),
+//!     ])
+//!   });
+//!
+//!   let dessin = dessin2!([
+//!     { dessin }(scale = [2., 2.]),
+//!     MyShape(say_this = "Hello world"),
+//!   ]);
+//! }
+//! ```
 //!
 //! ## Components
 //!
@@ -123,6 +151,11 @@
 //!
 //! ## Implement own export format.
 //! Documentation can be found in the [`export`] module.
+
+#![warn(missing_docs)]
+#![allow(clippy::tabs_in_doc_comments)]
+
+pub mod macros;
 
 // We need this in order for the proc_macro to work in this library.
 // See https://github.com/rust-lang/rust/issues/56409 for more details
