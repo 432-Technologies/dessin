@@ -1,19 +1,47 @@
-// #![warn(missing_docs)]
-#![allow(clippy::tabs_in_doc_comments)]
-
-//! **dessin is library aimed at building complex drawings, combine them, move them and export them as PDF or SVG.**
+//! **dessin** is library aimed at building complex drawings, combine them, move them and export them as PDF or SVG.
+//!
+//! Details about the [macro][`crate::macros`].
 //!
 //! ## Example
 //!
 //! ```
-//! # fn main () {
 //! use dessin::prelude::*;
 //!
-//! let dessin = dessin!();
-//! # }
-//! ```
+//! #[derive(Default, Shape)]
+//! struct MyShape {
+//!   text: String,
+//! }
+//! impl MyShape {
+//!   fn say_this(&mut self, what: &str) {
+//!     self.text = format!("{} And check this out: `{what}`", self.text);
+//!   }
+//! }
+//! impl From<MyShape> for Shape {
+//!   fn from(MyShape { text }: MyShape) -> Self {
+//!     dessin2!(Text!(fill = Color::RED, { text })).into()
+//!   }
+//! }
 //!
-//! Details about the [`dessin_macros`] macro.
+//! fn main() {
+//!   let dessin = dessin2!(for x in 0..10 {
+//!     let radius = x as f32 * 10.;
+//!
+//!     dessin2!([
+//!       Circle!(
+//!         fill = Color::RED,
+//!         { radius },
+//!         translate = [x as f32 * 5., 10.],
+//!       ),
+//!       Text!(fill = Color::BLACK, font_size = 10., text = "Hi !",),
+//!     ])
+//!   });
+//!
+//!   let dessin = dessin2!([
+//!     { dessin }(scale = [2., 2.]),
+//!     MyShape(say_this = "Hello world"),
+//!   ]);
+//! }
+//! ```
 //!
 //! ## Components
 //!
@@ -33,14 +61,14 @@
 //!
 //! impl From<MyComponent> for Shape {
 //! 	fn from(my_component: MyComponent) -> Shape {
-//! 		dessin!(
+//! 		dessin2!(
 //! 			// Implementation...
 //! 		)
 //! 	}
 //! }
 //! ```
 //!
-//! Since the [dessin!][`dessin_macros::dessin`] macro is only syntactic sugar for creating a [Shape][crate::shapes::Shape],
+//! Since the [dessin2!][`dessin_macros::dessin2`] macro is only syntactic sugar for creating a [Shape][crate::shapes::Shape],
 //! all parameters are simply rust function with the following signature: `fn (&mut self, argument_value: ArgumentType) {...}`.
 //!
 //! It can be tedious to create these function for all parameters, so the derive macro [Shape][`dessin_macro::shape`]
@@ -124,6 +152,11 @@
 //! ## Implement own export format.
 //! Documentation can be found in the [`export`] module.
 
+#![warn(missing_docs)]
+#![allow(clippy::tabs_in_doc_comments)]
+
+pub mod macros;
+
 // We need this in order for the proc_macro to work in this library.
 // See https://github.com/rust-lang/rust/issues/56409 for more details
 extern crate self as dessin;
@@ -176,17 +209,17 @@ mod tests {
         assert_eq!(bb.width(), 14.);
         assert_eq!(bb.height(), 14.);
 
-        let group = dessin2!([Octogon(scale = [12., 12.]), Circle(radius = 7.),]);
+        let group = dessin2!([Octogon(scale = [12., 12.]), Circle(radius = 7.)]);
         let bb = group.local_bounding_box();
         assert_eq!(bb.width(), 24.);
         assert_eq!(bb.height(), 24.);
 
-        let group = dessin2!([Octogon(scale = [15., 15.]), Circle(radius = 7.),]);
+        let group = dessin2!([Octogon(scale = [15., 15.]), Circle(radius = 7.)]);
         let bb = group.local_bounding_box();
         assert_eq!(bb.width(), 30.);
         assert_eq!(bb.height(), 30.);
 
-        let group = dessin2!([Octogon(scale = [13., 13.]), Circle(radius = 7.),]);
+        let group = dessin2!([Octogon(scale = [13., 13.]), Circle(radius = 7.)]);
         let bb = group.local_bounding_box();
         assert_eq!(bb.width(), 26.);
         assert_eq!(bb.height(), 26.);

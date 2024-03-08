@@ -108,6 +108,8 @@ where
 
         let bb = shape.local_bounding_box().straigthen();
 
+        //------------------------------------------------------------------------------------------------------------------
+
         dessin2!([
             Rectangle(
                 scale = [
@@ -122,6 +124,8 @@ where
             ),
             { shape },
         ])
+
+        //-----------------------------------------------------------------------------------------------------------------
     }
 }
 
@@ -158,7 +162,6 @@ impl<T: ShapeOp> ShapeOp for Padding<T> {
     }
 }
 
-// creates 2 tests to check that the code works
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
@@ -197,8 +200,8 @@ mod tests {
     #[test]
     fn similar_op_2() {
         let test_1 = dessin2!([
-            Circle!(radius = 1., translate = [0.5, 0.]),
-            Rectangle!(width = 1., height = 0.4, translate = [2., 0.])
+            Circle!(radius = 1.),
+            Rectangle!(width = 1., height = 0.4, translate = [1.5, 0.])
         ]);
 
         let base_1 = dessin2!(Padding<Shape>(
@@ -209,7 +212,7 @@ mod tests {
             padding_bottom = 1.,
         ));
 
-        let rectangle = dessin2!(Rectangle!(scale = [5.5, 3.8], translate = [0.75, -0.1]));
+        let rectangle = dessin2!(Rectangle!(scale = [5.5, 3.8], translate = [0.25, -0.1]));
 
         let base_2 = dessin2!(Padding<Style<Rectangle>>(
             shape = rectangle,

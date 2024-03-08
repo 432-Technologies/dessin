@@ -6,8 +6,8 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin!(
-//! 	Ellipse: ()
+//! dessin2!(
+//! 	Ellipse()
 //! );
 //! ```
 //!
@@ -15,8 +15,8 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin!(
-//! 	Text: ()
+//! dessin2!(
+//! 	Text()
 //! );
 //! ```
 //!
@@ -24,8 +24,8 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin!(
-//! 	Curve: ()
+//! dessin2!(
+//! 	Curve()
 //! );
 //! ```
 //!
@@ -33,8 +33,8 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin!(
-//! 	Image: ()
+//! dessin2!(
+//! 	Image()
 //! );
 //! ```
 //!
@@ -42,7 +42,7 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin!(
+//! dessin2!(
 //! 	[]
 //! );
 //! ```
@@ -54,10 +54,10 @@
 //!
 //! let ellipse_ref /* : Arc<RwLock<Ellipse>> */ = Default::default();
 //!
-//! dessin!(
-//! 	Dynamic<Ellipse>: (
-//! 		_ref={&ellipse_ref}
-//! 		semi_major_axis={2.}
+//! dessin2!(
+//! 	Dynamic<Ellipse>(
+//! 		_ref = &ellipse_ref,
+//! 		semi_major_axis = 2.
 //! 	)
 //! );
 //!
