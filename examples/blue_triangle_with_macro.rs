@@ -3,7 +3,6 @@ use dessin::{
     prelude::{polygons::Triangle, *},
 };
 use palette::Srgb;
-use palette::Srgba;
 use project_root::get_project_root;
 use std::fs;
 
@@ -14,10 +13,7 @@ fn main() {
         // paints the inside of the triangle in green
         fill = Srgb::new(1.0, 0.0, 0.0),
         // creates a black margin of 0.1 (0.05 outside and the same inside the triangle)
-        stroke = Stroke::Full {
-            color: Srgba::new(0.0, 0.0, 0.0, 1.0),
-            width: 0.1
-        },
+        stroke = Stroke::new_full(Srgb::new(0.0, 0.0, 0.0), 0.1),
         //chooses a rotation of 0 radians in the trigonometric direction
         rotate = Rotation2::new(0_f32.to_radians()),
     ),]);

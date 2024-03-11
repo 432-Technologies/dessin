@@ -25,11 +25,8 @@ fn main() {
         Rectangle!(
             width = 15.,
             height = 15.,
-            stroke = Stroke::Full {
-                color: Srgba::new(0.0, 0.0, 0.0, 0.01),
-                width: 1.
-            }
-        ),
+            stroke = Stroke::new_full(Srgba::new(0.0, 0.0, 0.0, 0.01), 1.)
+        )
     ]);
 
     let fond = optical_effect.local_bounding_box();

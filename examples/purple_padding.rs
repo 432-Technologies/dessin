@@ -24,10 +24,7 @@ fn main() {
     let rectangle_2 = dessin2!(Rectangle!(
         width = 5.5,
         height = 3.8,
-        stroke = Stroke::Full {
-            color: Srgba::new(0.588, 0.0, 0.0, 0.5),
-            width: 0.1
-        },
+        stroke = Stroke::new_full(Srgba::new(0.376, 0.376, 0.376, 0.5), 0.2),
         translate = [0.75, -0.1]
     ));
 

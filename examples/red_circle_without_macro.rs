@@ -1,6 +1,5 @@
 use dessin::prelude::*;
-use palette::Srgb;
-use palette::Srgba;
+use palette::{Srgb, Srgba};
 use project_root::get_project_root;
 use std::fs;
 
@@ -20,11 +19,8 @@ fn main() {
     });
 
     let circle = Style::new(circle)
-        .with_fill(Fill::Color(rgb(255, 0, 0)))
-        .with_stroke(Stroke::Full {
-            color: rgb(96, 96, 96),
-            width: 0.2,
-        });
+        .with_fill(Srgb::new(1.0, 0.0, 0.0))
+        .with_stroke(Stroke::new_full(Srgb::new(0.376, 0.376, 0.376), 0.2));
 
     //prints in svg version
     fs::write(

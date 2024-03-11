@@ -28,6 +28,7 @@ fn main() {
 
         large_half_circle.span_angle(PI);
 
+        //here, alpha is not needed (= 1.0), so we can replace Srgba by Srgb (without alpha)
         large_half_circle.fill(Srgba::new(1.0, 0.0, 0.0, 1.0));
 
         large_half_circle.translate([0., 20.]);

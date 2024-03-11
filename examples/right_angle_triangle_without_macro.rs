@@ -1,6 +1,5 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
-use palette::Srgb;
-use palette::Srgba;
+use palette::{Srgb, Srgba};
 use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
 
@@ -22,12 +21,12 @@ fn main() {
     triangle.fill(Srgb::new(0.0, 0.0, 0.392));
 
     // creates a black margin of 0.1 (0.05 outside and 0.05 inside the triangle)
-    triangle.stroke(Stroke::Dashed {
-        color: Srgba::new(0.0, 0.0, 0.0, 0.1522115),
-        width: 0.1,
-        on: 0.2,
-        off: 0.1,
-    });
+    triangle.stroke(Stroke::new_dashed(
+        Srgba::new(0.0, 0.0, 0.0, 0.1522115),
+        0.1,
+        0.2,
+        0.1,
+    ));
 
     // chooses a rotation of 0 radians in the trigonometric direction
     triangle.rotate(Rotation2::new(0_f32.to_radians()));
