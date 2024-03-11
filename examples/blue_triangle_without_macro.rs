@@ -15,7 +15,7 @@ fn main() {
     triangle.scale(Scale2::new(5., 5.));
 
     // paints the inside of the triangle in blue
-    triangle.fill(Srgb::new(1.0, 0.0, 0.0));
+    triangle.fill(Srgb::new(0.0, 0.0, 1.0));
 
     // creates a black margin of 0.2 (0.05 outside and 0.05 inside the triangle)
     triangle.stroke(Stroke::new_full(Srgb::new(0.0, 0.0, 0.0), 0.1));

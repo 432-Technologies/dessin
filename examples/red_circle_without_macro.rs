@@ -13,14 +13,11 @@ fn main() {
     circle.fill(Srgba::new(1.0, 0.0, 0.0, 0.8));
 
     // creates a grey margin of 0.2 (0.1 outside and 0.1 inside the circle)
-    circle.stroke(Stroke::Full {
-        color: Srgba::new(0.376, 0.376, 0.376, 1.0),
-        width: 0.2,
-    });
+    circle.stroke(Stroke::new_full(Srgba::new(0.376, 0.376, 0.376, 1.0), 0.2));
 
-    let circle = Style::new(circle)
-        .with_fill(Srgb::new(1.0, 0.0, 0.0))
-        .with_stroke(Stroke::new_full(Srgb::new(0.376, 0.376, 0.376), 0.2));
+    // let circle = Style::new(circle)
+    //     .with_fill(Srgb::new(1.0, 0.0, 0.0))
+    //     .with_stroke(Stroke::new_full(Srgb::new(0.376, 0.376, 0.376), 0.2));
 
     //prints in svg version
     fs::write(

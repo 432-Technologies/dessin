@@ -15,12 +15,8 @@ fn main() {
     octogon.fill(Srgba::new(1.0, 0.749, 0.0, 1.0));
 
     // We decide to not use stroke but it is possible
-    // octogon.stroke(Stroke::Dashed {
-    //     color: rgb(0, 0, 0),
-    //     width: 0.1,
-    //     on: 0.2,
-    //     off: 0.1
-    // });
+    // octogon.stroke(Stroke::new_dashed(Strba::new(0.0, 0.0, 0.0, 1.0), width: 0.1, on: 0.2, off: 0.1
+    // );
 
     // chooses a rotation of -10 radians in the trigonometric direction
     octogon.rotate(Rotation2::new(-10_f32.to_radians()));

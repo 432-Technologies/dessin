@@ -93,4 +93,5 @@ fn main() {
 
 // Note :
 // (1) This solution is not be optimal because we can merge these two renctangles into one.
-// (2) This code micht not return what we expect if you use "microsoft edge" but there is no same case with others like "google chrome" or "firefox"
+// (2) This code micht not return what we expect if you use "microsoft edge" but there is no same case with others like "google chrome"
+//     or "firefox"

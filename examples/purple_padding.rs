@@ -8,7 +8,7 @@ fn main() {
         width = 3.,
         height = 2.,
         translate = [1., 0.],
-        fill = Srgba::new(1.0, 0.0, 0.0, 1.0)
+        fill = Srgba::new(1.0, 0.0, 1.0, 1.0)
     ));
 
     let base = dessin2!(Padding<Shape>( // here, we can replace 'Shape' with 'Rectangle' but in case we want to use the

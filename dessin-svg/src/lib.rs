@@ -1,9 +1,7 @@
 use ::image::ImageFormat;
-use dessin::palette::IntoColor;
 use dessin::{
     export::{Export, Exporter},
     font::FontRef,
-    palette::Srgb,
     prelude::*,
 };
 use nalgebra::{Scale2, Transform2};
@@ -105,7 +103,12 @@ impl SVGExporter {
                 color.alpha
             )?,
             Some(Stroke::Full { color, width }) => {
-                write!(self.acc, "stroke='{:?}' stroke-width='{width}' ", color)?
+                write!(self.acc, "stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' ", 
+                color.red,
+                color.green,
+                color.blue,
+                color.alpha
+            )?
             }
 
             None => {}
