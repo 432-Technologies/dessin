@@ -6,6 +6,7 @@
 //!
 //! ```
 //! use dessin::prelude::*;
+//! use palette::{named, Srgb};
 //!
 //! #[derive(Default, Shape)]
 //! struct MyShape {
@@ -18,7 +19,7 @@
 //! }
 //! impl From<MyShape> for Shape {
 //!   fn from(MyShape { text }: MyShape) -> Self {
-//!     dessin2!(Text!(fill = Color::RED, { text })).into()
+//!     dessin2!(Text!(fill = Srgb::<f32>::from_format(named::RED).into_linear(), { text })).into()
 //!   }
 //! }
 //!
@@ -28,11 +29,11 @@
 //!
 //!     dessin2!([
 //!       Circle!(
-//!         fill = Color::RED,
+//!         fill = Srgb::<f32>::from_format(named::RED).into_linear(),
 //!         { radius },
 //!         translate = [x as f32 * 5., 10.],
 //!       ),
-//!       Text!(fill = Color::BLACK, font_size = 10., text = "Hi !",),
+//!       Text!(fill = Srgb::<f32>::from_format(named::BLACK).into_linear(), font_size = 10., text = "Hi !",),
 //!     ])
 //!   });
 //!
