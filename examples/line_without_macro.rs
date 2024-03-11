@@ -15,10 +15,7 @@ fn main() {
 
     line.fill(Srgba::new(1.0, 0.392, 0.392, 1.0));
 
-    line.stroke(Stroke::Full {
-        color: Srgba::new(1.0, 0.392, 0.392, 1.0),
-        width: 0.05,
-    });
+    line.stroke(Stroke::new_full(Srgba::new(1.0, 0.392, 0.392, 1.0), 0.05));
 
     line.translate([5., 1.]);
 

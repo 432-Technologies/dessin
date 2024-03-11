@@ -17,6 +17,7 @@ fn main() {
                     outer_radius = 20.,
                     inner_radius = 0.,
                     span_angle = PI,
+                    //here, alpha is not needed (= 1.0), so we can replace Srgba by Srgb (without alpha)
                     fill = Srgba::new(1.0, 0.0, 0.0, 1.0),
                     translate = [0., 20.],
                     // it rotates of 90° each time

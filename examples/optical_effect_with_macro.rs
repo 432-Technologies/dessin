@@ -22,15 +22,11 @@ fn main() {
             radius = 1.,
             fill = Srgba::new(1.0, 1.0, 1.0, 1.0),
         ),
-        // we can add other objects after to let them be in the front
-        // Rectangle!(
-        //     width = 15.,
-        //     height = 15.,
-        //     stroke = Stroke::Full {
-        //         color: rgb(0, 0, 0),
-        //         width: 1.
-        //     }
-        // ),
+        Rectangle!(
+            width = 15.,
+            height = 15.,
+            stroke = Stroke::new_full(Srgba::new(0.0, 0.0, 0.0, 0.01), 1.)
+        )
     ]);
 
     let fond = optical_effect.local_bounding_box();
