@@ -1,48 +1,15 @@
 use crate::prelude::*;
 use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
-use palette::{IntoColor, Srgb, Srgba};
+use palette::{IntoColor, Srgba};
 use std::{
     f32::consts::FRAC_1_SQRT_2,
     fmt,
     ops::{Deref, DerefMut, Mul},
 };
 
-/// Create a color from red, green and blue
-pub const fn rgb(r: u8, g: u8, b: u8) -> Color {
-    Color::RGB { r, g, b }
-}
-
-/// Create a color from red, green, blue and alpha
-pub const fn rgba(r: u8, g: u8, b: u8, a: u8) -> Color {
-    Color::RGBA { r, g, b, a }
-}
-
 /// Color
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Color {
-    /// RGB with transparency
-    RGBA {
-        /// red
-        r: u8,
-        /// green
-        g: u8,
-        /// blue
-        b: u8,
-        /// alpha
-        a: u8,
-    },
-    /// RGB
-    RGB {
-        /// red
-        r: u8,
-        /// green
-        g: u8,
-        /// blue
-        b: u8,
-    },
-    /// Raw color code
-    U32(u32),
-}
+pub enum Color {}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 
