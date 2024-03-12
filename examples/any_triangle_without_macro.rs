@@ -20,7 +20,7 @@ fn main() {
     triangle.angle(0.5);
 
     // paints the inside of the triangle in bright pink
-    triangle.fill(Srgb::new(1.0, 0.0, 0.5)); // here, ".into()" is not needed
+    triangle.fill(Srgb::new(1.0, 0.0, 0.498)); // here, ".into()" is not needed
 
     // creates a black margin of 0.1 (0.05 outside and 0.05 inside the triangle)
     triangle.stroke(Stroke::new_dashed(Srgb::new(0.0, 0.0, 0.0), 0.1, 0.2, 0.1));

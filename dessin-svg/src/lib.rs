@@ -79,9 +79,9 @@ impl SVGExporter {
             Some(color) => write!(
                 self.acc,
                 "fill='rgb({} {} {} / {:.3})' ",
-                color.red * 255.,
-                color.green * 255.,
-                color.blue * 255.,
+                (color.red * 255.) as u32,
+                (color.green * 255.) as u32,
+                (color.blue * 255.) as u32,
                 color.alpha
             )?, // pass [0;1] number to [0;255] for a working CSS code (not needed for alpha)
 
@@ -97,16 +97,16 @@ impl SVGExporter {
             }) => write!(
                 self.acc,
                 "stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' stroke-dasharray='{on},{off}' ",
-                color.red * 255.,
-                color.green * 255.,
-                color.blue * 255.,
+                (color.red * 255.) as u32,
+                (color.green * 255.) as u32,
+                (color.blue * 255.) as u32,
                 color.alpha
             )?,
             Some(Stroke::Full { color, width }) => {
                 write!(self.acc, "stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' ", 
-                color.red,
-                color.green,
-                color.blue,
+                (color.red * 255.) as u32,
+                (color.green * 255.) as u32,
+                (color.blue * 255.) as u32,
                 color.alpha
             )?
             }

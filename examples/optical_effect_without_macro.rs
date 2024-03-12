@@ -34,10 +34,12 @@ fn main() {
 
         optical_effect.inner_radius(0.);
 
+        optical_effect.outer_radius(10.);
+
         optical_effect.span_angle(PI / 10_f32);
 
         // paints the inside of the thick arc in black
-        optical_effect.fill(Srgba::new(0.0, 0.0, 0.0, 0.9));
+        optical_effect.fill(Srgba::new(0.0, 0.0, 0.0, 1.0));
 
         // chooses a rotation of (n*PI)/5 radians in the trigonometric direction
         optical_effect.rotate(Rotation2::new(PI * (n as f32) / 5_f32));

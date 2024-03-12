@@ -14,7 +14,7 @@ fn main() {
     // chooses the size of the second side of the triangle : 4
     triangle.size_axis_angle(4.);
 
-    // chooses a right angle in radiant which is : PI/2 or 3PI/2
+    // chooses a right angle in radiant which is : PI/2 or 5PI/2
     triangle.angle(PI / 2.);
 
     // paints the inside of the triangle in blue
@@ -22,7 +22,7 @@ fn main() {
 
     // creates a black margin of 0.1 (0.05 outside and 0.05 inside the triangle)
     triangle.stroke(Stroke::new_dashed(
-        Srgba::new(0.0, 0.0, 0.0, 0.1522115),
+        Srgba::new(0.0, 0.0, 0.0, 0.2522115),
         0.1,
         0.2,
         0.1,

@@ -16,7 +16,7 @@ fn main() {
             fill = Srgb::new(0.0, 0.0, 0.392),
             // creates a black pointing margin with a width of 0.1 (0.05 outside and the same inside the triangle), a length of 0.2 and
             // a space of 0.1 between each of them
-            stroke = Stroke::new_dashed(Srgba::new(0.0, 0.0, 0.0, 0.1522115), 0.1, 0.2, 0.1),
+            stroke = Stroke::new_dashed(Srgba::new(0.0, 0.0, 0.0, 0.2522115), 0.1, 0.2, 0.1),
             // chooses a rotation of 0 radians in the trigonometric direction
             rotate = Rotation2::new(0_f32.to_radians())
         ),

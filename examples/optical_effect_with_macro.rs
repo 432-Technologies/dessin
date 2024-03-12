@@ -11,7 +11,7 @@ fn main() {
                 outer_radius = 10.,
                 inner_radius = 0.,
                 span_angle = PI / 10_f32,
-                fill = Srgba::new(0.0, 0.0, 0.0, 0.9),
+                fill = Srgba::new(0.0, 0.0, 0.0, 1.0),
                 // chooses a rotation of (n*PI)/5 radians in the trigonometric direction
                 rotate = Rotation2::new(PI * (n as f32) / 5_f32)
             )])

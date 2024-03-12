@@ -13,7 +13,7 @@ fn main() {
             // chooses an angle of 0.5
             angle = 0.5,
             // paints the inside of the triangle in bright pink
-            fill = Srgb::new(1.0, 0.0, 0.5),
+            fill = Srgb::new(1.0, 0.0, 0.498),
             // creates a black pointing margin with a width of 0.1 (0.05 outside and the same inside the triangle), a length of 0.2 and
             // a space of 0.1 between each of them
             stroke = Stroke::new_dashed(Srgb::new(0.0, 0.0, 0.0), 0.1, 0.2, 0.1),

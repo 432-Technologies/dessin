@@ -14,7 +14,7 @@ fn main() {
     // paints the inside of the octogon in bright orange
     octogon.fill(Srgba::new(1.0, 0.749, 0.0, 1.0));
 
-    // We decide to not use stroke but it is possible
+    // We decide to not use stroke but it is possible :
     // octogon.stroke(Stroke::new_dashed(Strba::new(0.0, 0.0, 0.0, 1.0), width: 0.1, on: 0.2, off: 0.1
     // );
 
