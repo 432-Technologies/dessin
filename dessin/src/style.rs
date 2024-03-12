@@ -43,135 +43,6 @@ pub enum Color {
     /// Raw color code
     U32(u32),
 }
-impl Color {
-    /// #FF0000
-    pub const RED: Color = rgb(255, 0, 0);
-    /// #00FF00
-    pub const GREEN: Color = rgb(0, 255, 0);
-    /// #0000FF
-    pub const BLUE: Color = rgb(0, 0, 255);
-    /// #FFFFFF
-    pub const WHITE: Color = rgb(255, 255, 255);
-    /// #000000
-    pub const BLACK: Color = rgb(0, 0, 0);
-    /// #FFFF00
-    pub const YELLOW: Color = rgb(255, 255, 0);
-    /// #FFA500
-    pub const ORANGE: Color = rgb(255, 165, 0);
-    /// #FF00FF
-    pub const MAGENTA: Color = rgb(255, 0, 255);
-    /// #00FFFF
-    pub const CYAN: Color = rgb(0, 255, 255);
-    /// #808080
-    pub const GRAY: Color = rgb(128, 128, 128);
-    /// #00000000
-    pub const TRANSPARENT: Color = rgba(0, 0, 0, 0);
-    /// #C0C0C0
-    pub const LIGHT_GRAY: Color = rgb(192, 192, 192);
-    /// #404040
-    pub const DARK_GRAY: Color = rgb(64, 64, 64);
-
-    /// Cast a color to (red, green, blue, alpha)
-    pub const fn rgba(self) -> (u8, u8, u8, u8) {
-        match self {
-            Color::RGBA { r, g, b, a } => (r, g, b, a),
-            Color::RGB { r, g, b } => (r, g, b, 255),
-            Color::U32(c) => (
-                ((c >> 16) & 0xFF) as u8,
-                ((c >> 8) & 0xFF) as u8,
-                (c & 0xFF) as u8,
-                255,
-            ),
-        }
-    }
-
-    /// hue ∈ [0°, 360°], saturation ∈ [0, 1], lightness ∈ [0, 1] and alpha ∈ [0, 1]
-    pub fn hsla(hue: f32, saturation: f32, lightness: f32, alpha: f32) -> Color {
-        let chroma = 1. - (2. * lightness - 1.).abs() * saturation;
-        let hue_prime = hue / 60.;
-        let x = chroma * (1. - (hue_prime % 2. - 1.).abs());
-        let a = (alpha * 255.) as u8;
-        let (r, g, b) = if hue_prime < 1. {
-            (chroma, x, 0.)
-        } else if hue_prime < 2. {
-            (x, chroma, 0.)
-        } else if hue_prime < 3. {
-            (0., chroma, x)
-        } else if hue_prime < 4. {
-            (0., x, chroma)
-        } else if hue_prime < 5. {
-            (x, 0., chroma)
-        } else {
-            (chroma, 0., x)
-        };
-        let m = lightness - chroma / 2.;
-        Color::RGBA {
-            r: ((r + m) * 255.) as u8,
-            g: ((g + m) * 255.) as u8,
-            b: ((b + m) * 255.) as u8,
-            a,
-        }
-    }
-
-    /// Cast a color to (red, green, blue)
-    pub fn as_rgb(&self) -> (u8, u8, u8) {
-        match *self {
-            Color::RGBA { r, g, b, a: _ } => (r, g, b),
-            Color::RGB { r, g, b } => (r, g, b),
-            Color::U32(c) => (
-                ((c >> 16) & 0xFF) as u8,
-                ((c >> 8) & 0xFF) as u8,
-                (c & 0xFF) as u8,
-            ),
-        }
-    }
-
-    /// Cast a color to (red, green, blue), as f64
-    pub fn as_rgb_f32(&self) -> (f32, f32, f32) {
-        let (r, g, b) = self.as_rgb();
-        (r as f32 / 255., g as f32 / 255., b as f32 / 255.)
-    }
-
-    /// Cast a color to (red, green, blue, alpha), as f32
-    pub fn as_rgba_f32(&self) -> (f32, f32, f32, f32) {
-        let (r, g, b, a) = self.rgba();
-        (
-            r as f32 / 255.,
-            g as f32 / 255.,
-            b as f32 / 255.,
-            a as f32 / 255.,
-        )
-    }
-
-    /// Cast a color to (red, green, blue), as f64
-    pub fn as_rgb_f64(&self) -> (f64, f64, f64) {
-        let (r, g, b) = self.as_rgb();
-        (r as f64 / 255., g as f64 / 255., b as f64 / 255.)
-    }
-
-    /// Cast a color to (red, green, blue, alpha), as f64
-    pub fn as_rgba_f64(&self) -> (f64, f64, f64, f64) {
-        let (r, g, b, a) = self.rgba();
-        (
-            r as f64 / 255.,
-            g as f64 / 255.,
-            b as f64 / 255.,
-            a as f64 / 255.,
-        )
-    }
-}
-
-impl fmt::Display for Color {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let (r, g, b, a) = self.rgba();
-        write!(f, "#{r:02X?}{g:02X?}{b:02X?}")?;
-        if a < 255 {
-            write!(f, "{a:02X?}")
-        } else {
-            Ok(())
-        }
-    }
-}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 
@@ -179,18 +50,6 @@ pub struct StylePosition {
     pub stroke: Option<Stroke>,
     pub fill: Option<Srgba>,
 }
-
-// #[derive(Debug, Clone, Copy, PartialEq)]
-// pub enum Fill {
-//     Color(Srgba),
-//     // Color(Srgb),
-// }
-
-// impl From<Srgba> for Fill {
-//     fn from(c: Srgba) -> Self {
-//         Fill::Color(c)
-//     }
-// }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Stroke {
@@ -222,12 +81,6 @@ impl Stroke {
         }
     }
 }
-
-// impl From<(Srgba, f32)> for Stroke {
-//     fn from((color, width): (Srgba, f32)) -> Self {
-//         Stroke::Full { color, width }
-//     }
-// }
 
 impl Mul<Stroke> for Transform2<f32> {
     type Output = Stroke;
@@ -371,7 +224,3 @@ impl<T: ShapeBoundingBox> ShapeBoundingBox for Style<T> {
         self.shape.local_bounding_box()
     }
 }
-
-//---------------------------------------------------------------------------------------------------------------------------------
-// The horrors of the apprentice---------------------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------------------------------------------------
