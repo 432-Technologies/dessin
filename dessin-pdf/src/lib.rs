@@ -1,6 +1,7 @@
+use dessin::font::FontRef;
 use dessin::{
     export::{Export, Exporter},
-    font::FontGroup,
+    font::{get, Font, FontGroup, FontHolder},
     prelude::*,
 };
 use nalgebra::Translation2;
@@ -8,7 +9,10 @@ use printpdf::{
     BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference,
     Point,
 };
-use std::{collections::HashMap, fmt};
+use std::{
+    collections::{HashMap, HashSet},
+    fmt,
+};
 
 #[derive(Debug)]
 pub enum PDFError {
@@ -38,19 +42,33 @@ pub struct PDFOptions {
 
 pub struct PDFExporter {
     layer: PdfLayerReference,
-    fonts: PDFFontHolder,
+    // ----------------------------------------------------------------------
+    // fonts: PDFFontHolder,
+    doc: PdfDocumentReference,
+    used_font: HashSet<(FontRef, FontWeight)>,
 }
 impl PDFExporter {
-    pub fn new(layer: PdfLayerReference, fonts: PDFFontHolder) -> Self {
-        PDFExporter { layer, fonts }
-    }
-    pub fn new_with_default_font(layer: PdfLayerReference) -> Self {
+    pub fn new(
+        layer: PdfLayerReference,
+        doc: PdfDocumentReference,
+        used_font: HashSet<(FontRef, FontWeight)>, // can be Hashmap<(FontRef, FontWeight)>
+    ) -> Self {
         PDFExporter {
             layer,
-            fonts: PDFFontHolder::default(),
+            doc,
+            used_font,
+        }
+    }
+    pub fn new_with_default_font(layer: PdfLayerReference, doc: PdfDocumentReference) -> Self {
+        let stock: HashSet<(FontRef, FontWeight)> = HashSet::default();
+        PDFExporter {
+            layer,
+            doc,
+            used_font: stock,
         }
     }
 }
+// ----------------------------------------------------------------------------
 
 impl Exporter for PDFExporter {
     type Error = PDFError;
@@ -223,43 +241,97 @@ impl Exporter for PDFExporter {
         Ok(())
     }
 
-    fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> {
-        let font = text
-            .font
-            .as_ref()
-            .map(|f| f.font_family())
-            .unwrap_or("default");
-        let font = self
-            .fonts
-            .get(font)
-            .and_then(|font| match text.font_weight {
-                FontWeight::Regular => Some(font.regular.clone()),
-                FontWeight::Bold => font.bold.clone(),
-                FontWeight::Italic => font.italic.clone(),
-                FontWeight::BoldItalic => font.bold_italic.clone(),
-            })
-            .unwrap();
+    fn export_text(
+        &mut self,
+        TextPosition {
+            text,
+            align,
+            font_weight,
+            on_curve,
+            font_size,
+            reference_start,
+            direction,
+            font,
+        }: TextPosition,
+    ) -> Result<(), Self::Error> {
+        //-----------------------------------------------------------------------------------
+        let font = font.clone().unwrap_or(FontRef::default());
+
+        let font_name = font.name(font_weight);
+        //-----------------------------------------------------------------------------------
+
+        // let font = text
+        //     .font
+        //     .as_ref()
+        //     .map(|f| f.font_family())
+        //     .unwrap_or("default");
+
+        // let font = // self
+        // //     .fonts
+        //     get(font)
+        //     .get(font_weight)
+        //     .and_then(|font|
+        //         match font_weight {
+        //         FontWeight::Regular => Some(font.regular.clone()),
+        //         FontWeight::Bold => font.bold.clone(),
+        //         FontWeight::Italic => font.italic.clone(),
+        //         FontWeight::BoldItalic => font.bold_italic.clone(),
+        //     }) // Seems good here------------------------------------------------------//////
+        //     .unwrap();
+
+        //------------------------------------------------------------------------------------------------------------
+        // search if (font_ref, font_weight) is stocked in used_font
+        if !self.used_font.contains(&(font, font_weight)) {
+        }
+        // if it's not, we can insert the font into the PDF
+        else {
+            self.used_font.insert((font.clone(), font_weight));
+
+            self.used_font
+                .into_iter()
+                .find_map(move |(font, font_weight)| {
+                    let font_group = font::get(font);
+                    let (mime, bytes) = match font_group.get(font_weight) {
+                        dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
+                        dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
+                    };
+
+                    Some(self.doc.add_external_font(bytes.as_slice()))
+                })
+                .unwrap();
+        }
+
+        let font = get(font).get(font_weight);
+        let font: IndirectFontRef = match font {
+            // dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
+            dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
+                self.doc.add_external_font(b.as_slice())?
+            }
+        }; // not sure it's the best thing to do. maybe, it could go in the else
+           //------------------------------------------------------------------------------------------------------------
+
         self.layer.begin_text_section();
-        self.layer.set_font(&font, text.font_size);
+        self.layer.set_font(&font, font_size);
         // if let Some(te) = text.on_curve {
         //     self.layer.add_polygon()
         //     todo!()
         // }
-        let rotation = text.direction.y.atan2(text.direction.x).to_degrees();
+        let rotation = direction.y.atan2(direction.x).to_degrees();
         self.layer
             .set_text_rendering_mode(printpdf::TextRenderingMode::Fill);
         self.layer
             .set_text_matrix(printpdf::TextMatrix::TranslateRotate(
-                Mm(text.reference_start.x).into_pt(),
-                Mm(text.reference_start.y).into_pt(),
+                Mm(reference_start.x).into_pt(),
+                Mm(reference_start.y).into_pt(),
                 rotation,
             ));
 
         // self.layer.set_line_height(text.font_size);
         // self.layer.set_word_spacing(3000.0);
         // self.layer.set_character_spacing(10.0);
-        self.layer.write_text(text.text, &font);
+        self.layer.write_text(text, &font);
         self.layer.end_text_section();
+
         Ok(())
     }
 }
@@ -307,6 +379,8 @@ impl ToPDF for Shape {
         self.write_into_exporter(&mut exporter, &parent_transform)
     }
 
+    // ----------------------------------------------------------------------------------------------------------------------------
+
     fn to_pdf_with_options(
         &self,
         mut options: PDFOptions,
@@ -317,12 +391,16 @@ impl ToPDF for Shape {
         });
         let (doc, page, layer) = PdfDocument::new("", Mm(size.0), Mm(size.1), "Layer 1");
         let layer = doc.get_page(page).get_layer(layer);
+
+        //________________________________________________________________________________________________
         let default_regular = doc.add_builtin_font(BuiltinFont::Helvetica).unwrap();
         let default_bold = doc.add_builtin_font(BuiltinFont::HelveticaBold).unwrap();
         let default_italic = doc.add_builtin_font(BuiltinFont::HelveticaOblique).unwrap();
         let default_bold_italic = doc
             .add_builtin_font(BuiltinFont::HelveticaBoldOblique)
             .unwrap();
+        //_________________________________________________________________________________________________
+
         options.fonts.insert(
             "default".to_string(),
             dessin::font::FontGroup {
@@ -387,10 +465,12 @@ impl ToPDF for Shape {
             };
             options.fonts.insert(key, fonts_group);
         }
-        self.write_to_pdf_with_options(layer, options)?;
+        self.write_to_pdf_with_options(layer, options)?; // is that all we keep ?
 
         Ok(doc)
     }
+
+    // ---------------------------------------------------------------------------------------------------------------------------
 }
 
 // impl ToPDF for Curve {
