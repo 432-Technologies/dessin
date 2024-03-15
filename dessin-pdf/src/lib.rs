@@ -32,12 +32,12 @@ impl From<printpdf::Error> for PDFError {
     }
 }
 
-type PDFFontHolder = HashMap<String, FontGroup<IndirectFontRef>>;
+type PDFFontHolder = HashMap<(FontRef, FontWeight), IndirectFontRef>;
 
 #[derive(Default)]
 pub struct PDFOptions {
     pub size: Option<(f32, f32)>,
-    pub fonts: PDFFontHolder,
+    pub used_font: PDFFontHolder,
 }
 
 pub struct PDFExporter {
@@ -45,13 +45,13 @@ pub struct PDFExporter {
     // ----------------------------------------------------------------------
     // fonts: PDFFontHolder,
     doc: PdfDocumentReference,
-    used_font: HashSet<(FontRef, FontWeight)>,
+    used_font: PDFFontHolder, // used_font: HashSet<(FontRef, FontWeight)>, // --
 }
 impl PDFExporter {
     pub fn new(
         layer: PdfLayerReference,
         doc: PdfDocumentReference,
-        used_font: HashSet<(FontRef, FontWeight)>, // can be Hashmap<(FontRef, FontWeight)>
+        used_font: PDFFontHolder, // Hashmap<(FontRef, FontWeight)> // --
     ) -> Self {
         PDFExporter {
             layer,
@@ -60,7 +60,7 @@ impl PDFExporter {
         }
     }
     pub fn new_with_default_font(layer: PdfLayerReference, doc: PdfDocumentReference) -> Self {
-        let stock: HashSet<(FontRef, FontWeight)> = HashSet::default();
+        let stock: PDFFontHolder = HashMap::default();
         PDFExporter {
             layer,
             doc,
@@ -257,7 +257,7 @@ impl Exporter for PDFExporter {
         //-----------------------------------------------------------------------------------
         let font = font.clone().unwrap_or(FontRef::default());
 
-        let font_name = font.name(font_weight);
+        let font_name = font.clone().name(font_weight);
         //-----------------------------------------------------------------------------------
 
         // let font = text
@@ -281,33 +281,37 @@ impl Exporter for PDFExporter {
 
         //------------------------------------------------------------------------------------------------------------
         // search if (font_ref, font_weight) is stocked in used_font
-        if !self.used_font.contains(&(font, font_weight)) {
+        if !self.used_font.contains_key(&(font.clone(), font_weight)) {
         }
         // if it's not, we can insert the font into the PDF
         else {
-            self.used_font.insert((font.clone(), font_weight));
+            self.used_font.insert(
+                (font.clone(), font_weight),
+                match get(font.clone()).get(font_weight) {
+                    dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
+                        self.doc.add_external_font(b.as_slice())?
+                    }
+                },
+            );
 
-            self.used_font
-                .into_iter()
-                .find_map(move |(font, font_weight)| {
-                    let font_group = font::get(font);
-                    let (mime, bytes) = match font_group.get(font_weight) {
-                        dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
-                        dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
-                    };
+            let font_group = font::get(font.clone());
+            let (mime, bytes) = match font_group.get(font_weight) {
+                dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
+                dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
+            };
 
-                    Some(self.doc.add_external_font(bytes.as_slice()))
-                })
-                .unwrap();
+            self.doc.add_external_font(bytes.as_slice());
         }
 
-        let font = get(font).get(font_weight);
+        // transform font into an IndirectFontRef to be used after
+        let will_survive = get(font);
+        let font = will_survive.get(font_weight);
         let font: IndirectFontRef = match font {
             // dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
             dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
                 self.doc.add_external_font(b.as_slice())?
             }
-        }; // not sure it's the best thing to do. maybe, it could go in the else
+        }; // not sure it's the best thing to do. maybe, it could go in the else --
            //------------------------------------------------------------------------------------------------------------
 
         self.layer.begin_text_section();
@@ -365,14 +369,18 @@ pub trait ToPDF {
 impl ToPDF for Shape {
     fn write_to_pdf_with_options(
         &self,
-        layer: PdfLayerReference,
+        layer: PdfLayerReference, //doc ?
         options: PDFOptions,
     ) -> Result<(), PDFError> {
         let (width, height) = options.size.unwrap_or_else(|| {
             let bb = self.local_bounding_box();
             (bb.width(), bb.height())
         });
-        let mut exporter = PDFExporter::new(layer, options.fonts);
+        let mut exporter = PDFExporter::new(
+            layer, // doc.get_page(page).get_layer(layer)  ????
+            doc, // can be changed PdfDocument::empty("title".to_string()) // seems not good because of None.unwrap at a moment --
+            options.used_font,
+        );
         let translation = Translation2::new(width / 2., height / 2.);
         let parent_transform = nalgebra::convert(translation);
 
@@ -385,86 +393,90 @@ impl ToPDF for Shape {
         &self,
         mut options: PDFOptions,
     ) -> Result<PdfDocumentReference, PDFError> {
+        // creates the document
         let size = options.size.get_or_insert_with(|| {
             let bb = self.local_bounding_box();
             (bb.width(), bb.height())
-        });
-        let (doc, page, layer) = PdfDocument::new("", Mm(size.0), Mm(size.1), "Layer 1");
+        }); // is that all we keep ? --
+        let (mut doc, page, layer) = PdfDocument::new("", Mm(size.0), Mm(size.1), "Layer 1");
+        // is that all we keep ? --
         let layer = doc.get_page(page).get_layer(layer);
+        // is that all we keep ? --
 
-        //________________________________________________________________________________________________
-        let default_regular = doc.add_builtin_font(BuiltinFont::Helvetica).unwrap();
-        let default_bold = doc.add_builtin_font(BuiltinFont::HelveticaBold).unwrap();
-        let default_italic = doc.add_builtin_font(BuiltinFont::HelveticaOblique).unwrap();
-        let default_bold_italic = doc
-            .add_builtin_font(BuiltinFont::HelveticaBoldOblique)
-            .unwrap();
-        //_________________________________________________________________________________________________
+        //_______________________________________________________________________________________________________________BYE ! --
+        // let default_regular = doc.add_builtin_font(BuiltinFont::Helvetica).unwrap();
+        // let default_bold = doc.add_builtin_font(BuiltinFont::HelveticaBold).unwrap();
+        // let default_italic = doc.add_builtin_font(BuiltinFont::HelveticaOblique).unwrap();
+        // let default_bold_italic = doc
+        //     .add_builtin_font(BuiltinFont::HelveticaBoldOblique)
+        //     .unwrap();
 
-        options.fonts.insert(
-            "default".to_string(),
-            dessin::font::FontGroup {
-                regular: default_regular,
-                bold: Some(default_bold),
-                bold_italic: Some(default_bold_italic),
-                italic: Some(default_italic),
-            },
-        );
+        // options.fonts.insert(
+        //     "default".to_string(),
+        //     dessin::font::FontGroup {
+        //         regular: default_regular,
+        //         bold: Some(default_bold),
+        //         bold_italic: Some(default_bold_italic),
+        //         italic: Some(default_italic),
+        //     },
+        // );
 
-        for (
-            key,
-            dessin::font::FontGroup {
-                regular,
-                bold,
-                italic,
-                bold_italic,
-            },
-        ) in dessin::font::fonts()
-        {
-            let regular = match regular {
-                // dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
-                dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
-                    doc.add_external_font(b.as_slice())?
-                }
-            };
+        // for (
+        //     key,
+        //     dessin::font::FontGroup {
+        //         regular,
+        //         bold,
+        //         italic,
+        //         bold_italic,
+        //     },
+        // ) in dessin::font::fonts()
+        // {
+        // let regular = match regular {
+        //     // dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
+        //     dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
+        //         doc.add_external_font(b.as_slice())?
+        //     }
+        // };
 
-            let bold = match bold {
-                // Some(dessin::font::Font::ByName(n)) => {
-                //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-                // }
-                Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
-                    Some(doc.add_external_font(b.as_slice())?)
-                }
-                None => None,
-            };
+        // let bold = match bold {
+        //     // Some(dessin::font::Font::ByName(n)) => {
+        //     //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
+        //     // }
+        //     Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
+        //         Some(doc.add_external_font(b.as_slice())?)
+        //     }
+        //     None => None,
+        // };
 
-            let italic = match italic {
-                // Some(dessin::font::Font::ByName(n)) => {
-                //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-                // }
-                Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
-                    Some(doc.add_external_font(b.as_slice())?)
-                }
-                None => None,
-            };
+        // let italic = match italic {
+        //     // Some(dessin::font::Font::ByName(n)) => {
+        //     //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
+        //     // }
+        //     Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
+        //         Some(doc.add_external_font(b.as_slice())?)
+        //     }
+        //     None => None,
+        // };
 
-            let bold_italic = match bold_italic {
-                // Some(dessin::font::Font::ByName(n)) => {
-                //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-                // }
-                Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
-                    Some(doc.add_external_font(b.as_slice())?)
-                }
-                None => None,
-            };
-            let fonts_group = dessin::font::FontGroup {
-                regular,
-                bold,
-                bold_italic,
-                italic,
-            };
-            options.fonts.insert(key, fonts_group);
-        }
+        // let bold_italic = match bold_italic {
+        //     // Some(dessin::font::Font::ByName(n)) => {
+        //     //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
+        //     // }
+        //     Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
+        //         Some(doc.add_external_font(b.as_slice())?)
+        //     }
+        //     None => None,
+        // };
+        //     let fonts_group = dessin::font::FontGroup {
+        //         regular,
+        //         bold,
+        //         bold_italic,
+        //         italic,
+        //     };
+        //     options.fonts.insert(key, fonts_group);
+        // }
+        //________________________________________________________________________________________________________________BYE ! --
+
         self.write_to_pdf_with_options(layer, options)?; // is that all we keep ?
 
         Ok(doc)
