@@ -256,8 +256,6 @@ impl Exporter for PDFExporter<'_> {
     ) -> Result<(), Self::Error> {
         let font = font.clone().unwrap_or(FontRef::default());
 
-        let font_name = font.clone().name(font_weight);
-
         // search if (font_ref, font_weight) is stocked in used_font
         if !self.used_font.contains_key(&(font.clone(), font_weight)) {
         }
@@ -281,11 +279,9 @@ impl Exporter for PDFExporter<'_> {
             self.doc.add_external_font(bytes.as_slice());
         }
 
-        // transform font into an IndirectFontRef to be used after
         let will_survive = get(font);
         let font = will_survive.get(font_weight);
         let font: IndirectFontRef = match font {
-            // dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
             dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
                 self.doc.add_external_font(b.as_slice())?
             }
@@ -307,9 +303,6 @@ impl Exporter for PDFExporter<'_> {
                 rotation,
             ));
 
-        // self.layer.set_line_height(text.font_size);
-        // self.layer.set_word_spacing(3000.0);
-        // self.layer.set_character_spacing(10.0);
         self.layer.write_text(text, &font);
         self.layer.end_text_section();
 
@@ -351,7 +344,7 @@ pub trait ToPDF {
 impl ToPDF for Shape {
     fn write_to_pdf_with_options(
         &self,
-        layer: PdfLayerReference, //doc ?
+        layer: PdfLayerReference,
         options: PDFOptions,
         doc: &PdfDocumentReference,
     ) -> Result<(), PDFError> {
@@ -370,7 +363,6 @@ impl ToPDF for Shape {
         &self,
         mut options: PDFOptions,
     ) -> Result<PdfDocumentReference, PDFError> {
-        // creates the document
         let size = options.size.get_or_insert_with(|| {
             let bb = self.local_bounding_box();
             (bb.width(), bb.height())
@@ -384,146 +376,3 @@ impl ToPDF for Shape {
         Ok(doc)
     }
 }
-
-// impl ToPDF for Curve {
-//     fn draw_on_layer_with_parent_transform(
-//         &self,
-//         layer: &PdfLayerReference,
-//         parent_transform: &Transform2<f32>,
-//     ) -> Result<(), PDFError> {
-//         fn place_keypoints(
-//             curve: &Curve,
-//             parent_transform: &Transform2<f32>,
-//         ) -> Result<Vec<(printpdf::Point, bool)>, PDFError> {
-//             let CurvePosition {
-//                 keypoints,
-//                 closed: _,
-//             } = curve.position(parent_transform);
-
-//             let mut points = Vec::with_capacity(curve.keypoints.len());
-
-//             for idx in 0..keypoints.len() {
-//                 let k = &keypoints[idx];
-//                 let next_is_bezier = keypoints
-//                     .get(idx)
-//                     .map(|v| {
-//                         if let Keypoint::Bezier(Bezier { start: _, .. }) = v {
-//                             // start.is_none()
-//                             true
-//                         } else {
-//                             false
-//                         }
-//                     })
-//                     .unwrap_or(false);
-
-//                 match k {
-//                     Keypoint::Curve(c) => {
-//                         let parent_transform = curve.global_transform(parent_transform);
-//                         points.extend(place_keypoints(c, &parent_transform)?);
-//                     }
-//                     Keypoint::Bezier(Bezier {
-//                         start,
-//                         start_control,
-//                         end_control,
-//                         end,
-//                     }) => {
-//                         if let Some(start) = start {
-//                             points.push((
-//                                 printpdf::Point::new(Mm(start.x as f64), Mm(start.y as f64)),
-//                                 true,
-//                             ));
-//                         }
-//                         points.push((
-//                             printpdf::Point::new(
-//                                 Mm(start_control.x as f64),
-//                                 Mm(start_control.y as f64),
-//                             ),
-//                             true,
-//                         ));
-//                         points.push((
-//                             printpdf::Point::new(
-//                                 Mm(end_control.x as f64),
-//                                 Mm(end_control.y as f64),
-//                             ),
-//                             true,
-//                         ));
-//                         points.push((
-//                             printpdf::Point::new(Mm(end.x as f64), Mm(end.y as f64)),
-//                             next_is_bezier,
-//                         ));
-//                     }
-//                     Keypoint::Point(p) => points.push((
-//                         printpdf::Point::new(Mm(p.x as f64), Mm(p.y as f64)),
-//                         next_is_bezier,
-//                     )),
-//                 }
-//             }
-
-//             Ok(points)
-//         }
-
-//         let points = place_keypoints(self, parent_transform)?;
-
-//         let l = printpdf::Line {
-//             points,
-//             is_closed: self.closed,
-//             has_fill: false,
-//             has_stroke: true,
-//             is_clipping_path: false,
-//         };
-
-//         layer.add_shape(l);
-
-//         Ok(())
-//     }
-// }
-
-// impl ToPDF for Ellipse {
-//     #[inline]
-//     fn draw_on_layer_with_parent_transform(
-//         &self,
-//         layer: &PdfLayerReference,
-//         parent_transform: &Transform2<f32>,
-//     ) -> Result<(), PDFError> {
-//         Curve::from(self.clone()).draw_on_layer_with_parent_transform(layer, parent_transform)
-//     }
-// }
-
-// impl ToPDF for Text {
-//     fn draw_on_layer_with_parent_transform(
-//         &self,
-//         layer: &PdfLayerReference,
-//         parent_transform: &Transform2<f32>,
-//     ) -> Result<(), PDFError> {
-//         let TextPosition {
-//             text,
-//             align,
-//             font_weight,
-//             on_curve,
-//             font_size,
-//             reference_start: bottom_left,
-//         } = self.position(parent_transform);
-
-//         let fonts = &FONT_HOLDER.get().unwrap().read().unwrap()[self.font.unwrap_or(0)];
-//         let font = match font_weight {
-//             FontWeight::Regular => &fonts.regular,
-//             FontWeight::Bold => fonts.bold.as_ref().unwrap_or_else(|| &fonts.regular),
-//             FontWeight::BoldItalic => fonts.bold_italic.as_ref().unwrap_or_else(|| &fonts.regular),
-//             FontWeight::Italic => fonts.italic.as_ref().unwrap_or_else(|| &fonts.regular),
-//         };
-
-//         if let Some(curve) = &self.on_curve {
-//             todo!()
-//         } else {
-//             layer.use_text(
-//                 text,
-//                 font_size as f64,
-//                 Mm(bottom_left.x as f64),
-//                 Mm(bottom_left.y as f64),
-//                 font,
-//             );
-//         }
-
-//         Ok(())
-//     }
-// }
