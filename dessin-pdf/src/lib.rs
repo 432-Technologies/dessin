@@ -1,7 +1,6 @@
 use dessin::font::FontRef;
 use dessin::{
     export::{Export, Exporter},
-    font::{get, Font, FontGroup, FontHolder},
     prelude::*,
 };
 use nalgebra::Translation2;
@@ -9,12 +8,7 @@ use printpdf::{
     BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference,
     Point,
 };
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::{
-    collections::{HashMap, HashSet},
-    fmt,
-};
+use std::{collections::HashMap, fmt};
 
 #[derive(Debug)]
 pub enum PDFError {
@@ -49,7 +43,7 @@ pub struct PDFExporter<'a> {
     used_font: PDFFontHolder,
 }
 impl<'a> PDFExporter<'a> {
-    pub fn new(
+    pub fn new_with_font(
         layer: PdfLayerReference,
         doc: &'a PdfDocumentReference,
         used_font: PDFFontHolder,
@@ -60,7 +54,7 @@ impl<'a> PDFExporter<'a> {
             used_font,
         }
     }
-    pub fn new_with_default_font(layer: PdfLayerReference, doc: &'a PdfDocumentReference) -> Self {
+    pub fn new(layer: PdfLayerReference, doc: &'a PdfDocumentReference) -> Self {
         let stock: PDFFontHolder = HashMap::default();
         PDFExporter {
             layer,
@@ -245,9 +239,9 @@ impl Exporter for PDFExporter<'_> {
         &mut self,
         TextPosition {
             text,
-            align,
+            align: _,
             font_weight,
-            on_curve,
+            on_curve: _,
             font_size,
             reference_start,
             direction,
@@ -258,28 +252,17 @@ impl Exporter for PDFExporter<'_> {
 
         // search if (font_ref, font_weight) is stocked in used_font
         if !self.used_font.contains_key(&(font.clone(), font_weight)) {
-        }
-        // if it's not, we can insert the font into the PDF
-        else {
             self.used_font.insert(
                 (font.clone(), font_weight),
-                match get(font.clone()).get(font_weight) {
+                match font::get(font.clone()).get(font_weight) {
                     dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
                         self.doc.add_external_font(b.as_slice())?
                     }
                 },
             );
-
-            let font_group = font::get(font.clone());
-            let (mime, bytes) = match font_group.get(font_weight) {
-                dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
-                dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
-            };
-
-            self.doc.add_external_font(bytes.as_slice());
         }
 
-        let will_survive = get(font);
+        let will_survive = font::get(font);
         let font = will_survive.get(font_weight);
         let font: IndirectFontRef = match font {
             dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
@@ -352,7 +335,7 @@ impl ToPDF for Shape {
             let bb = self.local_bounding_box();
             (bb.width(), bb.height())
         });
-        let mut exporter = PDFExporter::new(layer, doc, options.used_font);
+        let mut exporter = PDFExporter::new_with_font(layer, doc, options.used_font);
         let translation = Translation2::new(width / 2., height / 2.);
         let parent_transform = nalgebra::convert(translation);
 
