@@ -45,16 +45,14 @@ pub struct PDFOptions {
 
 pub struct PDFExporter<'a> {
     layer: PdfLayerReference,
-    // ----------------------------------------------------------------------
-    // fonts: PDFFontHolder,
     doc: &'a PdfDocumentReference,
-    used_font: PDFFontHolder, // used_font: HashSet<(FontRef, FontWeight)>, // --
+    used_font: PDFFontHolder,
 }
 impl<'a> PDFExporter<'a> {
     pub fn new(
         layer: PdfLayerReference,
         doc: &'a PdfDocumentReference,
-        used_font: PDFFontHolder, // Hashmap<(FontRef, FontWeight)> // --
+        used_font: PDFFontHolder,
     ) -> Self {
         PDFExporter {
             layer,
@@ -71,7 +69,6 @@ impl<'a> PDFExporter<'a> {
         }
     }
 }
-// ----------------------------------------------------------------------------
 
 impl Exporter for PDFExporter<'_> {
     type Error = PDFError;
@@ -257,43 +254,15 @@ impl Exporter for PDFExporter<'_> {
             font,
         }: TextPosition,
     ) -> Result<(), Self::Error> {
-        //-----------------------------------------------------------------------------------
         let font = font.clone().unwrap_or(FontRef::default());
 
         let font_name = font.clone().name(font_weight);
-        //-----------------------------------------------------------------------------------
 
-        // let font = text
-        //     .font
-        //     .as_ref()
-        //     .map(|f| f.font_family())
-        //     .unwrap_or("default");
-
-        // let font = // self
-        // //     .fonts
-        //     get(font)
-        //     .get(font_weight)
-        //     .and_then(|font|
-        //         match font_weight {
-        //         FontWeight::Regular => Some(font.regular.clone()),
-        //         FontWeight::Bold => font.bold.clone(),
-        //         FontWeight::Italic => font.italic.clone(),
-        //         FontWeight::BoldItalic => font.bold_italic.clone(),
-        //     }) // Seems good here------------------------------------------------------//////
-        //     .unwrap();
-
-        //------------------------------------------------------------------------------------------------------------
         // search if (font_ref, font_weight) is stocked in used_font
         if !self.used_font.contains_key(&(font.clone(), font_weight)) {
         }
         // if it's not, we can insert the font into the PDF
         else {
-            // let doc = (&mut self
-            //     .doc
-            //     .get_or_init(|| RefCell::new(PdfDocument::new()))
-            //     .read()
-            //     .unwrap(),);
-
             self.used_font.insert(
                 (font.clone(), font_weight),
                 match get(font.clone()).get(font_weight) {
@@ -320,8 +289,7 @@ impl Exporter for PDFExporter<'_> {
             dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
                 self.doc.add_external_font(b.as_slice())?
             }
-        }; // not sure it's the best thing to do. maybe, it could go in the else --
-           //------------------------------------------------------------------------------------------------------------
+        };
 
         self.layer.begin_text_section();
         self.layer.set_font(&font, font_size);
@@ -398,8 +366,6 @@ impl ToPDF for Shape {
         self.write_into_exporter(&mut exporter, &parent_transform)
     }
 
-    // ----------------------------------------------------------------------------------------------------------------------------
-
     fn to_pdf_with_options(
         &self,
         mut options: PDFOptions,
@@ -408,92 +374,15 @@ impl ToPDF for Shape {
         let size = options.size.get_or_insert_with(|| {
             let bb = self.local_bounding_box();
             (bb.width(), bb.height())
-        }); // is that all we keep ? --
-        let (mut doc, page, layer) = PdfDocument::new("", Mm(size.0), Mm(size.1), "Layer 1");
-        // is that all we keep ? --
+        });
+        let (doc, page, layer) = PdfDocument::new("", Mm(size.0), Mm(size.1), "Layer 1");
+
         let layer = doc.get_page(page).get_layer(layer);
-        // is that all we keep ? --
 
-        //_______________________________________________________________________________________________________________BYE ! --
-        // let default_regular = doc.add_builtin_font(BuiltinFont::Helvetica).unwrap();
-        // let default_bold = doc.add_builtin_font(BuiltinFont::HelveticaBold).unwrap();
-        // let default_italic = doc.add_builtin_font(BuiltinFont::HelveticaOblique).unwrap();
-        // let default_bold_italic = doc
-        //     .add_builtin_font(BuiltinFont::HelveticaBoldOblique)
-        //     .unwrap();
-
-        // options.fonts.insert(
-        //     "default".to_string(),
-        //     dessin::font::FontGroup {
-        //         regular: default_regular,
-        //         bold: Some(default_bold),
-        //         bold_italic: Some(default_bold_italic),
-        //         italic: Some(default_italic),
-        //     },
-        // );
-
-        // for (
-        //     key,
-        //     dessin::font::FontGroup {
-        //         regular,
-        //         bold,
-        //         italic,
-        //         bold_italic,
-        //     },
-        // ) in dessin::font::fonts()
-        // {
-        // let regular = match regular {
-        //     // dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
-        //     dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
-        //         doc.add_external_font(b.as_slice())?
-        //     }
-        // };
-
-        // let bold = match bold {
-        //     // Some(dessin::font::Font::ByName(n)) => {
-        //     //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-        //     // }
-        //     Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
-        //         Some(doc.add_external_font(b.as_slice())?)
-        //     }
-        //     None => None,
-        // };
-
-        // let italic = match italic {
-        //     // Some(dessin::font::Font::ByName(n)) => {
-        //     //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-        //     // }
-        //     Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
-        //         Some(doc.add_external_font(b.as_slice())?)
-        //     }
-        //     None => None,
-        // };
-
-        // let bold_italic = match bold_italic {
-        //     // Some(dessin::font::Font::ByName(n)) => {
-        //     //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-        //     // }
-        //     Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
-        //         Some(doc.add_external_font(b.as_slice())?)
-        //     }
-        //     None => None,
-        // };
-        //     let fonts_group = dessin::font::FontGroup {
-        //         regular,
-        //         bold,
-        //         bold_italic,
-        //         italic,
-        //     };
-        //     options.fonts.insert(key, fonts_group);
-        // }
-        //________________________________________________________________________________________________________________BYE ! --
-
-        self.write_to_pdf_with_options(layer, options, &doc)?; // is that all we keep ?
+        self.write_to_pdf_with_options(layer, options, &doc)?;
 
         Ok(doc)
     }
-
-    // ---------------------------------------------------------------------------------------------------------------------------
 }
 
 // impl ToPDF for Curve {
