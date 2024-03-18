@@ -9,6 +9,8 @@ use printpdf::{
     BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference,
     Point,
 };
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::{
     collections::{HashMap, HashSet},
     fmt,
@@ -20,6 +22,7 @@ pub enum PDFError {
     WriteError(fmt::Error),
     CurveHasNoStartingPoint(Curve),
     UnknownBuiltinFont(String),
+    OrphelinLayer,
 }
 impl From<fmt::Error> for PDFError {
     fn from(e: fmt::Error) -> Self {
@@ -40,17 +43,17 @@ pub struct PDFOptions {
     pub used_font: PDFFontHolder,
 }
 
-pub struct PDFExporter {
+pub struct PDFExporter<'a> {
     layer: PdfLayerReference,
     // ----------------------------------------------------------------------
     // fonts: PDFFontHolder,
-    doc: PdfDocumentReference,
+    doc: &'a PdfDocumentReference,
     used_font: PDFFontHolder, // used_font: HashSet<(FontRef, FontWeight)>, // --
 }
-impl PDFExporter {
+impl<'a> PDFExporter<'a> {
     pub fn new(
         layer: PdfLayerReference,
-        doc: PdfDocumentReference,
+        doc: &'a PdfDocumentReference,
         used_font: PDFFontHolder, // Hashmap<(FontRef, FontWeight)> // --
     ) -> Self {
         PDFExporter {
@@ -59,7 +62,7 @@ impl PDFExporter {
             used_font,
         }
     }
-    pub fn new_with_default_font(layer: PdfLayerReference, doc: PdfDocumentReference) -> Self {
+    pub fn new_with_default_font(layer: PdfLayerReference, doc: &'a PdfDocumentReference) -> Self {
         let stock: PDFFontHolder = HashMap::default();
         PDFExporter {
             layer,
@@ -70,7 +73,7 @@ impl PDFExporter {
 }
 // ----------------------------------------------------------------------------
 
-impl Exporter for PDFExporter {
+impl Exporter for PDFExporter<'_> {
     type Error = PDFError;
     const CAN_EXPORT_ELLIPSE: bool = false;
 
@@ -285,6 +288,12 @@ impl Exporter for PDFExporter {
         }
         // if it's not, we can insert the font into the PDF
         else {
+            // let doc = (&mut self
+            //     .doc
+            //     .get_or_init(|| RefCell::new(PdfDocument::new()))
+            //     .read()
+            //     .unwrap(),);
+
             self.used_font.insert(
                 (font.clone(), font_weight),
                 match get(font.clone()).get(font_weight) {
@@ -345,10 +354,15 @@ pub trait ToPDF {
         &self,
         layer: PdfLayerReference,
         options: PDFOptions,
+        doc: &PdfDocumentReference,
     ) -> Result<(), PDFError>;
     #[inline]
-    fn write_to_pdf(&self, layer: PdfLayerReference) -> Result<(), PDFError> {
-        self.write_to_pdf_with_options(layer, PDFOptions::default())
+    fn write_to_pdf(
+        &self,
+        layer: PdfLayerReference,
+        doc: &PdfDocumentReference,
+    ) -> Result<(), PDFError> {
+        self.write_to_pdf_with_options(layer, PDFOptions::default(), doc)
     }
 
     fn to_pdf_with_options(&self, options: PDFOptions) -> Result<PdfDocumentReference, PDFError>;
@@ -371,16 +385,13 @@ impl ToPDF for Shape {
         &self,
         layer: PdfLayerReference, //doc ?
         options: PDFOptions,
+        doc: &PdfDocumentReference,
     ) -> Result<(), PDFError> {
         let (width, height) = options.size.unwrap_or_else(|| {
             let bb = self.local_bounding_box();
             (bb.width(), bb.height())
         });
-        let mut exporter = PDFExporter::new(
-            layer, // doc.get_page(page).get_layer(layer)  ????
-            doc, // can be changed PdfDocument::empty("title".to_string()) // seems not good because of None.unwrap at a moment --
-            options.used_font,
-        );
+        let mut exporter = PDFExporter::new(layer, doc, options.used_font);
         let translation = Translation2::new(width / 2., height / 2.);
         let parent_transform = nalgebra::convert(translation);
 
@@ -477,7 +488,7 @@ impl ToPDF for Shape {
         // }
         //________________________________________________________________________________________________________________BYE ! --
 
-        self.write_to_pdf_with_options(layer, options)?; // is that all we keep ?
+        self.write_to_pdf_with_options(layer, options, &doc)?; // is that all we keep ?
 
         Ok(doc)
     }
