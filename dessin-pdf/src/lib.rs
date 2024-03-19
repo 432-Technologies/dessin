@@ -256,23 +256,13 @@ impl Exporter for PDFExporter<'_> {
             .entry((font.clone(), font_weight))
             .or_insert_with(|| match font::get(font.clone()).get(font_weight) {
                 dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
-                    // self.doc.add_external_font(b.as_slice())? --
                     if let Err(err) = self.doc.add_external_font(b.as_slice()) {
-                        // eprintln!("Failed to add external font : {}", err); --
                         panic!("Failed to add external font : {}", err)
                     } else {
                         self.doc.add_external_font(b.as_slice()).unwrap()
                     }
                 }
             });
-
-        // let will_survive = font::get(font); --
-        // let font = will_survive.get(font_weight);
-        // let font: IndirectFontRef = match font {
-        //     dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
-        //         self.doc.add_external_font(b.as_slice())?
-        //     }
-        // }; --
 
         self.layer.begin_text_section();
         self.layer.set_font(&font, font_size);
@@ -296,73 +286,6 @@ impl Exporter for PDFExporter<'_> {
         Ok(())
     }
 }
-
-// pub trait ToPDF {
-//     fn write_to_pdf_with_options(
-//         &self,
-//         layer: PdfLayerReference,
-//         options: PDFOptions,
-//         doc: &PdfDocumentReference,
-//     ) -> Result<(), PDFError>;
-//     #[inline]
-//     fn write_to_pdf(
-//         &self,
-//         layer: PdfLayerReference,
-//         doc: &PdfDocumentReference,
-//     ) -> Result<(), PDFError> {
-//         self.write_to_pdf_with_options(layer, PDFOptions::default(), doc)
-//     }
-
-//     fn to_pdf_with_options(&self, options: PDFOptions) -> Result<PdfDocumentReference, PDFError>;
-//     #[inline]
-//     fn to_pdf_bytes_with_options(&self, options: PDFOptions) -> Result<Vec<u8>, PDFError> {
-//         Ok(self.to_pdf_with_options(options)?.save_to_bytes()?)
-//     }
-
-//     #[inline]
-//     fn to_pdf(&self) -> Result<PdfDocumentReference, PDFError> {
-//         self.to_pdf_with_options(PDFOptions::default())
-//     }
-//     #[inline]
-//     fn to_pdf_bytes(&self) -> Result<Vec<u8>, PDFError> {
-//         Ok(self.to_pdf()?.save_to_bytes()?)
-//     }
-// }
-// impl ToPDF for Shape {
-//     fn write_to_pdf_with_options(
-//         &self,
-//         layer: PdfLayerReference,
-//         options: PDFOptions,
-//         doc: &PdfDocumentReference,
-//     ) -> Result<(), PDFError> {
-//         let (width, height) = options.size.unwrap_or_else(|| {
-//             let bb = self.local_bounding_box();
-//             (bb.width(), bb.height())
-//         });
-//         let mut exporter = PDFExporter::new_with_font(layer, doc, options.used_font);
-//         let translation = Translation2::new(width / 2., height / 2.);
-//         let parent_transform = nalgebra::convert(translation);
-
-//         self.write_into_exporter(&mut exporter, &parent_transform)
-//     }
-
-//     fn to_pdf_with_options(
-//         &self,
-//         mut options: PDFOptions,
-//     ) -> Result<PdfDocumentReference, PDFError> {
-//         let size = options.size.get_or_insert_with(|| {
-//             let bb = self.local_bounding_box();
-//             (bb.width(), bb.height())
-//         });
-//         let (doc, page, layer) = PdfDocument::new("", Mm(size.0), Mm(size.1), "Layer 1");
-
-//         let layer = doc.get_page(page).get_layer(layer);
-
-//         self.write_to_pdf_with_options(layer, options, &doc)?;
-
-//         Ok(doc)
-//     }
-// }
 
 pub fn write_to_pdf_with_options(
     shape: &Shape,
