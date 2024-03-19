@@ -256,23 +256,13 @@ impl Exporter for PDFExporter<'_> {
             .entry((font.clone(), font_weight))
             .or_insert_with(|| match font::get(font.clone()).get(font_weight) {
                 dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
-                    // self.doc.add_external_font(b.as_slice())? --
                     if let Err(err) = self.doc.add_external_font(b.as_slice()) {
-                        // eprintln!("Failed to add external font : {}", err); --
                         panic!("Failed to add external font : {}", err)
                     } else {
                         self.doc.add_external_font(b.as_slice()).unwrap()
                     }
                 }
             });
-
-        // let will_survive = font::get(font); --
-        // let font = will_survive.get(font_weight);
-        // let font: IndirectFontRef = match font {
-        //     dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
-        //         self.doc.add_external_font(b.as_slice())?
-        //     }
-        // }; --
 
         self.layer.begin_text_section();
         self.layer.set_font(&font, font_size);
