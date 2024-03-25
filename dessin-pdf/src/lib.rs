@@ -4,11 +4,15 @@ use dessin::{
     prelude::*,
 };
 use nalgebra::Translation2;
+use printpdf::path::PaintMode;
 use printpdf::{
     BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference,
     Point,
 };
 use std::{collections::HashMap, fmt};
+//------------------------------------------------
+use printpdf::path::WindingOrder;
+//------------------------------------------------
 
 #[derive(Debug)]
 pub enum PDFError {
@@ -72,7 +76,20 @@ impl Exporter for PDFExporter<'_> {
         &mut self,
         StylePosition { fill, stroke }: StylePosition,
     ) -> Result<(), Self::Error> {
+        //-----------------------------------------------------------------
+        // let line = printpdf::Polygon {
+        //     rings: self, // We want vectors of points... Seems to be in the Shape (++) or the shape herself  --
+        //     mode: match (Some(fill), Some(stroke)) {
+        //         (fill, None) => PaintMode::Fill,
+        //         (None, stroke) => PaintMode::Stroke,
+        //         (fill, stroke) => PaintMode::FillStroke,
+        //     },
+        //     winding_order: WindingOrder::NonZero, // WindingOrder::EvenOdd, is also possible --
+        // };
+        //-----------------------------------------------------------------
+
         if let Some(fill) = fill {
+            // match mode {... => ...}
             let (r, g, b) = match fill {
                 Fill::Color(c) => c.as_rgb_f32(),
             };
@@ -120,6 +137,10 @@ impl Exporter for PDFExporter<'_> {
             self.layer
                 .set_outline_thickness(printpdf::Mm(w).into_pt().0);
         }
+
+        //--------------------------------------------------
+        // self.layer.add_polygon(line);
+        //--------------------------------------------------
 
         Ok(())
     }
@@ -197,11 +218,41 @@ impl Exporter for PDFExporter<'_> {
         Ok(())
     }
 
-    fn export_curve(&mut self, curve: CurvePosition) -> Result<(), Self::Error> {
+    fn export_curve(
+        &mut self,
+        curve: CurvePosition,
+        // StylePosition { fill, stroke }: StylePosition,
+    ) -> Result<(), Self::Error> {
         let points1 = curve
             .keypoints
             .iter()
             .enumerate()
+            // .flat_map(|(i, key_point)| {
+            //     let next_control = matches!(curve.keypoints.get(i + 1), Some(KeypointPosition::Bezier(b)) if b.start.is_none());
+            //     match key_point {
+            //         KeypointPosition::Point(p) => {
+            //             vec![(Point::new(Mm(p.x), Mm(p.y)), next_control)]
+            //         }
+            //         KeypointPosition::Bezier(b) => {
+            //             let mut res = vec![];
+            //             if let Some(start) = b.start {
+            //                 res.push((Point::new(Mm(start.x), Mm(start.y)), true));
+            //             }
+            //             res.append(&mut vec![
+            //                     (
+            //                         Point::new(Mm(b.start_control.x), Mm(b.start_control.y)),
+            //                         true,
+            //                     ),
+            //                     (Point::new(Mm(b.end_control.x), Mm(b.end_control.y)), false),
+            //                     (Point::new(Mm(b.end.x), Mm(b.end.y)), next_control),
+            //                 ]);
+            //             res
+            //         }
+            //     }
+            // })
+            // .collect();
+
+        //------------------------------------------------------------
             .flat_map(|(i, key_point)| {
                 let next_control = matches!(curve.keypoints.get(i + 1), Some(KeypointPosition::Bezier(b)) if b.start.is_none());
                 match key_point {
@@ -214,24 +265,41 @@ impl Exporter for PDFExporter<'_> {
                             res.push((Point::new(Mm(start.x), Mm(start.y)), true));
                         }
                         res.append(&mut vec![
-                                (
-                                    Point::new(Mm(b.start_control.x), Mm(b.start_control.y)),
-                                    true,
-                                ),
-                                (Point::new(Mm(b.end_control.x), Mm(b.end_control.y)), false),
-                                (Point::new(Mm(b.end.x), Mm(b.end.y)), next_control),
-                            ]);
+                            (
+                                Point::new(Mm(b.start_control.x), Mm(b.start_control.y)),
+                                true,
+                            ),
+                            (Point::new(Mm(b.end_control.x), Mm(b.end_control.y)), false),
+                            (Point::new(Mm(b.end.x), Mm(b.end.y)), next_control),
+                        ]);
                         res
                     }
                 }
             })
             .collect();
+        //------------------------------------------------------------
 
-        let line = Line {
-            points: points1,
-            is_closed: curve.closed,
+        // let line = Line {
+        //     // Seems to be good --
+        //     points: points1,
+        //     is_closed: curve.closed,
+        // };
+        // self.layer.add_line(line);
+        //-----------------------------------------------------------------
+        let line = printpdf::Polygon {
+            rings: vec![points1], // We want vectors of points... Seems to be in the Shape (++) or the shape herself  --
+            mode: PaintMode::FillStroke,
+            // mode: match (Some(fill), Some(stroke)) {
+            //     (fill, None) => PaintMode::Fill,
+            //     (None, stroke) => PaintMode::Stroke,
+            //     (fill, stroke) => PaintMode::FillStroke,
+            // },
+            winding_order: WindingOrder::NonZero, // WindingOrder::EvenOdd, is also possible --
         };
-        self.layer.add_line(line);
+
+        self.layer.add_polygon(line);
+
+        //-----------------------------------------------------------------
         Ok(())
     }
 

@@ -49,6 +49,7 @@ where
         &self,
         exporter: &mut E,
         parent_transform: &Transform2<f32>,
+        // style_position: StylePosition,
     ) -> Result<(), <E as Exporter>::Error>;
 }
 
@@ -60,6 +61,7 @@ where
         &self,
         exporter: &mut E,
         parent_transform: &Transform2<f32>,
+        // StylePosition { fill, stroke }: StylePosition,
     ) -> Result<(), <E as Exporter>::Error> {
         match self {
             Shape::Group(Group {
@@ -71,7 +73,11 @@ where
 
                 let parent_transform = parent_transform * local_transform;
                 for shape in shapes {
-                    shape.write_into_exporter(exporter, &parent_transform)?;
+                    shape.write_into_exporter(
+                        exporter,
+                        &parent_transform,
+                        // StylePosition { fill, stroke },
+                    )?;
                 }
 
                 exporter.end_block(metadata.as_slice())?;
@@ -89,7 +95,14 @@ where
                 };
 
                 exporter.start_style(style)?;
-                shape.write_into_exporter(exporter, parent_transform)?;
+                shape.write_into_exporter(
+                    exporter,
+                    parent_transform,
+                    // StylePosition {
+                    //     fill: *fill,
+                    //     stroke: *stroke,
+                    // },
+                )?;
                 exporter.end_style()
             }
             Shape::Image(image) => exporter.export_image(image.position(parent_transform)),
@@ -97,10 +110,16 @@ where
                 if E::CAN_EXPORT_ELLIPSE {
                     exporter.export_ellipse(ellipse.position(parent_transform))
                 } else {
-                    exporter.export_curve(ellipse.as_curve().position(parent_transform))
+                    exporter.export_curve(
+                        ellipse.as_curve().position(parent_transform),
+                        // StylePosition { fill, stroke },
+                    )
                 }
             }
-            Shape::Curve(curve) => exporter.export_curve(curve.position(parent_transform)),
+            Shape::Curve(curve) => exporter.export_curve(
+                curve.position(parent_transform),
+                // StylePosition { fill, stroke },
+            ),
             Shape::Text(text) => exporter.export_text(text.position(parent_transform)),
             Shape::Dynamic {
                 local_transform,
@@ -108,7 +127,11 @@ where
             } => {
                 let shape = shaper();
                 let parent_transform = parent_transform * local_transform;
-                shape.write_into_exporter(exporter, &parent_transform)
+                shape.write_into_exporter(
+                    exporter,
+                    &parent_transform,
+                    // StylePosition { fill, stroke },
+                )
             }
         }
     }
@@ -196,7 +219,11 @@ pub trait Exporter {
         Ok(())
     }
     /// Export a [`Curve`][crate::shapes::curve::Curve]
-    fn export_curve(&mut self, curve: CurvePosition) -> Result<(), Self::Error>;
+    fn export_curve(
+        &mut self,
+        curve: CurvePosition,
+        // style_position: StylePosition,
+    ) -> Result<(), Self::Error>;
     /// Export a [`Text`][crate::shapes::text::Text]
     fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error>;
 }
