@@ -1,6 +1,6 @@
+use dessin::font::FontRef;
 use dessin::{
     export::{Export, Exporter},
-    font::FontGroup,
     prelude::*,
 };
 use nalgebra::Translation2;
@@ -16,6 +16,7 @@ pub enum PDFError {
     WriteError(fmt::Error),
     CurveHasNoStartingPoint(Curve),
     UnknownBuiltinFont(String),
+    OrphelinLayer,
 }
 impl From<fmt::Error> for PDFError {
     fn from(e: fmt::Error) -> Self {
@@ -28,31 +29,42 @@ impl From<printpdf::Error> for PDFError {
     }
 }
 
-type PDFFontHolder = HashMap<String, FontGroup<IndirectFontRef>>;
+type PDFFontHolder = HashMap<(FontRef, FontWeight), IndirectFontRef>;
 
 #[derive(Default)]
 pub struct PDFOptions {
     pub size: Option<(f32, f32)>,
-    pub fonts: PDFFontHolder,
+    pub used_font: PDFFontHolder,
 }
 
-pub struct PDFExporter {
+pub struct PDFExporter<'a> {
     layer: PdfLayerReference,
-    fonts: PDFFontHolder,
+    doc: &'a PdfDocumentReference,
+    used_font: PDFFontHolder,
 }
-impl PDFExporter {
-    pub fn new(layer: PdfLayerReference, fonts: PDFFontHolder) -> Self {
-        PDFExporter { layer, fonts }
-    }
-    pub fn new_with_default_font(layer: PdfLayerReference) -> Self {
+impl<'a> PDFExporter<'a> {
+    pub fn new_with_font(
+        layer: PdfLayerReference,
+        doc: &'a PdfDocumentReference,
+        used_font: PDFFontHolder,
+    ) -> Self {
         PDFExporter {
             layer,
-            fonts: PDFFontHolder::default(),
+            doc,
+            used_font,
+        }
+    }
+    pub fn new(layer: PdfLayerReference, doc: &'a PdfDocumentReference) -> Self {
+        let stock: PDFFontHolder = HashMap::default();
+        PDFExporter {
+            layer,
+            doc,
+            used_font: stock,
         }
     }
 }
 
-impl Exporter for PDFExporter {
+impl Exporter for PDFExporter<'_> {
     type Error = PDFError;
     const CAN_EXPORT_ELLIPSE: bool = false;
 
@@ -223,43 +235,54 @@ impl Exporter for PDFExporter {
         Ok(())
     }
 
-    fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> {
-        let font = text
-            .font
-            .as_ref()
-            .map(|f| f.font_family())
-            .unwrap_or("default");
+    fn export_text(
+        &mut self,
+        TextPosition {
+            text,
+            align: _,
+            font_weight,
+            on_curve: _,
+            font_size,
+            reference_start,
+            direction,
+            font,
+        }: TextPosition,
+    ) -> Result<(), Self::Error> {
+        let font = font.clone().unwrap_or(FontRef::default());
+
+        // search if (font_ref, font_weight) is stocked in used_font
         let font = self
-            .fonts
-            .get(font)
-            .and_then(|font| match text.font_weight {
-                FontWeight::Regular => Some(font.regular.clone()),
-                FontWeight::Bold => font.bold.clone(),
-                FontWeight::Italic => font.italic.clone(),
-                FontWeight::BoldItalic => font.bold_italic.clone(),
-            })
-            .unwrap();
+            .used_font
+            .entry((font.clone(), font_weight))
+            .or_insert_with(|| match font::get(font.clone()).get(font_weight) {
+                dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
+                    if let Err(err) = self.doc.add_external_font(b.as_slice()) {
+                        panic!("Failed to add external font : {}", err)
+                    } else {
+                        self.doc.add_external_font(b.as_slice()).unwrap()
+                    }
+                }
+            });
+
         self.layer.begin_text_section();
-        self.layer.set_font(&font, text.font_size);
+        self.layer.set_font(&font, font_size);
         // if let Some(te) = text.on_curve {
         //     self.layer.add_polygon()
         //     todo!()
         // }
-        let rotation = text.direction.y.atan2(text.direction.x).to_degrees();
+        let rotation = direction.y.atan2(direction.x).to_degrees();
         self.layer
             .set_text_rendering_mode(printpdf::TextRenderingMode::Fill);
         self.layer
             .set_text_matrix(printpdf::TextMatrix::TranslateRotate(
-                Mm(text.reference_start.x).into_pt(),
-                Mm(text.reference_start.y).into_pt(),
+                Mm(reference_start.x).into_pt(),
+                Mm(reference_start.y).into_pt(),
                 rotation,
             ));
 
-        // self.layer.set_line_height(text.font_size);
-        // self.layer.set_word_spacing(3000.0);
-        // self.layer.set_character_spacing(10.0);
-        self.layer.write_text(text.text, &font);
+        self.layer.write_text(text, &font);
         self.layer.end_text_section();
+
         Ok(())
     }
 }
@@ -269,10 +292,15 @@ pub trait ToPDF {
         &self,
         layer: PdfLayerReference,
         options: PDFOptions,
+        doc: &PdfDocumentReference,
     ) -> Result<(), PDFError>;
     #[inline]
-    fn write_to_pdf(&self, layer: PdfLayerReference) -> Result<(), PDFError> {
-        self.write_to_pdf_with_options(layer, PDFOptions::default())
+    fn write_to_pdf(
+        &self,
+        layer: PdfLayerReference,
+        doc: &PdfDocumentReference,
+    ) -> Result<(), PDFError> {
+        self.write_to_pdf_with_options(layer, PDFOptions::default(), doc)
     }
 
     fn to_pdf_with_options(&self, options: PDFOptions) -> Result<PdfDocumentReference, PDFError>;
@@ -295,12 +323,13 @@ impl ToPDF for Shape {
         &self,
         layer: PdfLayerReference,
         options: PDFOptions,
+        doc: &PdfDocumentReference,
     ) -> Result<(), PDFError> {
         let (width, height) = options.size.unwrap_or_else(|| {
             let bb = self.local_bounding_box();
             (bb.width(), bb.height())
         });
-        let mut exporter = PDFExporter::new(layer, options.fonts);
+        let mut exporter = PDFExporter::new_with_font(layer, doc, options.used_font);
         let translation = Translation2::new(width / 2., height / 2.);
         let parent_transform = nalgebra::convert(translation);
 
@@ -316,222 +345,11 @@ impl ToPDF for Shape {
             (bb.width(), bb.height())
         });
         let (doc, page, layer) = PdfDocument::new("", Mm(size.0), Mm(size.1), "Layer 1");
+
         let layer = doc.get_page(page).get_layer(layer);
-        let default_regular = doc.add_builtin_font(BuiltinFont::Helvetica).unwrap();
-        let default_bold = doc.add_builtin_font(BuiltinFont::HelveticaBold).unwrap();
-        let default_italic = doc.add_builtin_font(BuiltinFont::HelveticaOblique).unwrap();
-        let default_bold_italic = doc
-            .add_builtin_font(BuiltinFont::HelveticaBoldOblique)
-            .unwrap();
-        options.fonts.insert(
-            "default".to_string(),
-            dessin::font::FontGroup {
-                regular: default_regular,
-                bold: Some(default_bold),
-                bold_italic: Some(default_bold_italic),
-                italic: Some(default_italic),
-            },
-        );
 
-        for (
-            key,
-            dessin::font::FontGroup {
-                regular,
-                bold,
-                italic,
-                bold_italic,
-            },
-        ) in dessin::font::fonts()
-        {
-            let regular = match regular {
-                // dessin::font::Font::ByName(n) => doc.add_builtin_font(find_builtin_font(&n)?)?,
-                dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
-                    doc.add_external_font(b.as_slice())?
-                }
-            };
-
-            let bold = match bold {
-                // Some(dessin::font::Font::ByName(n)) => {
-                //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-                // }
-                Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
-                    Some(doc.add_external_font(b.as_slice())?)
-                }
-                None => None,
-            };
-
-            let italic = match italic {
-                // Some(dessin::font::Font::ByName(n)) => {
-                //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-                // }
-                Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
-                    Some(doc.add_external_font(b.as_slice())?)
-                }
-                None => None,
-            };
-
-            let bold_italic = match bold_italic {
-                // Some(dessin::font::Font::ByName(n)) => {
-                //     Some(doc.add_builtin_font(find_builtin_font(&n)?)?)
-                // }
-                Some(dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b)) => {
-                    Some(doc.add_external_font(b.as_slice())?)
-                }
-                None => None,
-            };
-            let fonts_group = dessin::font::FontGroup {
-                regular,
-                bold,
-                bold_italic,
-                italic,
-            };
-            options.fonts.insert(key, fonts_group);
-        }
-        self.write_to_pdf_with_options(layer, options)?;
+        self.write_to_pdf_with_options(layer, options, &doc)?;
 
         Ok(doc)
     }
 }
-
-// impl ToPDF for Curve {
-//     fn draw_on_layer_with_parent_transform(
-//         &self,
-//         layer: &PdfLayerReference,
-//         parent_transform: &Transform2<f32>,
-//     ) -> Result<(), PDFError> {
-//         fn place_keypoints(
-//             curve: &Curve,
-//             parent_transform: &Transform2<f32>,
-//         ) -> Result<Vec<(printpdf::Point, bool)>, PDFError> {
-//             let CurvePosition {
-//                 keypoints,
-//                 closed: _,
-//             } = curve.position(parent_transform);
-
-//             let mut points = Vec::with_capacity(curve.keypoints.len());
-
-//             for idx in 0..keypoints.len() {
-//                 let k = &keypoints[idx];
-//                 let next_is_bezier = keypoints
-//                     .get(idx)
-//                     .map(|v| {
-//                         if let Keypoint::Bezier(Bezier { start: _, .. }) = v {
-//                             // start.is_none()
-//                             true
-//                         } else {
-//                             false
-//                         }
-//                     })
-//                     .unwrap_or(false);
-
-//                 match k {
-//                     Keypoint::Curve(c) => {
-//                         let parent_transform = curve.global_transform(parent_transform);
-//                         points.extend(place_keypoints(c, &parent_transform)?);
-//                     }
-//                     Keypoint::Bezier(Bezier {
-//                         start,
-//                         start_control,
-//                         end_control,
-//                         end,
-//                     }) => {
-//                         if let Some(start) = start {
-//                             points.push((
-//                                 printpdf::Point::new(Mm(start.x as f64), Mm(start.y as f64)),
-//                                 true,
-//                             ));
-//                         }
-//                         points.push((
-//                             printpdf::Point::new(
-//                                 Mm(start_control.x as f64),
-//                                 Mm(start_control.y as f64),
-//                             ),
-//                             true,
-//                         ));
-//                         points.push((
-//                             printpdf::Point::new(
-//                                 Mm(end_control.x as f64),
-//                                 Mm(end_control.y as f64),
-//                             ),
-//                             true,
-//                         ));
-//                         points.push((
-//                             printpdf::Point::new(Mm(end.x as f64), Mm(end.y as f64)),
-//                             next_is_bezier,
-//                         ));
-//                     }
-//                     Keypoint::Point(p) => points.push((
-//                         printpdf::Point::new(Mm(p.x as f64), Mm(p.y as f64)),
-//                         next_is_bezier,
-//                     )),
-//                 }
-//             }
-
-//             Ok(points)
-//         }
-
-//         let points = place_keypoints(self, parent_transform)?;
-
-//         let l = printpdf::Line {
-//             points,
-//             is_closed: self.closed,
-//             has_fill: false,
-//             has_stroke: true,
-//             is_clipping_path: false,
-//         };
-
-//         layer.add_shape(l);
-
-//         Ok(())
-//     }
-// }
-
-// impl ToPDF for Ellipse {
-//     #[inline]
-//     fn draw_on_layer_with_parent_transform(
-//         &self,
-//         layer: &PdfLayerReference,
-//         parent_transform: &Transform2<f32>,
-//     ) -> Result<(), PDFError> {
-//         Curve::from(self.clone()).draw_on_layer_with_parent_transform(layer, parent_transform)
-//     }
-// }
-
-// impl ToPDF for Text {
-//     fn draw_on_layer_with_parent_transform(
-//         &self,
-//         layer: &PdfLayerReference,
-//         parent_transform: &Transform2<f32>,
-//     ) -> Result<(), PDFError> {
-//         let TextPosition {
-//             text,
-//             align,
-//             font_weight,
-//             on_curve,
-//             font_size,
-//             reference_start: bottom_left,
-//         } = self.position(parent_transform);
-
-//         let fonts = &FONT_HOLDER.get().unwrap().read().unwrap()[self.font.unwrap_or(0)];
-//         let font = match font_weight {
-//             FontWeight::Regular => &fonts.regular,
-//             FontWeight::Bold => fonts.bold.as_ref().unwrap_or_else(|| &fonts.regular),
-//             FontWeight::BoldItalic => fonts.bold_italic.as_ref().unwrap_or_else(|| &fonts.regular),
-//             FontWeight::Italic => fonts.italic.as_ref().unwrap_or_else(|| &fonts.regular),
-//         };
-
-//         if let Some(curve) = &self.on_curve {
-//             todo!()
-//         } else {
-//             layer.use_text(
-//                 text,
-//                 font_size as f64,
-//                 Mm(bottom_left.x as f64),
-//                 Mm(bottom_left.y as f64),
-//                 font,
-//             );
-//         }
-
-//         Ok(())
-//     }
-// }
