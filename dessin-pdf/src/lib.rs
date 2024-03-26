@@ -287,69 +287,52 @@ impl Exporter for PDFExporter<'_> {
     }
 }
 
-pub trait ToPDF {
-    fn write_to_pdf_with_options(
-        &self,
-        layer: PdfLayerReference,
-        options: PDFOptions,
-        doc: &PdfDocumentReference,
-    ) -> Result<(), PDFError>;
-    #[inline]
-    fn write_to_pdf(
-        &self,
-        layer: PdfLayerReference,
-        doc: &PdfDocumentReference,
-    ) -> Result<(), PDFError> {
-        self.write_to_pdf_with_options(layer, PDFOptions::default(), doc)
-    }
+pub fn write_to_pdf_with_options(
+    shape: &Shape,
+    layer: PdfLayerReference,
+    options: PDFOptions,
+    doc: &PdfDocumentReference,
+) -> Result<(), PDFError> {
+    let (width, height) = options.size.unwrap_or_else(|| {
+        let bb = shape.local_bounding_box();
+        (bb.width(), bb.height())
+    });
+    let mut exporter = PDFExporter::new_with_font(layer, doc, options.used_font);
+    let translation = Translation2::new(width / 2., height / 2.);
+    let parent_transform = nalgebra::convert(translation);
 
-    fn to_pdf_with_options(&self, options: PDFOptions) -> Result<PdfDocumentReference, PDFError>;
-    #[inline]
-    fn to_pdf_bytes_with_options(&self, options: PDFOptions) -> Result<Vec<u8>, PDFError> {
-        Ok(self.to_pdf_with_options(options)?.save_to_bytes()?)
-    }
-
-    #[inline]
-    fn to_pdf(&self) -> Result<PdfDocumentReference, PDFError> {
-        self.to_pdf_with_options(PDFOptions::default())
-    }
-    #[inline]
-    fn to_pdf_bytes(&self) -> Result<Vec<u8>, PDFError> {
-        Ok(self.to_pdf()?.save_to_bytes()?)
-    }
+    shape.write_into_exporter(&mut exporter, &parent_transform)
 }
-impl ToPDF for Shape {
-    fn write_to_pdf_with_options(
-        &self,
-        layer: PdfLayerReference,
-        options: PDFOptions,
-        doc: &PdfDocumentReference,
-    ) -> Result<(), PDFError> {
-        let (width, height) = options.size.unwrap_or_else(|| {
-            let bb = self.local_bounding_box();
-            (bb.width(), bb.height())
-        });
-        let mut exporter = PDFExporter::new_with_font(layer, doc, options.used_font);
-        let translation = Translation2::new(width / 2., height / 2.);
-        let parent_transform = nalgebra::convert(translation);
 
-        self.write_into_exporter(&mut exporter, &parent_transform)
-    }
+pub fn to_pdf_with_options(
+    shape: &Shape,
+    mut options: PDFOptions,
+) -> Result<PdfDocumentReference, PDFError> {
+    let size = options.size.get_or_insert_with(|| {
+        let bb = shape.local_bounding_box();
+        (bb.width(), bb.height())
+    });
+    let (doc, page, layer) = PdfDocument::new("", Mm(size.0), Mm(size.1), "Layer 1");
 
-    fn to_pdf_with_options(
-        &self,
-        mut options: PDFOptions,
-    ) -> Result<PdfDocumentReference, PDFError> {
-        let size = options.size.get_or_insert_with(|| {
-            let bb = self.local_bounding_box();
-            (bb.width(), bb.height())
-        });
-        let (doc, page, layer) = PdfDocument::new("", Mm(size.0), Mm(size.1), "Layer 1");
+    let layer = doc.get_page(page).get_layer(layer);
 
-        let layer = doc.get_page(page).get_layer(layer);
+    write_to_pdf_with_options(shape, layer, options, &doc)?;
 
-        self.write_to_pdf_with_options(layer, options, &doc)?;
+    Ok(doc)
+}
 
-        Ok(doc)
-    }
+pub fn write_to_pdf(
+    shape: &Shape,
+    layer: PdfLayerReference,
+    doc: &PdfDocumentReference,
+) -> Result<(), PDFError> {
+    write_to_pdf_with_options(shape, layer, PDFOptions::default(), doc)
+}
+
+pub fn to_pdf(shape: &Shape) -> Result<PdfDocumentReference, PDFError> {
+    to_pdf_with_options(shape, PDFOptions::default())
+}
+
+pub fn to_pdf_bytes(shape: &Shape) -> Result<Vec<u8>, PDFError> {
+    Ok(to_pdf(shape)?.save_to_bytes()?)
 }
