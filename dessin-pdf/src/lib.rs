@@ -89,7 +89,7 @@ impl Exporter for PDFExporter<'_> {
         //-----------------------------------------------------------------
 
         if let Some(fill) = fill {
-            // match mode {... => ...}
+            // match mode {... => ...} --
             let (r, g, b) = match fill {
                 Fill::Color(c) => c.as_rgb_f32(),
             };
@@ -102,6 +102,19 @@ impl Exporter for PDFExporter<'_> {
                     icc_profile: None,
                 }));
         }
+        // else {
+        //     // just works if we have a white background
+        //     let (r, g, b) = (1., 1., 1.);
+
+        //     self.layer
+        //         .set_fill_color(printpdf::Color::Rgb(printpdf::Rgb {
+        //             r,
+        //             g,
+        //             b,
+        //             icc_profile: None,
+        //         }));
+        //     self.layer.set_overprint_fill(false)
+        // }
 
         if let Some(stroke) = stroke {
             let ((r, g, b), w) = match stroke {
@@ -138,9 +151,23 @@ impl Exporter for PDFExporter<'_> {
                 .set_outline_thickness(printpdf::Mm(w).into_pt().0);
         }
 
-        //--------------------------------------------------
-        // self.layer.add_polygon(line);
-        //--------------------------------------------------
+        // if let None = stroke {
+        //     // self.layer.set_overprint_fill(false)
+        // }
+
+        // if let None = stroke {
+        //     // just works if we have a white background
+        //     let (r, g, b) = (1., 1., 1.);
+        //     self.layer
+        //         .set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
+        //             r,
+        //             g,
+        //             b,
+        //             icc_profile: None,
+        //         }));
+        //     self.layer
+        //         .set_outline_thickness(printpdf::Mm(0.).into_pt().0)
+        // }
 
         Ok(())
     }
@@ -221,7 +248,7 @@ impl Exporter for PDFExporter<'_> {
     fn export_curve(
         &mut self,
         curve: CurvePosition,
-        // StylePosition { fill, stroke }: StylePosition,
+        StylePosition { fill, stroke }: StylePosition,
     ) -> Result<(), Self::Error> {
         let points1 = curve
             .keypoints
@@ -287,13 +314,14 @@ impl Exporter for PDFExporter<'_> {
         // self.layer.add_line(line);
         //-----------------------------------------------------------------
         let line = printpdf::Polygon {
-            rings: vec![points1], // We want vectors of points... Seems to be in the Shape (++) or the shape herself  --
-            mode: PaintMode::FillStroke,
-            // mode: match (Some(fill), Some(stroke)) {
-            //     (fill, None) => PaintMode::Fill,
-            //     (None, stroke) => PaintMode::Stroke,
-            //     (fill, stroke) => PaintMode::FillStroke,
-            // },
+            rings: vec![points1],
+            // mode: PaintMode::FillStroke,
+            mode: match (fill, stroke) {
+                (Some(fill), None) => PaintMode::Fill,
+                (None, Some(stroke)) => PaintMode::Stroke,
+                (Some(fill), Some(stroke)) => PaintMode::FillStroke,
+                (None, None) => PaintMode::Clip,
+            },
             winding_order: WindingOrder::NonZero, // WindingOrder::EvenOdd, is also possible --
         };
 
@@ -369,7 +397,73 @@ pub fn write_to_pdf_with_options(
     let translation = Translation2::new(width / 2., height / 2.);
     let parent_transform = nalgebra::convert(translation);
 
-    shape.write_into_exporter(&mut exporter, &parent_transform)
+    // Try 4
+    // if let (Some(fill), Some(stroke)) = match shape {
+    //     Shape::Style { fill, stroke, .. } => (fill, stroke),
+    //     _ => (&None, &None),
+    // } {
+    //     shape.write_into_exporter(
+    //         &mut exporter,
+    //         &parent_transform,
+    //         StylePosition {
+    //             fill: Some(*fill),
+    //             stroke: Some(*stroke),
+    //         },
+    //     )
+    // } else if let (Some(fill), Some(stroke)) = match shape {
+    //     Shape::Style { fill, stroke, .. } => (fill, None::Option::<Stroke>), // PB here
+    //     _ => (&None, None),
+    // } {
+    //     shape.write_into_exporter(
+    //         &mut exporter,
+    //         &parent_transform,
+    //         StylePosition {
+    //             fill: Some(*fill),
+    //             stroke: None,
+    //         },
+    //     )
+    // } else if let (Some(fill), Some(stroke)) = match shape {
+    //     Shape::Style { fill, stroke, .. } => (None, stroke),
+    //     _ => (None, &None),
+    // } {
+    //     shape.write_into_exporter(
+    //         &mut exporter,
+    //         &parent_transform,
+    //         StylePosition {
+    //             fill: None,
+    //             stroke: Some(*stroke),
+    //         },
+    //     )
+    // } else {
+    //     shape.write_into_exporter(
+    //         &mut exporter,
+    //         &parent_transform,
+    //         StylePosition {
+    //             fill: None,
+    //             stroke: None,
+    //         },
+    //     )
+    // }
+
+    if let Shape::Style { fill, stroke, .. } = shape {
+        shape.write_into_exporter(
+            &mut exporter,
+            &parent_transform,
+            StylePosition {
+                fill: *fill,
+                stroke: *stroke,
+            },
+        ) //Needed to be complete
+    } else {
+        shape.write_into_exporter(
+            &mut exporter,
+            &parent_transform,
+            StylePosition {
+                fill: None,
+                stroke: None,
+            },
+        )
+    }
 }
 
 pub fn to_pdf_with_options(
