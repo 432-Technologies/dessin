@@ -431,14 +431,35 @@ pub fn to_string_with_options(
     let mut exporter = SVGExporter::new(min_x, min_y, span_x, span_y);
 
     let parent_transform = nalgebra::convert(Scale2::new(1., -1.));
-    shape.write_into_exporter(
-        &mut exporter,
-        &parent_transform,
-        StylePosition {
-            fill: None,
-            stroke: None,
-        },
-    )?;
+
+    // shape.write_into_exporter(
+    //     &mut exporter,
+    //     &parent_transform,
+    //     StylePosition {
+    //         fill: None,
+    //         stroke: None,
+    //     },
+    // )?;
+
+    if let Shape::Style { fill, stroke, .. } = shape {
+        shape.write_into_exporter(
+            &mut exporter,
+            &parent_transform,
+            StylePosition {
+                fill: *fill,
+                stroke: *stroke,
+            },
+        )? //Needed to be complete
+    } else {
+        shape.write_into_exporter(
+            &mut exporter,
+            &parent_transform,
+            StylePosition {
+                fill: None,
+                stroke: None,
+            },
+        )?
+    }
 
     Ok(exporter.finish())
 }

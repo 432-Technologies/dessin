@@ -284,14 +284,34 @@ impl ToImage for Shape {
         let height = bb.height().ceil() as u32;
         let mut exporter = ImageExporter::new(width, height);
 
-        self.write_into_exporter(
-            &mut exporter,
-            &transform,
-            StylePosition {
-                stroke: None,
-                fill: None,
-            },
-        )?;
+        // self.write_into_exporter(
+        //     &mut exporter,
+        //     &transform,
+        //     StylePosition {
+        //         stroke: None,
+        //         fill: None,
+        //     },
+        // )?;
+
+        if let Shape::Style { fill, stroke, .. } = self {
+            self.write_into_exporter(
+                &mut exporter,
+                &transform,
+                StylePosition {
+                    fill: *fill,
+                    stroke: *stroke,
+                },
+            )? //Needed to be complete
+        } else {
+            self.write_into_exporter(
+                &mut exporter,
+                &transform,
+                StylePosition {
+                    fill: None,
+                    stroke: None,
+                },
+            )?
+        }
 
         let raw: Vec<u32> = exporter.finalize().into_vec();
         let raw: Vec<u8> = unsafe {
