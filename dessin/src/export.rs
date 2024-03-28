@@ -29,7 +29,7 @@ where
     /// # fn end_style(&mut self) -> Result<(), Self::Error> { Ok(()) }
     /// # fn export_image(&mut self, image: ImagePosition) -> Result<(), Self::Error> { Ok(()) }
     /// # fn export_ellipse(&mut self, ellipse: EllipsePosition) -> Result<(), Self::Error> { Ok(()) }
-    /// # fn export_curve(&mut self, curve: CurvePosition) -> Result<(), Self::Error> { Ok(()) }
+    /// # fn export_curve(&mut self, curve: CurvePosition, StylePosition {fill,stroke,} : StylePosition,) -> Result<(), Self::Error> { Ok(()) }
     /// # fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> { Ok(()) }
     /// }
     ///
@@ -39,6 +39,7 @@ where
     /// 	shape.write_into_exporter( // Start walking the dessin
     /// 		&mut my_dummy_exporter,
     /// 		&Default::default(),
+    ///         StylePosition {fill: None,stroke: None,},
     /// 	);
     /// }
     ///
@@ -158,7 +159,7 @@ where
 /// # fn end_style(&mut self) -> Result<(), Self::Error> { Ok(()) }
 /// # fn export_image(&mut self, image: ImagePosition) -> Result<(), Self::Error> { Ok(()) }
 /// # fn export_ellipse(&mut self, ellipse: EllipsePosition) -> Result<(), Self::Error> { Ok(()) }
-/// # fn export_curve(&mut self, curve: CurvePosition) -> Result<(), Self::Error> { Ok(()) }
+/// # fn export_curve(&mut self, curve: CurvePosition, StylePosition {fill,stroke,}: StylePosition,) -> Result<(), Self::Error> { Ok(()) }
 /// # fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> { Ok(()) }
 /// }
 ///
@@ -172,6 +173,7 @@ where
 /// 		self.write_into_exporter( // Start walking the dessin
 /// 			&mut exporter,
 /// 			&Default::default(), // In the real implementation, we need to mirror the Y axis, as the positive side is in the DOWN side
+///             StylePosition {fill: None,stroke: None,},
 /// 		).unwrap();
 ///
 /// 		exporter.finish()
