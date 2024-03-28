@@ -347,18 +347,51 @@ impl Exporter for PDFExporter<'_> {
         let font = font.clone().unwrap_or(FontRef::default());
 
         // search if (font_ref, font_weight) is stocked in used_font
+        // let font = self
+        //     .used_font
+        //     .entry((font.clone(), font_weight))
+        //     .or_insert_with(|| match font::get(font.clone()).get(font_weight) {
+        //         dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
+        //             if let Err(err) = self.doc.add_external_font(b.as_slice()) {
+        //                 panic!("Failed to add external font : {}", err)
+        //             } else {
+        //                 self.doc.add_external_font(b.as_slice()).unwrap()
+        //             }
+        //         }
+        //     });
+
+        //----------------------------------------------------------------------------------------
+        //Try 1
+        // let font = self
+        //     .used_font
+        //     .entry((font.clone(), font_weight))
+        //     .or_insert_with(|| match font::get(font.clone()).get(font_weight) {
+        //         dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
+        //             match self.doc.add_external_font(b.as_slice()) {
+        //                 Ok(_) => self.doc.add_external_font(b.as_slice()).unwrap(),
+        //                 Err(err) => {
+        //                     println!("Failed to add external font : {}", err);
+        //                     Err(err).unwrap()
+        //                 }
+        //             }
+        //         }
+        //     });
+
+        //Try 2
         let font = self
             .used_font
             .entry((font.clone(), font_weight))
             .or_insert_with(|| match font::get(font.clone()).get(font_weight) {
                 dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
                     if let Err(err) = self.doc.add_external_font(b.as_slice()) {
-                        panic!("Failed to add external font : {}", err)
+                        println!("Failed to add external font : {}", err);
+                        Err(err).unwrap()
                     } else {
                         self.doc.add_external_font(b.as_slice()).unwrap()
                     }
                 }
             });
+        //----------------------------------------------------------------------------------------
 
         self.layer.begin_text_section();
         self.layer.set_font(&font, font_size);
