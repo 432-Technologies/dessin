@@ -1,13 +1,12 @@
-use dessin::font::FontRef;
 use dessin::{
     export::{Export, Exporter},
+    font::FontRef,
     prelude::*,
 };
 use nalgebra::Translation2;
-use printpdf::path::PaintMode;
 use printpdf::{
-    BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference,
-    Point,
+    path::PaintMode, IndirectFontRef, Mm, PdfDocument, PdfDocumentReference,
+    PdfLayerReference, Point,
 };
 use std::{collections::HashMap, fmt};
 //------------------------------------------------
@@ -76,20 +75,8 @@ impl Exporter for PDFExporter<'_> {
         &mut self,
         StylePosition { fill, stroke }: StylePosition,
     ) -> Result<(), Self::Error> {
-        //-----------------------------------------------------------------
-        // let line = printpdf::Polygon {
-        //     rings: self, // We want vectors of points... Seems to be in the Shape (++) or the shape herself  --
-        //     mode: match (Some(fill), Some(stroke)) {
-        //         (fill, None) => PaintMode::Fill,
-        //         (None, stroke) => PaintMode::Stroke,
-        //         (fill, stroke) => PaintMode::FillStroke,
-        //     },
-        //     winding_order: WindingOrder::NonZero, // WindingOrder::EvenOdd, is also possible --
-        // };
-        //-----------------------------------------------------------------
 
         if let Some(fill) = fill {
-            // match mode {... => ...} --
             let (r, g, b) = match fill {
                 Fill::Color(c) => c.as_rgb_f32(),
             };
@@ -102,19 +89,6 @@ impl Exporter for PDFExporter<'_> {
                     icc_profile: None,
                 }));
         }
-        // else {
-        //     // just works if we have a white background
-        //     let (r, g, b) = (1., 1., 1.);
-
-        //     self.layer
-        //         .set_fill_color(printpdf::Color::Rgb(printpdf::Rgb {
-        //             r,
-        //             g,
-        //             b,
-        //             icc_profile: None,
-        //         }));
-        //     self.layer.set_overprint_fill(false)
-        // }
 
         if let Some(stroke) = stroke {
             let ((r, g, b), w) = match stroke {
@@ -254,32 +228,6 @@ impl Exporter for PDFExporter<'_> {
             .keypoints
             .iter()
             .enumerate()
-            // .flat_map(|(i, key_point)| {
-            //     let next_control = matches!(curve.keypoints.get(i + 1), Some(KeypointPosition::Bezier(b)) if b.start.is_none());
-            //     match key_point {
-            //         KeypointPosition::Point(p) => {
-            //             vec![(Point::new(Mm(p.x), Mm(p.y)), next_control)]
-            //         }
-            //         KeypointPosition::Bezier(b) => {
-            //             let mut res = vec![];
-            //             if let Some(start) = b.start {
-            //                 res.push((Point::new(Mm(start.x), Mm(start.y)), true));
-            //             }
-            //             res.append(&mut vec![
-            //                     (
-            //                         Point::new(Mm(b.start_control.x), Mm(b.start_control.y)),
-            //                         true,
-            //                     ),
-            //                     (Point::new(Mm(b.end_control.x), Mm(b.end_control.y)), false),
-            //                     (Point::new(Mm(b.end.x), Mm(b.end.y)), next_control),
-            //                 ]);
-            //             res
-            //         }
-            //     }
-            // })
-            // .collect();
-
-        //------------------------------------------------------------
             .flat_map(|(i, key_point)| {
                 let next_control = matches!(curve.keypoints.get(i + 1), Some(KeypointPosition::Bezier(b)) if b.start.is_none());
                 match key_point {
@@ -346,38 +294,6 @@ impl Exporter for PDFExporter<'_> {
     ) -> Result<(), Self::Error> {
         let font = font.clone().unwrap_or(FontRef::default());
 
-        // search if (font_ref, font_weight) is stocked in used_font
-        // let font = self
-        //     .used_font
-        //     .entry((font.clone(), font_weight))
-        //     .or_insert_with(|| match font::get(font.clone()).get(font_weight) {
-        //         dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
-        //             if let Err(err) = self.doc.add_external_font(b.as_slice()) {
-        //                 panic!("Failed to add external font : {}", err)
-        //             } else {
-        //                 self.doc.add_external_font(b.as_slice()).unwrap()
-        //             }
-        //         }
-        //     });
-
-        //----------------------------------------------------------------------------------------
-        //Try 1
-        // let font = self
-        //     .used_font
-        //     .entry((font.clone(), font_weight))
-        //     .or_insert_with(|| match font::get(font.clone()).get(font_weight) {
-        //         dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
-        //             match self.doc.add_external_font(b.as_slice()) {
-        //                 Ok(_) => self.doc.add_external_font(b.as_slice()).unwrap(),
-        //                 Err(err) => {
-        //                     println!("Failed to add external font : {}", err);
-        //                     Err(err).unwrap()
-        //                 }
-        //             }
-        //         }
-        //     });
-
-        //Try 2
         let font = self
             .used_font
             .entry((font.clone(), font_weight))
@@ -391,7 +307,6 @@ impl Exporter for PDFExporter<'_> {
                     }
                 }
             });
-        //----------------------------------------------------------------------------------------
 
         self.layer.begin_text_section();
         self.layer.set_font(&font, font_size);
@@ -430,54 +345,6 @@ pub fn write_to_pdf_with_options(
     let translation = Translation2::new(width / 2., height / 2.);
     let parent_transform = nalgebra::convert(translation);
 
-    // Try 4
-    // if let (Some(fill), Some(stroke)) = match shape {
-    //     Shape::Style { fill, stroke, .. } => (fill, stroke),
-    //     _ => (&None, &None),
-    // } {
-    //     shape.write_into_exporter(
-    //         &mut exporter,
-    //         &parent_transform,
-    //         StylePosition {
-    //             fill: Some(*fill),
-    //             stroke: Some(*stroke),
-    //         },
-    //     )
-    // } else if let (Some(fill), Some(stroke)) = match shape {
-    //     Shape::Style { fill, stroke, .. } => (fill, None::Option::<Stroke>), // PB here
-    //     _ => (&None, None),
-    // } {
-    //     shape.write_into_exporter(
-    //         &mut exporter,
-    //         &parent_transform,
-    //         StylePosition {
-    //             fill: Some(*fill),
-    //             stroke: None,
-    //         },
-    //     )
-    // } else if let (Some(fill), Some(stroke)) = match shape {
-    //     Shape::Style { fill, stroke, .. } => (None, stroke),
-    //     _ => (None, &None),
-    // } {
-    //     shape.write_into_exporter(
-    //         &mut exporter,
-    //         &parent_transform,
-    //         StylePosition {
-    //             fill: None,
-    //             stroke: Some(*stroke),
-    //         },
-    //     )
-    // } else {
-    //     shape.write_into_exporter(
-    //         &mut exporter,
-    //         &parent_transform,
-    //         StylePosition {
-    //             fill: None,
-    //             stroke: None,
-    //         },
-    //     )
-    // }
-
     if let Shape::Style { fill, stroke, .. } = shape {
         shape.write_into_exporter(
             &mut exporter,
@@ -486,7 +353,7 @@ pub fn write_to_pdf_with_options(
                 fill: *fill,
                 stroke: *stroke,
             },
-        ) //Needed to be complete
+        ) //TODO Needed to be complete ? --MathNuba
     } else {
         shape.write_into_exporter(
             &mut exporter,
