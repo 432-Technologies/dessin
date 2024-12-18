@@ -5,8 +5,8 @@ use dessin::{
 };
 use nalgebra::Translation2;
 use printpdf::{
-    path::PaintMode, IndirectFontRef, Mm, PdfDocument, PdfDocumentReference,
-    PdfLayerReference, Point,
+    path::PaintMode, IndirectFontRef, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference,
+    Point,
 };
 use std::{collections::HashMap, fmt};
 //------------------------------------------------
@@ -75,7 +75,6 @@ impl Exporter for PDFExporter<'_> {
         &mut self,
         StylePosition { fill, stroke }: StylePosition,
     ) -> Result<(), Self::Error> {
-
         if let Some(fill) = fill {
             let (r, g, b) = match fill {
                 Fill::Color(c) => c.as_rgb_f32(),
@@ -294,6 +293,7 @@ impl Exporter for PDFExporter<'_> {
     ) -> Result<(), Self::Error> {
         let font = font.clone().unwrap_or(FontRef::default());
 
+        // search if (font_ref, font_weight) is stocked in used_font
         let font = self
             .used_font
             .entry((font.clone(), font_weight))
