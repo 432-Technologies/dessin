@@ -5,7 +5,7 @@ use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
     token::{Brace, Bracket, Comma, Paren},
-    Expr, ExprAssign, ExprForLoop, ExprLet, Path, Result, Token,
+    Expr, ExprAssign, ExprForLoop, ExprLet, Pat, Path, Result, Token,
 };
 
 enum Action {
@@ -195,7 +195,13 @@ enum DessinIfElseArg {
 impl Parse for DessinIfElseArg {
     fn parse(input: ParseStream) -> Result<Self> {
         if input.peek(Token![let]) {
-            let let_exp: ExprLet = input.parse()?;
+            let let_exp = ExprLet {
+                attrs: vec![],
+                let_token: input.parse().unwrap(),
+                pat: Box::new(Pat::parse_single(&input).unwrap()),
+                eq_token: input.parse().unwrap(),
+                expr: Box::new(Expr::parse_without_eager_brace(&input).unwrap()),
+            };
             return Ok(DessinIfElseArg::Let(let_exp));
         }
 

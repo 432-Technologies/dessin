@@ -1,7 +1,7 @@
 [package]
 authors = [
-    "Olivier Lemoine <olivier.lemoine@432technologies.com>",
-    "Francois Morillon <francois.morillon@432technologies.com>",
+	"Olivier Lemoine <olivier.lemoine@432technologies.com>",
+	"Francois Morillon <francois.morillon@432technologies.com>",
 ]
 description = "Build complex drawing for PDF, SVG, ..."
 categories = ["graphics", "gui", "rendering", "template-engine"]
@@ -10,17 +10,17 @@ edition = "2021"
 license = "MIT"
 name = "dessin"
 repository = "https://github.com/432-technologies/dessin"
-version = "0.8.20-pre"
+version = "0.8.21-pre"
 
 [features]
 default = ["default-font"]
 default-font = []
 
 [dependencies]
-dessin-macros = { path = "../dessin-macros", version = "0.8.20-pre" }
-fontdue = "^0.8.0"
-image = "^0.24.8"
-nalgebra = "^0.32.3"
+dessin-macros = { path = "../dessin-macros", version = "0.8.21-pre" }
+fontdue = "^0.9"
+image = "0.24"
+nalgebra = "^0.33"
 palette = "^0.7.5"
 
 [dev-dependencies]

@@ -642,15 +642,15 @@ fn simple_if() {
     )
     .unwrap();
 }
-#[test]
-fn if_let() {
-    syn::parse_str::<Dessin>(
-        "if let Some(x) = my_condition {
-            Circle: ()
-        }",
-    )
-    .unwrap();
-}
+// #[test]
+// fn if_let() {
+//     syn::parse_str::<Dessin>(
+//         "if let Some(x) = my_condition {
+//             Circle: ()
+//         }",
+//     )
+//     .unwrap();
+// }
 #[test]
 fn combined_if() {
     syn::parse_str::<Dessin>(

@@ -1,6 +1,5 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
 use dessin_image::ToImage;
-use dessin_pdf::ToPDF;
 use palette::{named, Srgb};
 use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
