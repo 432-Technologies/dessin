@@ -19,7 +19,7 @@
 //! }
 //! impl From<MyShape> for Shape {
 //!   fn from(MyShape { text }: MyShape) -> Self {
-//!     dessin2!(Text!(fill = Srgb::<f32>::from_format(named::RED).into_linear(), { text })).into()
+//!     dessin2!(*Text(fill = Srgb::<f32>::from_format(named::RED).into_linear(), { text })).into()
 //!   }
 //! }
 //!
@@ -28,12 +28,12 @@
 //!     let radius = x as f32 * 10.;
 //!
 //!     dessin2!([
-//!       Circle!(
+//!       *Circle(
 //!         fill = Srgb::<f32>::from_format(named::RED).into_linear(),
 //!         { radius },
 //!         translate = [x as f32 * 5., 10.],
 //!       ),
-//!       Text!(fill = Srgb::<f32>::from_format(named::BLACK).into_linear(), font_size = 10., text = "Hi !",),
+//!       *Text(fill = Srgb::<f32>::from_format(named::BLACK).into_linear(), font_size = 10., text = "Hi !",),
 //!     ])
 //!   });
 //!
@@ -178,52 +178,52 @@ pub use ::palette;
 /// Prelude module includes everyting you need to build a dessin.
 /// You can of courses cherry pick what you need by importing directly from other modules.
 pub mod prelude {
-    pub use crate::{contrib::*, shapes::*, style::*};
-    pub use ::dessin_macros::{dessin, dessin2, Shape};
+	pub use crate::{contrib::*, shapes::*, style::*};
+	pub use ::dessin_macros::{dessin, dessin2, Shape};
 }
 
 /// Everything related to fonts.
 pub mod font {
-    pub use crate::shapes::text::font::*;
+	pub use crate::shapes::text::font::*;
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::prelude::{polygons::Octogon, *};
+	use crate::prelude::{polygons::Octogon, *};
 
-    #[test]
-    fn erased_type() {
-        #[derive(Default)]
-        struct Component {}
-        impl From<Component> for Shape {
-            fn from(_: Component) -> Self {
-                dessin2!()
-            }
-        }
+	#[test]
+	fn erased_type() {
+		#[derive(Default)]
+		struct Component {}
+		impl From<Component> for Shape {
+			fn from(_: Component) -> Self {
+				dessin2!()
+			}
+		}
 
-        dessin2!(Component() > (translate = [1., 1.]));
-    }
+		dessin2!(Component() > (translate = [1., 1.]));
+	}
 
-    #[test]
-    fn group_bounding_box() {
-        let group = dessin2!([Octogon(), Circle(radius = 7.),]);
-        let bb = group.local_bounding_box();
-        assert_eq!(bb.width(), 14.);
-        assert_eq!(bb.height(), 14.);
+	#[test]
+	fn group_bounding_box() {
+		let group = dessin2!([Octogon(), Circle(radius = 7.),]);
+		let bb = group.local_bounding_box();
+		assert_eq!(bb.width(), 14.);
+		assert_eq!(bb.height(), 14.);
 
-        let group = dessin2!([Octogon(scale = [12., 12.]), Circle(radius = 7.)]);
-        let bb = group.local_bounding_box();
-        assert_eq!(bb.width(), 24.);
-        assert_eq!(bb.height(), 24.);
+		let group = dessin2!([Octogon(scale = [12., 12.]), Circle(radius = 7.)]);
+		let bb = group.local_bounding_box();
+		assert_eq!(bb.width(), 24.);
+		assert_eq!(bb.height(), 24.);
 
-        let group = dessin2!([Octogon(scale = [15., 15.]), Circle(radius = 7.)]);
-        let bb = group.local_bounding_box();
-        assert_eq!(bb.width(), 30.);
-        assert_eq!(bb.height(), 30.);
+		let group = dessin2!([Octogon(scale = [15., 15.]), Circle(radius = 7.)]);
+		let bb = group.local_bounding_box();
+		assert_eq!(bb.width(), 30.);
+		assert_eq!(bb.height(), 30.);
 
-        let group = dessin2!([Octogon(scale = [13., 13.]), Circle(radius = 7.)]);
-        let bb = group.local_bounding_box();
-        assert_eq!(bb.width(), 26.);
-        assert_eq!(bb.height(), 26.);
-    }
+		let group = dessin2!([Octogon(scale = [13., 13.]), Circle(radius = 7.)]);
+		let bb = group.local_bounding_box();
+		assert_eq!(bb.width(), 26.);
+		assert_eq!(bb.height(), 26.);
+	}
 }

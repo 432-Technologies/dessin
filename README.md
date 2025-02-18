@@ -2,7 +2,7 @@
 
 **Try out the new [API](https://github.com/432-Technologies/dessin/tree/v0.8-pre)**
 
-Generate complex drawing for PDF, SVG, and many more to come ! 
+Generate complex drawing for PDF, SVG, and many more to come !
 
 ## Getting started
 
@@ -37,7 +37,7 @@ impl MyShape {
 }
 impl From<MyShape> for Shape {
   fn from(MyShape { text }: MyShape) -> Self {
-    dessin2!(Text!(fill = Srgb::<f32>::from_format(named::RED).into_linear(), { text })).into()
+    dessin2!(*Text(fill = Srgb::<f32>::from_format(named::RED).into_linear(), { text })).into()
   }
 }
 
@@ -46,12 +46,12 @@ fn main() {
     let radius = x as f32 * 10.;
 
     dessin2!([
-      Circle!(
+      *Circle(
         fill = Srgb::<f32>::from_format(named::RED).into_linear(),
         { radius },
         translate = [x as f32 * 5., 10.],
       ),
-      Text!(fill = Srgb::<f32>::from_format(named::BLACK).into_linear(), font_size = 10., text = "Hi !",),
+      *Text(fill = Srgb::<f32>::from_format(named::BLACK).into_linear(), font_size = 10., text = "Hi !",),
     ])
   });
 

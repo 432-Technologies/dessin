@@ -1,2 +1,7 @@
-reorder_imports = true
+hard_tabs = true
+edition = "2021"
+max_width = 100
 imports_granularity = "Crate"
+newline_style = "Unix"
+reorder_impl_items = true
+group_imports = "One"

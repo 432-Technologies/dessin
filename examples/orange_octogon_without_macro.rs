@@ -6,27 +6,27 @@ use project_root::get_project_root;
 use std::fs;
 
 fn main() {
-    // creates a octogon
-    let octogon = Octogon::default();
+	// creates a octogon
+	let octogon = Octogon::default();
 
-    let mut octogon = Style::new(octogon);
+	let mut octogon = Style::new(octogon);
 
-    // paints the inside of the octogon in bright orange
-    octogon.fill(Srgba::new(1.0, 0.749, 0.0, 1.0));
+	// paints the inside of the octogon in bright orange
+	octogon.fill(Srgba::new(1.0, 0.749, 0.0, 1.0));
 
-    // We decide to not use stroke but it is possible :
-    // octogon.stroke(Stroke::new_dashed(Strba::new(0.0, 0.0, 0.0, 1.0), width: 0.1, on: 0.2, off: 0.1
-    // );
+	// We decide to not use stroke but it is possible :
+	// octogon.stroke(Stroke::new_dashed(Strba::new(0.0, 0.0, 0.0, 1.0), width: 0.1, on: 0.2, off: 0.1
+	// );
 
-    // chooses a rotation of -10 radians in the trigonometric direction
-    octogon.rotate(Rotation2::new(-10_f32.to_radians()));
+	// chooses a rotation of -10 radians in the trigonometric direction
+	octogon.rotate(Rotation2::new(-10_f32.to_radians()));
 
-    // prints in svg version
-    fs::write(
-        get_project_root()
-            .unwrap()
-            .join("examples/out/orange_octogon.svg"),
-        dessin_svg::to_string(&octogon.into()).unwrap(),
-    )
-    .unwrap();
+	// prints in svg version
+	fs::write(
+		get_project_root()
+			.unwrap()
+			.join("examples/out/orange_octogon.svg"),
+		dessin_svg::to_string(&octogon.into()).unwrap(),
+	)
+	.unwrap();
 }
