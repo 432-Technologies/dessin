@@ -6,6 +6,7 @@ members = [
 	"dessin-svg",
 	"dessin-pdf",
 	"dessin-image",
+	"dessin-dioxus",
 	"dessin-macros",
 
 	# Internal
