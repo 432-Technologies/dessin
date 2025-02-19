@@ -3,7 +3,6 @@ use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
 use palette::{IntoColor, Srgba};
 use std::{
 	f32::consts::FRAC_1_SQRT_2,
-	fmt,
 	ops::{Deref, DerefMut, Mul},
 };
 
