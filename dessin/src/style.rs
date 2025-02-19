@@ -10,19 +10,20 @@ use std::{
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Color {}
 
+/// Calculated result style
 #[derive(Debug, Clone, Copy, PartialEq)]
-
 pub struct StylePosition {
 	pub stroke: Option<Stroke>,
 	pub fill: Option<Srgba>,
 }
 
+/// `Stroke`
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Stroke {
-	Full {
-		color: Srgba,
-		width: f32,
-	},
+	/// Solid line
+	Full { color: Srgba, width: f32 },
+
+	/// Dashed line
 	Dashed {
 		color: Srgba,
 		width: f32,
@@ -32,11 +33,13 @@ pub enum Stroke {
 }
 
 impl Stroke {
+	/// Solid line
 	pub fn new_full<F: IntoColor<Srgba>>(color: F, width: f32) -> Self {
 		let color = color.into_color();
 		Self::Full { color, width }
 	}
 
+	/// Dashed line
 	pub fn new_dashed<F: IntoColor<Srgba>>(color: F, width: f32, on: f32, off: f32) -> Self {
 		let color = color.into_color();
 		Self::Dashed {
@@ -76,13 +79,21 @@ impl Mul<Stroke> for Transform2<f32> {
 	}
 }
 
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Style<T> {
+	/// Wrapped `Shape`
 	pub shape: T,
+
+	/// Add a fill
+	#[shape(into_some)]
 	pub fill: Option<Srgba>,
+
+	/// Add a `Stroke`
+	#[shape(into_some)]
 	pub stroke: Option<Stroke>,
 }
 impl<T> Style<T> {
+	/// Create a new `Style`
 	#[inline]
 	pub fn new(shape: T) -> Self {
 		Style {
@@ -90,30 +101,6 @@ impl<T> Style<T> {
 			fill: None,
 			stroke: None,
 		}
-	}
-
-	#[inline]
-	pub fn stroke<S: Into<Stroke>>(&mut self, stroke: S) -> &mut Self {
-		self.stroke = Some(stroke.into());
-		self
-	}
-
-	#[inline]
-	pub fn with_stroke<S: Into<Stroke>>(mut self, stroke: S) -> Self {
-		self.stroke(stroke);
-		self
-	}
-
-	#[inline]
-	pub fn fill<F: IntoColor<Srgba>>(&mut self, fill: F) -> &mut Self {
-		self.fill = Some(fill.into_color());
-		self
-	}
-
-	#[inline]
-	pub fn with_fill<F: IntoColor<Srgba>>(mut self, fill: F) -> Self {
-		self.fill(fill);
-		self
 	}
 }
 
