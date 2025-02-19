@@ -3,14 +3,19 @@ use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
 use std::ops::{Deref, DerefMut};
 
 #[derive(Debug, Clone, PartialEq, Shape)]
+/// Add padding around a `Shape`
 pub struct Padding<T> {
-	#[shape(into)]
+	/// Wrapped `Shape`
 	#[shape(into)]
 	pub shape: T,
 
+	/// Left padding
 	pub padding_left: f32,
+	/// Right padding
 	pub padding_right: f32,
+	/// Top padding
 	pub padding_top: f32,
+	/// Bottom padding
 	pub padding_bottom: f32,
 }
 impl<T> Default for Padding<T>

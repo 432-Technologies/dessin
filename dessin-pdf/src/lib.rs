@@ -4,14 +4,12 @@ use dessin::{
 	prelude::*,
 };
 use nalgebra::Translation2;
-//------------------------------------------------
 use printpdf::path::WindingOrder;
 use printpdf::{
 	color, path::PaintMode, BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument,
 	PdfDocumentReference, PdfLayerReference, Point,
 };
 use std::{collections::HashMap, fmt};
-//------------------------------------------------
 
 #[derive(Debug)]
 pub enum PDFError {
