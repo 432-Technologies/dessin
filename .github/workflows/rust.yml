@@ -1,33 +1,37 @@
 name: Rust
 
 on:
-  push:
+    push:
 
 env:
-  CARGO_TERM_COLOR: always
+    CARGO_TERM_COLOR: always
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run tests
-        run: cargo test --verbose
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Install fonts
+              run: sudo apt install -y pkg-config libfreetype6-dev libfontconfig1-dev
+            - name: Run tests
+              run: cargo test --verbose
 
-  format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Format
-        run: cargo fmt
+    format:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Format
+              run: cargo fmt
 
-  examples:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Copy current shape dir
-        run: cp -r examples/out examples/out-current
-      - name: Execute all examples
-        run: ./run-all-examples.sh
-      - name: Compare the 2 directories
-        run: diff examples/out-current examples/out
+    examples:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Install fonts
+              run: sudo apt install -y pkg-config libfreetype6-dev libfontconfig1-dev
+            - name: Copy current shape dir
+              run: cp -r examples/out examples/out-current
+            - name: Execute all examples
+              run: ./run-all-examples.sh
+            - name: Compare the 2 directories
+              run: diff examples/out-current examples/out
