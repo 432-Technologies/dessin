@@ -4,7 +4,7 @@ use project_root::get_project_root;
 use std::fs;
 
 fn main() {
-	let rectangle: Shape = dessin2!([*Rectangle(
+	let rectangle: Shape = dessin!([*Rectangle(
 		// chooses a width of 11
 		width = 11.,
 		// chooses a height of 6

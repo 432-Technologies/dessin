@@ -12,7 +12,7 @@ fn main() {
 		.unwrap()
 		.join("examples/out/animation.svg");
 
-	let test_img = dessin2!(
+	let test_img = dessin!(
 		*polygons::Triangle(fill = Srgb::<f32>::from_format(named::BLUE).into_linear(),)
 			> (scale = [50., 50.])
 	)
@@ -21,7 +21,7 @@ fn main() {
 
 	let triangle = Default::default();
 
-	let frame = dessin2!(
+	let frame = dessin!(
 		[
 			*Circle(
 				stroke = Stroke::new_full(Srgb::<f32>::from_format(named::RED).into_linear(), 0.5),

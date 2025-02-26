@@ -4,7 +4,7 @@ use project_root::get_project_root;
 use std::fs;
 
 fn main() {
-	let line: Shape = dessin2!([
+	let line: Shape = dessin!([
 		// creates a little circle as reference for a movement
 		*Circle(radius = 0.1),
 		// creates a line

@@ -7,7 +7,7 @@
 //! # use dessin::prelude::*;
 //! let r = 2.;
 //!
-//! dessin2!(Circle(
+//! dessin!(Circle(
 //! 	radius=r,
 //! 	translate=[r * 2., 0.],
 //! ));
@@ -17,7 +17,7 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin2!(Curve(
+//! dessin!(Curve(
 //! 	closed,
 //! ));
 //! ```
@@ -27,7 +27,7 @@
 //! ```
 //! # use dessin::prelude::*;
 //! let text = "my string";
-//! dessin2!(Text(
+//! dessin!(Text(
 //! 	{text},
 //! ));
 //! ```
@@ -35,15 +35,15 @@
 //! ### With component in a mod:
 //!
 //! ```
-//! # use dessin::prelude::dessin2;
-//! dessin2!(dessin::prelude::Text());
+//! # use dessin::prelude::dessin;
+//! dessin!(dessin::prelude::Text());
 //! ```
 //!
 //! ## Group
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin2!([
+//! dessin!([
 //!     Circle(),
 //!     Text(),
 //! ]);
@@ -56,13 +56,13 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin2!(Text(
+//! dessin!(Text(
 //!     // here type is `Text`
 //! ) > (
 //!     // here type is `Shape`
 //! ));
 //!
-//! dessin2!([
+//! dessin!([
 //!     Circle(),
 //!     Text(),
 //! ] > (
@@ -74,19 +74,19 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin2!(for x in 0..10 {
+//! dessin!(for x in 0..10 {
 //!     // Here, rust code is expected. But return type must be a `Shape`
 //!     let x = x as f32;
 //!
-//!     dessin2!(Circle(
+//!     dessin!(Circle(
 //!         radius=x,
 //!         translate=[x, x * 2.]
 //!     ))
 //! });
 //!
 //! // Same as before, we can transform the group after
-//! dessin2!(for text in ["Hello", "World"] {
-//!     dessin2!(Text(
+//! dessin!(for text in ["Hello", "World"] {
+//!     dessin!(Text(
 //!         { text },
 //!     ))
 //! } > (
@@ -98,19 +98,19 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin2!(if true {
+//! dessin!(if true {
 //!     Circle()
 //! });
 //!
 //! // Both side must return the same type
-//! dessin2!(if true {
+//! dessin!(if true {
 //!     Circle()
 //! } else {
 //!     Circle()
 //! });
 //!
 //! // That's why the type of each branch can be erased
-//! dessin2!(if true {
+//! dessin!(if true {
 //!     Circle() > ()
 //! } else {
 //!     Text() > ()

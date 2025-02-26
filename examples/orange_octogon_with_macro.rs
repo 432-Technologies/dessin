@@ -6,7 +6,7 @@ use project_root::get_project_root;
 use std::fs;
 
 fn main() {
-	let octogon: Shape = dessin2!(
+	let octogon: Shape = dessin!(
 		*Octogon(
 			// paints the inside of the octogon in bright orange
 			fill = Srgba::new(1.0, 0.749, 0.0, 1.0),

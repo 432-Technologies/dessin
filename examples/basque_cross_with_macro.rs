@@ -4,11 +4,11 @@ use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
 
 fn main() {
-	let basque_cross: Shape = dessin2!([
+	let basque_cross: Shape = dessin!([
 		// creates a little circle which serves as references for mouvements
 		*Circle(radius = 0.01, fill = Srgba::new(1.0, 0.0, 0.0, 1.0),),
 		for n in 0..=4 {
-			dessin2!([
+			dessin!([
 				// creates large half red circle
 				*ThickArc(
 					// it starts at an angle of 90°

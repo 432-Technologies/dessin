@@ -19,15 +19,15 @@
 //! }
 //! impl From<MyShape> for Shape {
 //!   fn from(MyShape { text }: MyShape) -> Self {
-//!     dessin2!(*Text(fill = Srgb::<f32>::from_format(named::RED).into_linear(), { text })).into()
+//!     dessin!(*Text(fill = Srgb::<f32>::from_format(named::RED).into_linear(), { text })).into()
 //!   }
 //! }
 //!
 //! fn main() {
-//!   let dessin = dessin2!(for x in 0..10 {
+//!   let dessin = dessin!(for x in 0..10 {
 //!     let radius = x as f32 * 10.;
 //!
-//!     dessin2!([
+//!     dessin!([
 //!       *Circle(
 //!         fill = Srgb::<f32>::from_format(named::RED).into_linear(),
 //!         { radius },
@@ -37,7 +37,7 @@
 //!     ])
 //!   });
 //!
-//!   let dessin = dessin2!([
+//!   let dessin = dessin!([
 //!     { dessin }(scale = [2., 2.]),
 //!     MyShape(say_this = "Hello world"),
 //!   ]);
@@ -62,14 +62,14 @@
 //!
 //! impl From<MyComponent> for Shape {
 //! 	fn from(my_component: MyComponent) -> Shape {
-//! 		dessin2!(
+//! 		dessin!(
 //! 			// Implementation...
 //! 		)
 //! 	}
 //! }
 //! ```
 //!
-//! Since the [dessin2!][`dessin_macros::dessin2`] macro is only syntactic sugar for creating a [Shape][crate::shapes::Shape],
+//! Since the [dessin!][`dessin_macros::dessin`] macro is only syntactic sugar for creating a [Shape][crate::shapes::Shape],
 //! all parameters are simply rust function with the following signature: `fn (&mut self, argument_value: ArgumentType) {...}`.
 //!
 //! It can be tedious to create these function for all parameters, so the derive macro [Shape][`dessin_macro::shape`]
@@ -180,7 +180,7 @@ pub use ::palette;
 /// You can of courses cherry pick what you need by importing directly from other modules.
 pub mod prelude {
 	pub use crate::{contrib::*, shapes::*, style::*};
-	pub use ::dessin_macros::{dessin, dessin2, Shape};
+	pub use ::dessin_macros::{dessin, Shape};
 }
 
 /// Everything related to fonts.
@@ -194,7 +194,7 @@ mod tests {
 
 	#[test]
 	fn types_funkyness() {
-		dessin2!(Padding<Shape>(shape = dessin2!(Line() > ())) > *());
+		dessin!(Padding<Shape>(shape = dessin!(Line() > ())) > *());
 	}
 
 	#[test]
@@ -203,31 +203,31 @@ mod tests {
 		struct Component {}
 		impl From<Component> for Shape {
 			fn from(_: Component) -> Self {
-				dessin2!()
+				dessin!()
 			}
 		}
 
-		dessin2!(Component() > (translate = [1., 1.]));
+		dessin!(Component() > (translate = [1., 1.]));
 	}
 
 	#[test]
 	fn group_bounding_box() {
-		let group = dessin2!([Octogon(), Circle(radius = 7.),]);
+		let group = dessin!([Octogon(), Circle(radius = 7.),]);
 		let bb = group.local_bounding_box();
 		assert_eq!(bb.width(), 14.);
 		assert_eq!(bb.height(), 14.);
 
-		let group = dessin2!([Octogon(scale = [12., 12.]), Circle(radius = 7.)]);
+		let group = dessin!([Octogon(scale = [12., 12.]), Circle(radius = 7.)]);
 		let bb = group.local_bounding_box();
 		assert_eq!(bb.width(), 24.);
 		assert_eq!(bb.height(), 24.);
 
-		let group = dessin2!([Octogon(scale = [15., 15.]), Circle(radius = 7.)]);
+		let group = dessin!([Octogon(scale = [15., 15.]), Circle(radius = 7.)]);
 		let bb = group.local_bounding_box();
 		assert_eq!(bb.width(), 30.);
 		assert_eq!(bb.height(), 30.);
 
-		let group = dessin2!([Octogon(scale = [13., 13.]), Circle(radius = 7.)]);
+		let group = dessin!([Octogon(scale = [13., 13.]), Circle(radius = 7.)]);
 		let bb = group.local_bounding_box();
 		assert_eq!(bb.width(), 26.);
 		assert_eq!(bb.height(), 26.);

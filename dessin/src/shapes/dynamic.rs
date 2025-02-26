@@ -134,7 +134,7 @@ fn dynamic() {
 
 	let my_ref = Default::default();
 
-	let c = dessin2!([Dynamic::<Circle>(_ref = &my_ref, radius = 2.,)]);
+	let c = dessin!([Dynamic::<Circle>(_ref = &my_ref, radius = 2.,)]);
 	c.write_into_exporter(
 		&mut TestExporter(2.),
 		&Transform2::default(),

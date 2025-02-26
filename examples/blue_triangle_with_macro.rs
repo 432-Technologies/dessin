@@ -7,7 +7,7 @@ use project_root::get_project_root;
 use std::fs;
 
 fn main() {
-	let triangle: Shape = dessin2!([*Triangle(
+	let triangle: Shape = dessin!([*Triangle(
 		// chooses an equilateral triangle [(x,x) => equilateral] with a size of 5. [if you want an isosceles triangle : (x,y)]
 		scale = Scale2::new(5., 5.),
 		// paints the inside of the triangle in green

@@ -16,7 +16,7 @@ fn c(a: f32) -> Srgba {
 pub struct InnerBubbleRing;
 impl From<InnerBubbleRing> for Shape {
 	fn from(_: InnerBubbleRing) -> Self {
-		let ring_strip = dessin2!(
+		let ring_strip = dessin!(
 			[
 				*Circle(stroke = Stroke::new_full(c(0.784), 0.1), radius = 1.,),
 				*Circle(
@@ -33,8 +33,8 @@ impl From<InnerBubbleRing> for Shape {
 		);
 
 		let angle = PI / 14_f32;
-		dessin2!(for n in 0..28 {
-			dessin2!({ ring_strip.clone() }(
+		dessin!(for n in 0..28 {
+			dessin!({ ring_strip.clone() }(
 				rotate = Rotation2::new(n as f32 * angle)
 			))
 		})
@@ -53,7 +53,7 @@ impl BinaryRing {
 impl From<BinaryRing> for Shape {
 	fn from(BinaryRing(radius): BinaryRing) -> Self {
 		const T: &str = "10001011101001011000101110001010010101110100111010010101110010101001110010100101011010100101111101001011011100001110001110001011100000101011100101000101110100101100010111000101001010111010011101001010101100010111000101001010111010011101001010111001010100111001010010101101010010111110100101101110000111000111000101110000010101110010100010111010010110001011100010100101011101001110100101011100101010011100101001010110101001011111010010110111000011100011100010111000001010111001010001011101001011000101110001010010101110100111010010101110010101001110010100101011010100101111101001011011100001110001110001011100000101011100101000101110100101100010111000101001010111010011101001010111001010100111001010010101101010010111110100101101110000111000111000101110000010101110010";
-		dessin2!(
+		dessin!(
 			*Text(
 				text = T,
 				on_curve = Circle::default().with_radius(radius),
@@ -68,29 +68,29 @@ impl From<BinaryRing> for Shape {
 pub struct TimerRing;
 impl From<TimerRing> for Shape {
 	fn from(_: TimerRing) -> Self {
-		let long_line = dessin2!(Line(from = Point2::new(36., 0.), to = Point2::new(28., 0.),));
-		let short_line = dessin2!(Line(
+		let long_line = dessin!(Line(from = Point2::new(36., 0.), to = Point2::new(28., 0.),));
+		let short_line = dessin!(Line(
 			from = Point2::new(36., 0.),
 			to = Point2::new(32., 0.),
 			rotate = Rotation2::new(FRAC_PI_8),
 		));
-		let small_line = dessin2!(Line(from = Point2::new(36., 0.), to = Point2::new(35., 0.),));
+		let small_line = dessin!(Line(from = Point2::new(36., 0.), to = Point2::new(35., 0.),));
 
-		dessin2!(
+		dessin!(
 			[
 				Circle(radius = 36.),
 				for x in 0..8 {
-					dessin2!({ long_line.clone() }(
+					dessin!({ long_line.clone() }(
 						rotate = Rotation2::new(x as f32 * FRAC_PI_4)
 					))
 				},
 				for x in 0..8 {
-					dessin2!({ short_line.clone() }(
+					dessin!({ short_line.clone() }(
 						rotate = Rotation2::new(x as f32 * FRAC_PI_4)
 					))
 				},
 				for x in 0..160 {
-					dessin2!({ small_line.clone() }(
+					dessin!({ small_line.clone() }(
 						rotate = Rotation2::new(x as f32 * PI / 160.)
 					))
 				},
@@ -104,7 +104,7 @@ impl From<TimerRing> for Shape {
 pub struct ThreeColoredRing;
 impl From<ThreeColoredRing> for Shape {
 	fn from(_: ThreeColoredRing) -> Self {
-		dessin2!([
+		dessin!([
 			*Circle(
 				stroke = Stroke::new_full(Srgb::new(0.588, 0.588, 0.588), 0.2),
 				radius = 40.,
@@ -122,7 +122,7 @@ impl From<ThreeColoredRing> for Shape {
 pub struct Squares;
 impl From<Squares> for Shape {
 	fn from(_: Squares) -> Self {
-		let square_line = dessin2!(
+		let square_line = dessin!(
 			[
 				*Rectangle(stroke = Stroke::new_full(C, 0.1), width = 2.5, height = 2.5,),
 				*Rectangle(
@@ -159,13 +159,13 @@ impl From<Squares> for Shape {
 		);
 
 		let angle = 150_f32.to_radians() / 36.;
-		let quarter = dessin2!(for x in 0..36 {
-			dessin2!({ square_line.clone() }(
+		let quarter = dessin!(for x in 0..36 {
+			dessin!({ square_line.clone() }(
 				rotate = Rotation2::new(x as f32 * angle)
 			))
 		});
 
-		dessin2!([
+		dessin!([
 			{ quarter.clone() }(rotate = Rotation2::new(15_f32.to_radians())),
 			{ quarter }(rotate = Rotation2::new(195_f32.to_radians())),
 		])
@@ -176,7 +176,7 @@ impl From<Squares> for Shape {
 pub struct Symbol432;
 impl From<Symbol432> for Shape {
 	fn from(_: Symbol432) -> Self {
-		dessin2!([
+		dessin!([
 			*Curve(
 				stroke = Stroke::new_full(Srgb::new(0.498, 0.498, 0.498), 0.6),
 				then = Point2::new(0., 0.),
@@ -229,7 +229,7 @@ impl From<Symbol432> for Shape {
 pub struct Logo432;
 impl From<Logo432> for Shape {
 	fn from(_: Logo432) -> Self {
-		dessin2!([
+		dessin!([
 			InnerBubbleRing(),
 			BinaryRing(radius = 10.),
 			TimerRing(),
@@ -248,7 +248,7 @@ fn main() {
 	let path = get_project_root().unwrap().join("examples/out/");
 
 	// Image
-	dessin2!({ dessin }(scale = [5., 5.]))
+	dessin!({ dessin }(scale = [5., 5.]))
 		.rasterize()
 		.unwrap()
 		.into_rgba8()

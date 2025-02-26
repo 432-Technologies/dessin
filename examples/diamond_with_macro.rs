@@ -4,7 +4,7 @@ use project_root::get_project_root;
 use std::fs;
 
 fn main() {
-	let diamond: Shape = dessin2!([
+	let diamond: Shape = dessin!([
 		// here we use the circle as a point to have a reference to use when moving the diamond
 		*Circle(radius = 0.1),
 		*Diamond(

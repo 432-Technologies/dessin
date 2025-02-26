@@ -4,7 +4,7 @@ use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
 
 fn main() {
-	let triangle: Shape = dessin2!([
+	let triangle: Shape = dessin!([
 		*Triangle(
 			//chooses the size of the first side of the triangle which is on the x axis without rotation : 3
 			width_x_axis = 3.,

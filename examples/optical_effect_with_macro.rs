@@ -5,9 +5,9 @@ use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
 
 fn main() {
-	let optical_effect: Shape = dessin2!([
+	let optical_effect: Shape = dessin!([
 		for n in 0..11 {
-			dessin2!([*ThickArc(
+			dessin!([*ThickArc(
 				outer_radius = 10.,
 				inner_radius = 0.,
 				span_angle = PI / 10_f32,
@@ -33,7 +33,7 @@ fn main() {
 	// dbg!(fond.width()); // if we want to know the fond.width size
 
 	//Here we want to create a grey font behind all
-	let truc = dessin2!([
+	let truc = dessin!([
 		*Rectangle(
 			width = fond.width(),
 			height = fond.height(),

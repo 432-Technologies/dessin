@@ -6,35 +6,70 @@
 extern crate proc_macro;
 
 mod dessin_macro;
-mod dessin_macro_old;
 
 use proc_macro2::TokenStream;
 use quote::{__private::mk_ident, quote, spanned::Spanned};
 use syn::{parse_macro_input, DataStruct, DeriveInput, Fields, FieldsNamed, Type};
 
-///
+/// Entry point to build drawings
+/// ```ignore
+/// dessin!([
+/// 	*Text(
+/// 		text = "Hi",
+/// 		fill = Srgba::new(255, 0, 0, 255),
+/// 	),
+/// 	Line(
+/// 		from = [0., 10.],
+/// 		to = [10., 0.],
+/// 	),
+/// ] > *(
+/// 	translate = [-5., 5.],
+/// 	fill = Srgba::new(0, 255, 0, 255),
+/// ))
 #[proc_macro]
-#[deprecated(
-	since = "0.8.18-pre",
-	note = "A new macro `dessin2` was built to replace it"
-)]
 pub fn dessin(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
-	let dessin = parse_macro_input!(tokens as dessin_macro_old::Dessin);
-
-	TokenStream::from(dessin).into()
-}
-
-///
-#[proc_macro]
-pub fn dessin2(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 	let dessin = parse_macro_input!(tokens as dessin_macro::Dessin);
 
 	TokenStream::from(dessin).into()
 }
 
-/// Helper macro
-///
 /// Auto implements setter for each members
+///
+/// ```rust
+/// # #[macro_use] extern crate dessin_macros;
+/// # use std::sync::{Arc, RwLock};
+///
+/// #[derive(Shape)]
+/// struct MyShape {
+/// 	// fn my_parameter(&mut self, v: u32)
+/// 	my_parameter: u32,
+///
+/// 	// fn my_bool(&mut self)
+/// 	// set my_bool to true if called
+/// 	#[shape(bool)]
+/// 	my_bool: bool,
+///
+/// 	// No fn generated
+/// 	#[shape(skip)]
+/// 	skip_this: Arc<RwLock<Vec<u8>>>,
+///
+/// 	// fn skip_option(&mut self, v: u32)
+/// 	// set skip_option to Some(v) if called
+/// 	#[shape(some)]
+/// 	skip_option: Option<u32>,
+/// 	// fn or_not(&mut self, v: Option<u32>)
+/// 	or_not: Option<u32>,
+///
+/// 	// fn into_string<V: Into<String>>(&mut self, v: V)
+/// 	#[shape(into)]
+/// 	into_string: String,
+///
+/// 	// fn maybe_into_string<V: Into<String>>(&mut self, v: V)
+/// 	// set maybe_into_string to Some(v.into()) if called
+/// 	#[shape(into_some)]
+/// 	maybe_into_string: Option<String>,
+/// }
+/// ```
 #[proc_macro_derive(Shape, attributes(shape, local_transform))]
 pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 	let input = parse_macro_input!(input as DeriveInput);

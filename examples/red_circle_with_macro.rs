@@ -4,7 +4,7 @@ use project_root::get_project_root;
 use std::fs;
 
 fn main() {
-	let circle: Shape = dessin2!([*Circle(
+	let circle: Shape = dessin!([*Circle(
 		// chooses a radius of 11
 		radius = 11., //11. is like a proportion of the box allowed
 		// paints the inside of the circle in red

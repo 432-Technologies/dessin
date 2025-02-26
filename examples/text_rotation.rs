@@ -12,7 +12,7 @@ struct RotatedText {
 }
 impl From<RotatedText> for Shape {
 	fn from(RotatedText { text, rotation }: RotatedText) -> Self {
-		let text = dessin2!(*Text(
+		let text = dessin!(*Text(
 			fill = Srgb::<f32>::from_format(named::BLACK).into_linear(),
 			font_size = 1.,
 			align = TextAlign::Center,
@@ -24,7 +24,7 @@ impl From<RotatedText> for Shape {
 		let width = bb.width();
 		let height = bb.height();
 
-		dessin2!(
+		dessin!(
 			[
 				*Rectangle(
 					{ width },
@@ -40,9 +40,9 @@ impl From<RotatedText> for Shape {
 }
 
 fn main() {
-	let dessin = dessin2!(
+	let dessin = dessin!(
 		for (idx, text) in "Hello world! This is me!".split(" ").enumerate() {
-			dessin2!(RotatedText(rotation = idx as f32 * -PI / 4., { text }))
+			dessin!(RotatedText(rotation = idx as f32 * -PI / 4., { text }))
 		}
 	);
 
@@ -56,7 +56,7 @@ fn main() {
 	.unwrap();
 
 	// Image
-	dessin2!({ dessin }(scale = [5., 5.]))
+	dessin!({ dessin }(scale = [5., 5.]))
 		.rasterize()
 		.unwrap()
 		.into_rgba8()

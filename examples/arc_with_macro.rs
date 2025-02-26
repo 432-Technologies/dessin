@@ -4,7 +4,7 @@ use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
 
 fn main() {
-	let arc: Shape = dessin2!([*Arc(
+	let arc: Shape = dessin!([*Arc(
 		start_angle = 0.,
 		end_angle = PI / 4.,
 		// creates a margin with a width of 0.1

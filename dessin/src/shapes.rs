@@ -6,7 +6,7 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin2!(
+//! dessin!(
 //! 	Ellipse()
 //! );
 //! ```
@@ -15,7 +15,7 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin2!(
+//! dessin!(
 //! 	Text()
 //! );
 //! ```
@@ -24,7 +24,7 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin2!(
+//! dessin!(
 //! 	Curve()
 //! );
 //! ```
@@ -33,7 +33,7 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin2!(
+//! dessin!(
 //! 	Image()
 //! );
 //! ```
@@ -42,7 +42,7 @@
 //!
 //! ```
 //! # use dessin::prelude::*;
-//! dessin2!(
+//! dessin!(
 //! 	[]
 //! );
 //! ```
@@ -54,7 +54,7 @@
 //!
 //! let ellipse_ref /* : Arc<RwLock<Ellipse>> */ = Default::default();
 //!
-//! dessin2!(
+//! dessin!(
 //! 	Dynamic<Ellipse>(
 //! 		_ref = &ellipse_ref,
 //! 		semi_major_axis = 2.
@@ -756,7 +756,7 @@ mod tests {
 
 	#[test]
 	fn parent_rotate_child_scale() {
-		let base = dessin2!(Image(scale = [2., 4.], translate = [1., 2.]));
+		let base = dessin!(Image(scale = [2., 4.], translate = [1., 2.]));
 
 		let base_position = base.position(&Transform2::default());
 		assert!(

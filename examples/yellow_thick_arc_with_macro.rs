@@ -4,7 +4,7 @@ use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
 
 fn main() {
-	let thick_arc: Shape = dessin2!([*ThickArc(
+	let thick_arc: Shape = dessin!([*ThickArc(
 		// chooses a radius of 10 for the outer curve
 		outer_radius = 10.,
 		// chooses a radius of 5 for the inner curve

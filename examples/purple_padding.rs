@@ -4,14 +4,14 @@ use project_root::get_project_root;
 use std::fs;
 
 fn main() {
-	let rectangle_1 = dessin2!(*Rectangle(
+	let rectangle_1 = dessin!(*Rectangle(
 		width = 3.,
 		height = 2.,
 		translate = [1., 0.],
 		fill = Srgba::new(1.0, 0.0, 1.0, 1.0)
 	));
 
-	let base = dessin2!(Padding<Shape>( // here, we can replace 'Shape' with 'Rectangle' but in case we want to use the
+	let base = dessin!(Padding<Shape>( // here, we can replace 'Shape' with 'Rectangle' but in case we want to use the
 														// Padding to a multiple geometric form, using Shape become a must
 		shape = rectangle_1.clone(),
 		padding_left = 1.5,
@@ -21,7 +21,7 @@ fn main() {
 
 	));
 
-	let rectangle_2 = dessin2!(*Rectangle(
+	let rectangle_2 = dessin!(*Rectangle(
 		width = 5.5,
 		height = 3.8,
 		stroke = Stroke::new_full(Srgba::new(0.0, 0.7, 0.0, 1.0), 0.2),

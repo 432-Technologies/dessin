@@ -97,7 +97,7 @@ impl From<VerticalLayout> for Shape {
 	) -> Self {
 		let mut y = 0.;
 
-		dessin2!(
+		dessin!(
 			for shape in (shapes) {
 				let mut shape = shape;
 
@@ -129,7 +129,7 @@ mod tests {
 
 	#[test]
 	fn one_element() {
-		let layout = dessin2!(VerticalLayout(of = Text::default().with_font_size(10.)) > ());
+		let layout = dessin!(VerticalLayout(of = Text::default().with_font_size(10.)) > ());
 
 		let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
 
@@ -138,7 +138,7 @@ mod tests {
 
 	#[test]
 	fn two_distinct_elements() {
-		let layout = dessin2!(
+		let layout = dessin!(
 			VerticalLayout(
 				of = Text::default().with_font_size(10.),
 				of = Text::default().with_font_size(10.),
@@ -152,9 +152,9 @@ mod tests {
 
 	#[test]
 	fn two_elements_vec_with_gap() {
-		let layout = dessin2!(
+		let layout = dessin!(
 			VerticalLayout(
-				of = dessin2!([Text(font_size = 10.), Text(font_size = 10.)]),
+				of = dessin!([Text(font_size = 10.), Text(font_size = 10.)]),
 				gap = 4.
 			) > ()
 		);
@@ -166,7 +166,7 @@ mod tests {
 
 	#[test]
 	fn two_distinct_elements_with_gap() {
-		let layout = dessin2!(
+		let layout = dessin!(
 			VerticalLayout(
 				of = Text::default().with_font_size(10.),
 				of = Text::default().with_font_size(10.),
@@ -181,8 +181,8 @@ mod tests {
 
 	#[test]
 	fn base_layout() {
-		let layout = dessin2!(VerticalLayout(
-			of = dessin2!([Circle(radius = 10.), Circle(radius = 10.),]),
+		let layout = dessin!(VerticalLayout(
+			of = dessin!([Circle(radius = 10.), Circle(radius = 10.),]),
 		));
 
 		let Shape::Group(Group {
@@ -205,9 +205,9 @@ mod tests {
 
 	#[test]
 	fn transformed_layout() {
-		let layout = dessin2!(VerticalLayout(
+		let layout = dessin!(VerticalLayout(
 			of = {
-				dessin2!([
+				dessin!([
 					Circle(radius = 10., translate = [0., 5.]),
 					Circle(radius = 10., translate = [0., -10.]),
 					Circle(radius = 10., translate = [0., 0.]),
@@ -243,9 +243,9 @@ mod tests {
 
 		assert_float_absolute_eq!(height_triangle, 2. * (3f32.sqrt() / 2.), 10e-5);
 
-		let shape = dessin2!([VerticalLayout(
-			of = dessin2!(polygons::Triangle()),
-			of = dessin2!(Circle(radius = 1.)),
+		let shape = dessin!([VerticalLayout(
+			of = dessin!(polygons::Triangle()),
+			of = dessin!(Circle(radius = 1.)),
 		)]);
 
 		let bb = shape.local_bounding_box();
@@ -262,7 +262,7 @@ mod tests {
 		let text = "test\nwhy\nnot";
 		let gap = 2.;
 
-		let first_text = dessin2!(*TextBox(
+		let first_text = dessin!(*TextBox(
 			{ text },
 			fill = Srgb::<f32>::from_format(named::BLACK).into_linear(),
 			font_size = 3.6,
@@ -271,10 +271,10 @@ mod tests {
 			line_spacing = 2.,
 		));
 
-		let layout = dessin2!(VerticalLayout(
+		let layout = dessin!(VerticalLayout(
 			start_from_bottom,
 			{ gap },
-			of = dessin2!([
+			of = dessin!([
 				{ first_text }(),
 				*Text(
 					text = "Notes",

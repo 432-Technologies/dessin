@@ -4,7 +4,7 @@ use project_root::get_project_root;
 use std::fs;
 
 fn main() {
-	let text: Shape = dessin2!([*TextBox(
+	let text: Shape = dessin!([*TextBox(
 		font_size = 5.,
 		line_spacing = 1.,
 		text = "Here we write some text",

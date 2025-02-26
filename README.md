@@ -42,15 +42,15 @@ impl MyShape {
 }
 impl From<MyShape> for Shape {
 	fn from(MyShape { text }: MyShape) -> Self {
-		dessin2!(*Text(fill = Srgb::<f32>::from_format(named::RED).into_linear(), { text })).into()
+		dessin!(*Text(fill = Srgb::<f32>::from_format(named::RED).into_linear(), { text })).into()
 	}
 }
 
 fn main() {
-	let dessin = dessin2!(for x in 0..10 {
+	let dessin = dessin!(for x in 0..10 {
 		let radius = x as f32 * 10.;
 
-		dessin2!([
+		dessin!([
 			*Circle(
 				fill = Srgb::<f32>::from_format(named::RED).into_linear(),
 				{ radius },
@@ -60,12 +60,14 @@ fn main() {
 		])
 	});
 
-	let dessin = dessin2!([
+	let dessin = dessin!([
 		{ dessin }(scale = [2., 2.]),
 		MyShape(say_this = "Hello world"),
 	]);
 
-	let svg = dessin_svg::to_string(&dessin).unwrap();
+	// let svg = dessin_svg::to_string(&dessin).unwrap();
+	// let pdf = dessin_pdf::to_string(&dessin).unwrap();
+	// Etc...
 }
 
 ```

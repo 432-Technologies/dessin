@@ -185,7 +185,7 @@ mod tests {
 
 	#[test]
 	fn rotate_group() {
-		let dessin = dessin2!(
+		let dessin = dessin!(
 			[
 				Circle(translate = [0., 25.]),
 				Text(

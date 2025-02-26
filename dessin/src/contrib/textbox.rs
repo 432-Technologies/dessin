@@ -141,10 +141,10 @@ impl From<TextBox> for Shape {
 			TextVerticalAlign::Top => (TextVerticalAlign::Bottom, -1.),
 		};
 
-		dessin2!(
+		dessin!(
 			VerticalLayout(
 				extend = lines.into_iter().map(|text| {
-					dessin2!(Text(
+					dessin!(Text(
 						{ text },
 						{ align },
 						{ vertical_align },
@@ -168,7 +168,7 @@ fn one_line() {
 
 	let text = "it should work, famous last word";
 
-	let shape: Shape = dessin2!(
+	let shape: Shape = dessin!(
 		*TextBox(
 			{ text },
 			fill = Srgb::<f32>::from_format(named::BLACK).into_linear(),
@@ -188,7 +188,7 @@ fn two_lines() {
 
 	let text = "it should work\nfamous last word";
 
-	let shape: Shape = dessin2!(*TextBox(
+	let shape: Shape = dessin!(*TextBox(
 		{ text },
 		fill = Srgb::<f32>::from_format(named::BLACK).into_linear(),
 		font_size = 5.,
@@ -209,7 +209,7 @@ fn should_break() {
 
 	let text = "it should work, famous last word";
 
-	let mut shape: Shape = dessin2!(
+	let mut shape: Shape = dessin!(
 		TextBox(
 			{ text },
 			font_size = 5.,
