@@ -432,6 +432,10 @@ fn simple_with_style() {
 	syn::parse_str::<Dessin>("*Item()").unwrap();
 }
 #[test]
+fn simple_with_style_and_generic() {
+	syn::parse_str::<Dessin>("*Item<GenA, GenB<GenC>>()").unwrap();
+}
+#[test]
 fn complex_with_style() {
 	syn::parse_str::<Dessin>("*Item() > *()").unwrap();
 }

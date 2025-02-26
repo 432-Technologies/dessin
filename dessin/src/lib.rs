@@ -192,6 +192,11 @@ mod tests {
 	use crate::prelude::{polygons::Octogon, *};
 
 	#[test]
+	fn types_funkyness() {
+		dessin2!(Padding<Shape>(shape = dessin2!(Line() > ())) > *());
+	}
+
+	#[test]
 	fn erased_type() {
 		#[derive(Default)]
 		struct Component {}
