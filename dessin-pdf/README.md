@@ -1,1 +1,3 @@
-# Dessin PDF
+# dessin-pdf
+
+License: MIT

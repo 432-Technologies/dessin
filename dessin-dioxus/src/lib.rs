@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use ::image::ImageFormat;
 use dessin::prelude::*;
 use dioxus::prelude::*;

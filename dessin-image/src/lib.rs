@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use ::image::{DynamicImage, RgbaImage};
 use dessin::{
 	export::{Export, Exporter},
