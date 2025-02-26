@@ -498,7 +498,7 @@ pub trait ShapeBoundingBox {
 }
 
 /// A group of [`Shape`], locally positionned by a transform
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub struct Group {
 	/// Transform of the whole group
 	pub local_transform: Transform2<f32>,
@@ -541,6 +541,40 @@ pub enum Shape {
 		local_transform: Transform2<f32>,
 		shaper: Arc<Shaper>,
 	},
+}
+impl PartialEq for Shape {
+	fn eq(&self, other: &Self) -> bool {
+		match (self, other) {
+			(Shape::Group(g1), Shape::Group(g2)) => g1 == g2,
+			(
+				Shape::Style {
+					fill: fill1,
+					stroke: stroke1,
+					shape: shape1,
+				},
+				Shape::Style {
+					fill: fill2,
+					stroke: stroke2,
+					shape: shape2,
+				},
+			) => fill1 == fill2 && stroke1 == stroke2 && shape1 == shape2,
+			(Shape::Ellipse(e1), Shape::Ellipse(e2)) => e1 == e2,
+			(Shape::Image(i1), Shape::Image(i2)) => i1 == i2,
+			(Shape::Text(t1), Shape::Text(t2)) => t1 == t2,
+			(Shape::Curve(c1), Shape::Curve(c2)) => c1 == c2,
+			(
+				Shape::Dynamic {
+					local_transform: local_transform1,
+					shaper: shaper1,
+				},
+				Shape::Dynamic {
+					local_transform: local_transform2,
+					shaper: shaper2,
+				},
+			) => local_transform1 == local_transform2 && shaper1() == shaper2(),
+			_ => false,
+		}
+	}
 }
 
 impl Shape {
