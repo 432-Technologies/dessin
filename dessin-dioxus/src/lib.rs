@@ -105,8 +105,7 @@ pub fn SVG(shape: ReadOnlySignal<Shape>, options: Option<SVGOptions>) -> Element
 	let used_font = use_signal(|| HashSet::new());
 
 	rsx! {
-		svg {
-			view_box,
+		svg { view_box,
 			Shaper {
 				shape,
 				parent_transform: nalgebra::convert(Scale2::new(1., -1.)),
@@ -143,11 +142,7 @@ fn Shaper(
 			rsx! {
 				g {
 					for shape in shapes {
-						Shaper {
-							shape: shape,
-							parent_transform,
-							used_font,
-						}
+						Shaper { shape, parent_transform, used_font }
 					}
 				}
 			}
@@ -207,11 +202,7 @@ fn Shaper(
 					stroke_width,
 					stroke_dasharray,
 
-					Shaper {
-						parent_transform,
-						shape: *shape,
-						used_font,
-					}
+					Shaper { parent_transform, shape: *shape, used_font }
 				}
 			}
 		}
@@ -225,7 +216,7 @@ fn Shaper(
 				ellipse {
 					rx: ellipse.semi_major_axis,
 					ry: ellipse.semi_minor_axis,
-					transform: "translate({x} {y}) rotate({r})"
+					transform: "translate({x} {y}) rotate({r})",
 				}
 			}
 		}
@@ -249,7 +240,7 @@ fn Shaper(
 					x: image.center.x - image.width / 2.,
 					y: image.center.y - image.width / 2.,
 					transform: "rotate({r})",
-					href: "data:image/png;base64,{data}"
+					href: "data:image/png;base64,{data}",
 				}
 			}
 		}
@@ -282,21 +273,15 @@ fn Shaper(
 
 			rsx! {
 				text {
-					font_family:"{font}",
-					text_anchor:"{align}",
-					font_size:"{text.font_size}px",
-					font_weight:"{weight}",
-					"text-style":"{text_style}",
-					transform:"translate({x} {y}) rotate({r})",
+					font_family: "{font}",
+					text_anchor: "{align}",
+					font_size: "{text.font_size}px",
+					font_weight: "{weight}",
+					"text-style": "{text_style}",
+					transform: "translate({x} {y}) rotate({r})",
 					if let Some(curve) = text.on_curve {
-						path {
-							id: id.clone(),
-							d: write_curve(curve)
-						}
-						textPath {
-							href: id,
-							{text.text}
-						}
+						path { id: id.clone(), d: write_curve(curve) }
+						textPath { href: id, {text.text} }
 					} else {
 						{text.text}
 					}
@@ -304,9 +289,7 @@ fn Shaper(
 			}
 		}
 		Shape::Curve(curve) => rsx! {
-			path {
-				d: write_curve(curve.position(&parent_transform))
-			}
+			path { d: write_curve(curve.position(&parent_transform)) }
 		},
 		Shape::Dynamic {
 			local_transform,
