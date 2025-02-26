@@ -10,14 +10,14 @@ edition = "2021"
 license = "MIT"
 name = "dessin"
 repository = "https://github.com/432-technologies/dessin"
-version = "0.8.0"
+version = "0.8.22"
 
 [features]
 default = ["default-font"]
 default-font = []
 
 [dependencies]
-dessin-macros = { path = "../dessin-macros", version = "0.8.0" }
+dessin-macros = { path = "../dessin-macros", version = "0.8.22" }
 fontdue = "^0.9"
 image = "0.24"
 nalgebra = "^0.33"

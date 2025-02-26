@@ -14,7 +14,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.8.0"
+version = "0.8.22"
 license = "MIT"
 edition = "2021"
 repository = "https://github.com/432-Technologies/dessin"
