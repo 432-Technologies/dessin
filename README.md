@@ -1,8 +1,7 @@
 # [dessin](https://docs.rs/dessin/)
 
 **Try out the new [API](https://github.com/432-Technologies/dessin/tree/v0.8-pre)**
-
-Generate complex drawing for PDF, SVG, and many more to come !
+Generate complex drawing for PDF, SVG, images and Dioxus !
 
 ## Getting started
 
