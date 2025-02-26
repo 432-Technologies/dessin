@@ -6,61 +6,66 @@ Generate complex drawing for PDF, SVG, and many more to come !
 
 ## Getting started
 
-Add `dessin` and `dessin-svg` to your project dependencies
+First of all, add `dessin` to build beautiful drawings !
 
 ```bash
-cargo add dessin dessin-svg
+cargo add dessin
 ```
 
-or if you need PDF:
+Then, and either/or `dessin-svg`, `dessin-pdf`, `dessin-image` or `dessin-dioxus` depending of the export you need.
 
-```bash
-cargo add dessin dessin-pdf
-```
+### Crates
 
-Documentation on [docs.rs](https://docs.rs/dessin/0.8.2-pre/)
+- [dessin](./dessin/README.md): the main composing logic
+- [dessin-macros](./dessin-macros/README.md): the macros `dessin!()` and `#[derive(Shape)]`
+- [dessin-svg](./dessin-svg/README.md): the SVG exporter
+- [dessin-pdf](./dessin-pdf/README.md): the PDF exporter
+- [dessin-image](./dessin-image/README.md): the image exporter
+- [dessin-dioxus](./dessin-dioxus/README.md): the Dioxus exporter
 
 ### Overview
 
 ```rust
 use dessin::prelude::*;
 use palette::{named, Srgb};
+// We also reexport palette, in case you need it
+// use dessin::palette::{named, Srgb};
 
 #[derive(Default, Shape)]
 struct MyShape {
-  text: String,
+	text: String,
 }
 impl MyShape {
-  fn say_this(&mut self, what: &str) {
-    self.text = format!("{} And check this out: `{what}`", self.text);
-  }
+	fn say_this(&mut self, what: &str) {
+		self.text = format!("{} And check this out: `{what}`", self.text);
+	}
 }
 impl From<MyShape> for Shape {
-  fn from(MyShape { text }: MyShape) -> Self {
-    dessin2!(*Text(fill = Srgb::<f32>::from_format(named::RED).into_linear(), { text })).into()
-  }
+	fn from(MyShape { text }: MyShape) -> Self {
+		dessin2!(*Text(fill = Srgb::<f32>::from_format(named::RED).into_linear(), { text })).into()
+	}
 }
 
 fn main() {
-  let dessin = dessin2!(for x in 0..10 {
-    let radius = x as f32 * 10.;
+	let dessin = dessin2!(for x in 0..10 {
+		let radius = x as f32 * 10.;
 
-    dessin2!([
-      *Circle(
-        fill = Srgb::<f32>::from_format(named::RED).into_linear(),
-        { radius },
-        translate = [x as f32 * 5., 10.],
-      ),
-      *Text(fill = Srgb::<f32>::from_format(named::BLACK).into_linear(), font_size = 10., text = "Hi !",),
-    ])
-  });
+		dessin2!([
+			*Circle(
+				fill = Srgb::<f32>::from_format(named::RED).into_linear(),
+				{ radius },
+				translate = [x as f32 * 5., 10.],
+			),
+			*Text(fill = Srgb::<f32>::from_format(named::BLACK).into_linear(), font_size = 10., text = "Hi !",),
+		])
+	});
 
-  let dessin = dessin2!([
-    { dessin }(scale = [2., 2.]),
-    MyShape(say_this = "Hello world"),
-  ]);
+	let dessin = dessin2!([
+		{ dessin }(scale = [2., 2.]),
+		MyShape(say_this = "Hello world"),
+	]);
 
-  let svg = dessin_svg::to_string(&dessin).unwrap();
+	let svg = dessin_svg::to_string(&dessin).unwrap();
 }
 
 ```
