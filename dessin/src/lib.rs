@@ -155,7 +155,6 @@
 
 #![warn(missing_docs)]
 #![allow(clippy::tabs_in_doc_comments)]
-#![doc = include_str!("../../README.md")]
 
 pub mod macros;
 
