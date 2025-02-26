@@ -1,0 +1,21 @@
+[package]
+authors = [
+	"Olivier Lemoine <olivier.lemoine@432technologies.com>",
+	"Francois Morillon <francois.morillon@432technologies.com>",
+]
+description = "Macros for the crate `dessin`"
+categories = ["graphics", "gui", "rendering", "template-engine"]
+keywords = ["graphics", "draw", "layout", "proc-macros"]
+edition = "2021"
+license = "MIT"
+name = "dessin-macros"
+repository = "https://github.com/432-technologies/dessin"
+version = "0.8.0"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "2.0", features = ["full"] }

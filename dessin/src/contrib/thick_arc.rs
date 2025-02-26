@@ -1,90 +1,70 @@
-use algebr::Angle;
-use shape::{Keypoint, Keypoints, Path};
+use crate::prelude::*;
+use core::f32::consts::PI;
+use nalgebra::Transform2;
 
-use crate::{
-    shape::{self, Style},
-    Rect, Shape,
-};
-
-use super::Arc;
-
-#[derive(Debug, Clone, PartialEq)]
+/// An arc with a thickness
+#[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct ThickArc {
-    pub(crate) pos: Rect,
-    pub(crate) inner_radius: f32,
-    pub(crate) outer_radius: f32,
-    pub(crate) start_angle: Angle,
-    pub(crate) end_angle: Angle,
-    pub(crate) style: Option<Style>,
+	/// [`ShapeOp`]
+	#[local_transform]
+	pub local_transform: Transform2<f32>,
+
+	/// start angle in radian
+	pub start_angle: f32,
+
+	/// end angle in radian
+	pub end_angle: f32,
+
+	/// Width of the inner radius
+	pub inner_radius: f32,
+
+	/// Width of the outer radius
+	pub outer_radius: f32,
 }
-crate::impl_pos_at!(ThickArc);
-crate::impl_pos_anchor!(ThickArc);
-crate::impl_style!(ThickArc);
 impl ThickArc {
-    pub const fn new() -> Self {
-        ThickArc {
-            pos: Rect::new(),
-            inner_radius: 0.0,
-            outer_radius: 0.0,
-            start_angle: Angle::radians(0.0),
-            end_angle: Angle::radians(0.0),
-            style: None,
-        }
-    }
-
-    pub const fn with_inner_radius(mut self, inner_radius: f32) -> Self {
-        self.inner_radius = inner_radius;
-        self
-    }
-
-    pub const fn with_outer_radius(mut self, outer_radius: f32) -> Self {
-        self.outer_radius = outer_radius;
-        self
-    }
-
-    pub const fn with_start_angle(mut self, start_angle: Angle) -> Self {
-        self.start_angle = start_angle;
-        self
-    }
-
-    pub const fn with_end_angle(mut self, end_angle: Angle) -> Self {
-        self.end_angle = end_angle;
-        self
-    }
+	/// End angle from a span
+	pub fn span_angle(&mut self, span_angle: f32) -> &mut Self {
+		self.end_angle = (self.start_angle + span_angle) % (2. * PI);
+		self
+	}
+	/// End angle from a span
+	pub fn with_span_angle(mut self, span_angle: f32) -> Self {
+		self.end_angle((self.start_angle + span_angle) % (2. * PI));
+		self
+	}
 }
 
-impl Into<Shape> for ThickArc {
-    fn into(self) -> Shape {
-        let outer: Keypoints = Arc::new()
-            .at(self.pos.pos)
-            .with_anchor(self.pos.anchor)
-            .with_radius(self.outer_radius)
-            .with_start_angle(self.start_angle)
-            .with_end_angle(self.end_angle)
-            .into();
-
-        let inner: Keypoints = Arc::new()
-            .at(self.pos.pos)
-            .with_anchor(self.pos.anchor)
-            .with_radius(self.inner_radius)
-            .with_start_angle(self.start_angle)
-            .with_end_angle(self.end_angle)
-            .into();
-
-        let inner = inner.reversed();
-
-        let p = if let Keypoint::Point(p) = inner.0.first().unwrap() {
-            *p
-        } else {
-            unreachable!()
-        };
-
-        Path::new()
-            .then_do(outer)
-            .then(p)
-            .then_do(inner)
-            .close()
-            .with_maybe_style(self.style)
-            .into()
-    }
+impl From<ThickArc> for Shape {
+	fn from(
+		ThickArc {
+			local_transform,
+			start_angle,
+			end_angle,
+			inner_radius,
+			outer_radius,
+		}: ThickArc,
+	) -> Self {
+		dessin!(Curve(
+			transform = local_transform,
+			then = Curve::from(
+				Arc {
+					start_angle,
+					end_angle,
+					..Default::default()
+				}
+				.with_radius(outer_radius),
+			),
+			then = Curve::from(
+				Arc {
+					start_angle,
+					end_angle,
+					..Default::default()
+				}
+				.with_radius(inner_radius),
+			)
+			.reversed(),
+			closed,
+		))
+		.into()
+	}
 }

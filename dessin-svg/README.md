@@ -1,1 +1,3 @@
-# Dessin SVG
+# dessin-svg
+
+License: MIT

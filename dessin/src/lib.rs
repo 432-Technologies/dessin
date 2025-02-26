@@ -1,223 +1,235 @@
-//! Dessin (french for drawing) is aimed at creating complexe [`Drawing`][Drawing] and export them in [`SVG`]
-//! or [`PDF`].
+//! **dessin** is library aimed at building complex drawings, combine them, move them and export them as PDF or SVG.
 //!
-//! [`SVG`]: https://docs.rs/dessin-svg/
-//! [`PDF`]: https://docs.rs/dessin-pdf/
+//! Details about the [macro][`crate::macros`].
+//!
+//! ## Example
 //!
 //! ```
-//! use dessin::{shape::{Text, Image, ImageFormat, Line, Circle}, style::{FontWeight, Fill, Color}, vec2, Drawing};
+//! use dessin::prelude::*;
+//! use palette::{named, Srgb};
 //!
-//! let mut drawing = Drawing::empty().with_canvas_size(vec2(100., 100.));
+//! #[derive(Default, Shape)]
+//! struct MyShape {
+//!   text: String,
+//! }
+//! impl MyShape {
+//!   fn say_this(&mut self, what: &str) {
+//!     self.text = format!("{} And check this out: `{what}`", self.text);
+//!   }
+//! }
+//! impl From<MyShape> for Shape {
+//!   fn from(MyShape { text }: MyShape) -> Self {
+//!     dessin!(*Text(fill = Srgb::<f32>::from_format(named::RED).into_linear(), { text })).into()
+//!   }
+//! }
 //!
-//! drawing.add(
-//!         Text::new("Hello World".to_owned())
-//!             .at(vec2(50., 50.))
-//!     )
-//!     .add(
-//!         Line::from(vec2(0., 0.)).to(vec2(100., 100.))
-//!     )
-//!     .add(
-//!         Circle::new()
-//!             .at(vec2(50., 50.)).with_radius(10.)
-//!     )
-//!     .add(
-//!         Image::new(ImageFormat::PNG(include_bytes!("../rustacean-flat-happy.png").to_vec()))
-//!             .at(vec2(50., 50.))
-//!             .with_size(vec2(10., 10.))
-//!     );
+//! fn main() {
+//!   let dessin = dessin!(for x in 0..10 {
+//!     let radius = x as f32 * 10.;
+//!
+//!     dessin!([
+//!       *Circle(
+//!         fill = Srgb::<f32>::from_format(named::RED).into_linear(),
+//!         { radius },
+//!         translate = [x as f32 * 5., 10.],
+//!       ),
+//!       *Text(fill = Srgb::<f32>::from_format(named::BLACK).into_linear(), font_size = 10., text = "Hi !",),
+//!     ])
+//!   });
+//!
+//!   let dessin = dessin!([
+//!     { dessin }(scale = [2., 2.]),
+//!     MyShape(say_this = "Hello world"),
+//!   ]);
+//! }
 //! ```
+//!
+//! ## Components
+//!
+//! [Base components][`crate::shapes`] are defined in the `shapes` module.
+//!
+//! [Components using base ones][`crate::contrib`] are defined in the `contrib` module.
+//!
+//! In `dessin`, a component is just a struct/enum that can be converted to a [Shape][crate::shapes::Shape],
+//! and implements the [Default][`std::default::Default`] trait.
+//!
+//! This means that a component can be as simple as:
+//! ```
+//! use dessin::prelude::*;
+//!
+//! #[derive(Default)]
+//! struct MyComponent {}
+//!
+//! impl From<MyComponent> for Shape {
+//! 	fn from(my_component: MyComponent) -> Shape {
+//! 		dessin!(
+//! 			// Implementation...
+//! 		)
+//! 	}
+//! }
+//! ```
+//!
+//! Since the [dessin!][`dessin_macros::dessin`] macro is only syntactic sugar for creating a [Shape][crate::shapes::Shape],
+//! all parameters are simply rust function with the following signature: `fn (&mut self, argument_value: ArgumentType) {...}`.
+//!
+//! It can be tedious to create these function for all parameters, so the derive macro [Shape][`dessin_macro::shape`]
+//! is here to do exactly that.
+//!
+//! So
+//! ```
+//! # use nalgebra::Transform2;
+//! # use dessin::prelude::*;
+//! # pub trait ShapeOp {}
+//! # #[derive(Clone)]
+//!	#[derive(Default, Shape)]
+//! struct MyComponent {
+//! 	// This auto implements ShapeOp for MyComponent using `my_local_transform` as the storage.
+//! 	#[local_transform]
+//!		my_local_transform: Transform2<f32>,
+//!
+//! 	// Generate a function for u32
+//! 	value: u32,
+//!
+//! 	// Does not generate a function for this field
+//! 	#[shape(skip)]
+//! 	skip_value: u32,
+//!
+//! 	// Generates a function for Into<u32>
+//! 	#[shape(into)]
+//! 	into_value: u32,
+//!
+//! 	// Generates a function that does not take any arguments, but set `my_bool` to true
+//! 	#[shape(bool)]
+//! 	my_bool: bool,
+//! }
+//!
+//! # impl From<MyComponent> for Shape {
+//! #   fn from(_: MyComponent) -> Shape { unimplemented!() }
+//! # }
+//! ```
+//!
+//! becomes
+//! ```
+//! # use nalgebra::Transform2;
+//! # use dessin::prelude::*;
+//! # pub trait ShapeOp {}
+//!
+//!	#[derive(Default)]
+//! struct MyComponent {
+//! 	my_local_transform: Transform2<f32>,
+//! 	value: u32,
+//! 	skip_value: u32,
+//! 	into_value: u32,
+//! 	my_bool: bool,
+//! }
+//!
+//! impl ShapeOp for MyComponent { /* skip impl */ }
+//!
+//! impl MyComponent {
+//! 	pub fn value(&mut self, value: u32) -> &mut Self {
+//! #       self
+//!         /* skip impl */
+//!     }
+//! 	pub fn into_value<T: Into<u32>>(&mut self, value: T) -> &mut Self {
+//! #       self
+//!         /* skip impl */
+//!     }
+//! 	pub fn my_bool(&mut self) -> &mut Self {
+//! #       self
+//!         /* skip impl */
+//!     }
+//! }
+//!
+//! # impl From<MyComponent> for Shape {
+//! #   fn from(_: MyComponent) -> Shape { unimplemented!() }
+//! # }
+//! ```
+//! To be precise, all functions generated by this derive macro, return `&mut Self` to chain function together.
+//! Generated functions have the same name as their corresponding field.
+//! This derive macro also generate corresponding `with_xxxx`, taking `self` instead of `&mut self` and returning `Self`.
+//!
+//! One still does need to implement `From<MyComponent> for Shape { ... }` manually.
+//!
+//! ## Implement own export format.
+//! Documentation can be found in the [`export`] module.
 
+#![warn(missing_docs)]
+#![allow(clippy::tabs_in_doc_comments)]
+#![doc = include_str!("../../README.md")]
+
+pub mod macros;
+
+// We need this in order for the proc_macro to work in this library.
+// See https://github.com/rust-lang/rust/issues/56409 for more details
+extern crate self as dessin;
+
+/// Shapes made of basic [shapes][crate::shapes::Shape]
 pub mod contrib;
-mod drawing;
-mod macros;
-mod position;
-mod shapes;
+/// Declarations to create an export format.
+pub mod export;
+/// Building blocks of a dessin
+pub mod shapes;
+/// Styling of the building blocks
 pub mod style;
 
-pub type Size = Vec2;
+pub use ::image;
+pub use ::nalgebra;
+pub use ::palette;
 
-pub use crate::drawing::Drawing;
-pub use crate::position::{Rect, RectOp};
-pub use crate::shapes::{Shape, ShapeType};
-pub use algebr::{vec2, Angle, Vec2};
-
-pub mod shape {
-    pub use crate::shapes::circle::Circle;
-    pub use crate::shapes::embedded::EmbeddedDrawing;
-    pub use crate::shapes::image::{Image, ImageFormat};
-    pub use crate::shapes::line::{Line, LineBuilder};
-    pub use crate::shapes::path::{Keypoint, Keypoints, Path};
-    pub use crate::shapes::text::Text;
-    pub use crate::style::{Color, Fill, Stroke, Style};
+/// Prelude module includes everyting you need to build a dessin.
+/// You can of courses cherry pick what you need by importing directly from other modules.
+pub mod prelude {
+	pub use crate::{contrib::*, shapes::*, style::*};
+	pub use ::dessin_macros::{dessin, Shape};
 }
 
-pub trait ShapeGrouping {
-    fn group(self) -> Drawing;
-}
-
-impl<T> ShapeGrouping for T
-where
-    T: Into<Shape>,
-{
-    fn group(self) -> Drawing {
-        Drawing::new(self)
-    }
-}
-
-impl<T, U> ShapeGrouping for (T, U)
-where
-    T: Into<Shape>,
-    U: Into<Shape>,
-{
-    fn group(self) -> Drawing {
-        Drawing::new(vec![self.0.into(), self.1.into()])
-    }
-}
-
-impl<T, U, V> ShapeGrouping for (T, U, V)
-where
-    T: Into<Shape>,
-    U: Into<Shape>,
-    V: Into<Shape>,
-{
-    fn group(self) -> Drawing {
-        Drawing::new(vec![self.0.into(), self.1.into(), self.2.into()])
-    }
-}
-
-impl<T, U, V, W> ShapeGrouping for (T, U, V, W)
-where
-    T: Into<Shape>,
-    U: Into<Shape>,
-    V: Into<Shape>,
-    W: Into<Shape>,
-{
-    fn group(self) -> Drawing {
-        Drawing::new(vec![
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-        ])
-    }
-}
-
-impl<T, U, V, W, X> ShapeGrouping for (T, U, V, W, X)
-where
-    T: Into<Shape>,
-    U: Into<Shape>,
-    V: Into<Shape>,
-    W: Into<Shape>,
-    X: Into<Shape>,
-{
-    fn group(self) -> Drawing {
-        Drawing::new(vec![
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-        ])
-    }
-}
-
-impl<T, U, V, W, X, Y> ShapeGrouping for (T, U, V, W, X, Y)
-where
-    T: Into<Shape>,
-    U: Into<Shape>,
-    V: Into<Shape>,
-    W: Into<Shape>,
-    X: Into<Shape>,
-    Y: Into<Shape>,
-{
-    fn group(self) -> Drawing {
-        Drawing::new(vec![
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-        ])
-    }
-}
-
-impl<T, U, V, W, X, Y, Z> ShapeGrouping for (T, U, V, W, X, Y, Z)
-where
-    T: Into<Shape>,
-    U: Into<Shape>,
-    V: Into<Shape>,
-    W: Into<Shape>,
-    X: Into<Shape>,
-    Y: Into<Shape>,
-    Z: Into<Shape>,
-{
-    fn group(self) -> Drawing {
-        Drawing::new(vec![
-            self.0.into(),
-            self.1.into(),
-            self.2.into(),
-            self.3.into(),
-            self.4.into(),
-            self.5.into(),
-            self.6.into(),
-        ])
-    }
-}
-
-pub trait ShapeInteraction<T> {
-    fn children_of(self, parent: T) -> Drawing;
-    fn parent_of(self, children: T) -> Drawing;
-}
-
-impl<T, U> ShapeInteraction<U> for T
-where
-    T: Into<Shape>,
-    U: Into<Shape>,
-{
-    fn children_of(self, parent: U) -> Drawing {
-        let mut parent = Drawing::new(parent);
-        parent.add(self);
-        parent
-    }
-
-    fn parent_of(self, children: U) -> Drawing {
-        let mut parent = Drawing::new(self);
-        parent.add(children);
-        parent
-    }
-}
-
-impl<T> Into<Shape> for Vec<T>
-where
-    T: Into<Shape>,
-{
-    fn into(self) -> Shape {
-        let shapes: Vec<Shape> = self.into_iter().map(Into::into).collect();
-
-        let pos = shapes.iter().fold(Rect::new(), |r, s| r.union(s.pos));
-
-        Shape {
-            pos,
-            style: None,
-            shape_type: ShapeType::Drawing(shapes),
-        }
-    }
+/// Everything related to fonts.
+pub mod font {
+	pub use crate::shapes::text::font::*;
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use shape::{Circle, Text};
+	use crate::prelude::{polygons::Octogon, *};
 
-    #[test]
-    fn children() {
-        let c = Circle::new();
-        let t = Text::new("".to_owned());
+	#[test]
+	fn types_funkyness() {
+		dessin!(Padding<Shape>(shape = dessin!(Line() > ())) > *());
+	}
 
-        let drawing = c.parent_of(t);
+	#[test]
+	fn erased_type() {
+		#[derive(Default)]
+		struct Component {}
+		impl From<Component> for Shape {
+			fn from(_: Component) -> Self {
+				dessin!()
+			}
+		}
 
-        let ts = vec![Text::new("".to_owned()), Text::new("".to_owned())];
-        drawing.parent_of(ts);
-    }
+		dessin!(Component() > (translate = [1., 1.]));
+	}
+
+	#[test]
+	fn group_bounding_box() {
+		let group = dessin!([Octogon(), Circle(radius = 7.),]);
+		let bb = group.local_bounding_box();
+		assert_eq!(bb.width(), 14.);
+		assert_eq!(bb.height(), 14.);
+
+		let group = dessin!([Octogon(scale = [12., 12.]), Circle(radius = 7.)]);
+		let bb = group.local_bounding_box();
+		assert_eq!(bb.width(), 24.);
+		assert_eq!(bb.height(), 24.);
+
+		let group = dessin!([Octogon(scale = [15., 15.]), Circle(radius = 7.)]);
+		let bb = group.local_bounding_box();
+		assert_eq!(bb.width(), 30.);
+		assert_eq!(bb.height(), 30.);
+
+		let group = dessin!([Octogon(scale = [13., 13.]), Circle(radius = 7.)]);
+		let bb = group.local_bounding_box();
+		assert_eq!(bb.width(), 26.);
+		assert_eq!(bb.height(), 26.);
+	}
 }

@@ -1,11 +1,27 @@
 [package]
-name = "dessin"
-version = "0.7.3"
+authors = [
+	"Olivier Lemoine <olivier.lemoine@432technologies.com>",
+	"Francois Morillon <francois.morillon@432technologies.com>",
+]
+description = "Build complex drawing for PDF, SVG, Images or Dioxus"
+categories = ["graphics", "gui", "rendering", "template-engine"]
+keywords = ["graphics", "draw", "layout"]
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/daedalus-aero-space/dessin"
-description = "Build complex drawing for PDF, SVG, ..."
+name = "dessin"
+repository = "https://github.com/432-technologies/dessin"
+version = "0.8.0"
+
+[features]
+default = ["default-font"]
+default-font = []
 
 [dependencies]
-algebr = "0.1"
-rusttype = "0.9.3"
+dessin-macros = { path = "../dessin-macros", version = "0.8.0" }
+fontdue = "^0.9"
+image = "0.24"
+nalgebra = "^0.33"
+palette = "^0.7"
+
+[dev-dependencies]
+assert_float_eq = "1.1"

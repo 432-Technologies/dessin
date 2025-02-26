@@ -1,193 +1,270 @@
-use crate::{
-    shape::Style,
-    shapes::text::{FontWeight, Text, TextAlign},
-    Drawing, Rect, Shape,
-};
-use algebr::{vec2, Vec2};
-use rusttype::{Font, Scale};
+use crate::{font::FontRef, prelude::*};
+use fontdue::{Font, FontSettings};
+use nalgebra::Transform2;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct TextLayout {
-    pub(crate) text: String,
-    pub(crate) pos: Rect,
-    pub(crate) boxes: Vec<TextBox>,
-}
-crate::impl_pos_at!(TextLayout);
-crate::impl_pos_anchor!(TextLayout);
-impl TextLayout {
-    pub const fn new(text: String) -> Self {
-        TextLayout {
-            text,
-            pos: Rect::new(),
-            boxes: vec![],
-        }
-    }
-
-    pub fn add_box(mut self, b: TextBox) -> Self {
-        self.boxes.push(b);
-        self
-    }
-
-    pub fn with_scale(mut self, scale: f32) -> Self {
-        self.pos = self.pos.with_size(vec2(scale, scale));
-        self
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
+/// Box of text, with auto wrapping text if width is too large
+#[derive(Debug, Clone, PartialEq, Shape)]
 pub struct TextBox {
-    pub(crate) pos: Rect,
-    pub(crate) style: Option<Style>,
-    pub(crate) align: TextAlign,
-    pub(crate) font_size: f32,
-    pub(crate) font_weight: FontWeight,
-    pub(crate) spacing: f32,
+	/// [`ShapeOp`]
+	#[local_transform]
+	pub local_transform: Transform2<f32>,
+
+	/// Font size
+	pub font_size: f32,
+
+	/// Spacing between each line
+	pub line_spacing: f32,
+
+	/// Horizontal align
+	pub align: TextAlign,
+
+	/// Vertical align
+	pub vertical_align: TextVerticalAlign,
+
+	/// The text
+	#[shape(into)]
+	pub text: String,
+
+	/// Font weight
+	pub font_weight: FontWeight,
+
+	/// Dimension on the x-axis
+	pub width: f32,
+
+	/// Dimension on the y-axis
+	#[shape(some)]
+	pub height: Option<f32>,
+
+	/// Font
+	#[shape(into_some)]
+	pub font: Option<FontRef>,
 }
-crate::impl_pos!(TextBox);
-crate::impl_style!(TextBox);
+impl Default for TextBox {
+	fn default() -> Self {
+		TextBox {
+			local_transform: Default::default(),
+			font_size: Default::default(),
+			line_spacing: Default::default(),
+			align: Default::default(),
+			vertical_align: TextVerticalAlign::Top,
+			text: Default::default(),
+			font_weight: Default::default(),
+			width: f32::MAX,
+			height: Default::default(),
+			font: Default::default(),
+		}
+	}
+}
 impl TextBox {
-    pub const fn new() -> Self {
-        TextBox {
-            pos: Rect::new(),
-            style: None,
-            align: TextAlign::Left,
-            font_size: 16.,
-            font_weight: FontWeight::Regular,
-            spacing: 0.,
-        }
-    }
-
-    pub fn with_scale(mut self, scale: f32) -> Self {
-        self.pos = self.pos.with_size(vec2(scale, scale));
-        self
-    }
-
-    pub const fn with_align(mut self, align: TextAlign) -> Self {
-        self.align = align;
-        self
-    }
-
-    pub const fn with_spacing(mut self, spacing: f32) -> Self {
-        self.spacing = spacing;
-        self
-    }
-
-    pub const fn with_font_size(mut self, font_size: f32) -> Self {
-        self.font_size = font_size;
-        self
-    }
-
-    pub const fn with_font_weight(mut self, font_weight: FontWeight) -> Self {
-        self.font_weight = font_weight;
-        self
-    }
-}
-impl From<TextLayout> for Shape {
-    fn from(
-        TextLayout {
-            mut text,
-            pos: global_pos,
-            boxes,
-        }: TextLayout,
-    ) -> Self {
-        const ARIAL_REGULAR: &[u8] = include_bytes!("Arial.ttf");
-        const ARIAL_BOLD: &[u8] = include_bytes!("Arial Bold.ttf");
-        const ARIAL_ITALIC: &[u8] = include_bytes!("Arial Italic.ttf");
-        const ARIAL_BOLD_ITALIC: &[u8] = include_bytes!("Arial Bold Italic.ttf");
-
-        fn length_of(word: &str, font: Font, scale: f32) -> f32 {
-            let scale = Scale::uniform(scale);
-            font.glyphs_for(word.chars())
-                .scan(None, |last, g| {
-                    let pos = if let Some(last) = last {
-                        font.pair_kerning(scale, *last, g.clone().id())
-                    } else {
-                        0.0
-                    } + g.clone().scaled(scale).h_metrics().advance_width;
-                    *last = Some(g.id());
-                    Some(pos)
-                })
-                .sum()
-        }
-
-        text.push(' ');
-
-        let mut pos = Vec2::zero();
-        let mut box_idx = 0;
-        let mut acc = String::new();
-        let mut canvas = Rect::new();
-        let mut drawing = Drawing::empty();
-
-        for line in text.split("\n") {
-            for word in line.split(" ").chain(Some("\n")) {
-                if let Some(b) = boxes.get(box_idx) {
-                    let font = match b.font_weight {
-                        FontWeight::Regular => Font::try_from_bytes(ARIAL_REGULAR),
-                        FontWeight::Bold => Font::try_from_bytes(ARIAL_BOLD),
-                        FontWeight::Italic => Font::try_from_bytes(ARIAL_ITALIC),
-                        FontWeight::BoldItalic => Font::try_from_bytes(ARIAL_BOLD_ITALIC),
-                    }
-                    .unwrap();
-
-                    let hard_new_line = if word == "\n" {
-                        true
-                    } else {
-                        let len = length_of(word, font, b.font_size);
-                        pos.x += len;
-
-                        if acc.len() > 0 {
-                            acc.push(' ');
-                        }
-                        acc.push_str(word);
-
-                        false
-                    };
-
-                    if hard_new_line || pos.x > b.pos.size().x {
-                        let text = std::mem::take(&mut acc);
-                        let res = Text::new(text)
-                            .at(global_pos.pos + b.pos.pos - vec2(0., pos.y))
-                            .with_anchor(b.pos.anchor)
-                            .with_size(global_pos.size() * b.pos.size())
-                            .with_align(b.align)
-                            .with_font_size(global_pos.size().x * b.font_size) // TODO: Non-uniform size
-                            .with_font_weight(b.font_weight)
-                            .with_style(b.style.clone().unwrap_or_default());
-
-                        canvas = canvas.union(res.pos);
-
-                        drawing.add(res);
-
-                        pos.y += (b.font_size + b.spacing) * global_pos.size().x; // TODO: Non-uniform size
-                        pos.x = 0.;
-
-                        if pos.y >= b.pos.size().y {
-                            box_idx += 1;
-                            pos.y = 0.;
-                        }
-                    }
-                } else {
-                    break;
-                }
-            }
-        }
-
-        drawing.into()
-    }
+	/// Remove height constraint (default)
+	#[inline]
+	pub fn no_height(&mut self) -> &mut Self {
+		self.height = None;
+		self
+	}
+	/// Remove height constraint (default)
+	#[inline]
+	pub fn without_weight(mut self) -> Self {
+		self.no_height();
+		self
+	}
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::Drawing;
-    use algebr::vec2;
+impl From<TextBox> for Shape {
+	fn from(
+		TextBox {
+			local_transform,
+			font_size,
+			line_spacing,
+			text,
+			width,
+			height,
+			align,
+			vertical_align,
+			font_weight,
+			font,
+		}: TextBox,
+	) -> Self {
+		let font_ref = font.clone();
+		let fonts = crate::font::get(font.unwrap_or_default());
+		let raw_font = match fonts.get(FontWeight::Regular) {
+			crate::font::Font::OTF(bytes) => bytes,
+			crate::font::Font::TTF(bytes) => bytes,
+		};
 
-    #[test]
-    fn new() {
-        let mut drawing = Drawing::empty().with_canvas_size(vec2(300., 300.));
-        drawing.add(
-            TextLayout::new("Hello world".to_owned())
-                .add_box(TextBox::new().at(vec2(10., 10.)).with_size(vec2(10., 10.))),
-        );
-    }
+		let font = Font::from_bytes(raw_font.as_slice(), FontSettings::default()).unwrap();
+
+		let mut lines = vec![];
+		let mut height = height.unwrap_or(f32::MAX);
+
+		for line in text.lines() {
+			let mut len = 0.;
+			let mut acc = String::new();
+
+			if height - font_size < 0. {
+				break;
+			}
+
+			for word in line.split_whitespace() {
+				if word.is_empty() {
+					continue;
+				}
+
+				let word_size = size_of(&font, word, font_size);
+
+				if len + word_size > width {
+					lines.push(std::mem::take(&mut acc));
+
+					acc = word.to_owned();
+					len = word_size;
+
+					height -= font_size + line_spacing;
+				} else {
+					len += word_size;
+
+					if !acc.is_empty() {
+						acc.push(' ');
+					}
+
+					acc.push_str(word)
+				}
+			}
+
+			if !acc.is_empty() {
+				lines.push(acc)
+			}
+		}
+
+		let (vertical_align, _) = match vertical_align {
+			TextVerticalAlign::Bottom => (TextVerticalAlign::Top, 1.),
+			TextVerticalAlign::Center => (TextVerticalAlign::Center, -1.),
+			TextVerticalAlign::Top => (TextVerticalAlign::Bottom, -1.),
+		};
+
+		dessin!(
+			VerticalLayout(
+				extend = lines.into_iter().map(|text| {
+					dessin!(Text(
+						{ text },
+						{ align },
+						{ vertical_align },
+						{ font_weight },
+						{ font_size },
+						maybe_font = font_ref.clone(),
+					))
+					.into()
+				}),
+				gap = line_spacing,
+				transform = local_transform,
+			) > ()
+		)
+	}
+}
+
+use palette::{named, Srgb};
+#[test]
+fn one_line() {
+	use assert_float_eq::*;
+
+	let text = "it should work, famous last word";
+
+	let shape: Shape = dessin!(
+		*TextBox(
+			{ text },
+			fill = Srgb::<f32>::from_format(named::BLACK).into_linear(),
+			font_size = 5.,
+			align = TextAlign::Left,
+			line_spacing = 2.,
+		) > ()
+	);
+
+	let bb = shape.local_bounding_box();
+	assert_float_absolute_eq!(bb.height(), 5., 0.001);
+}
+
+#[test]
+fn two_lines() {
+	use assert_float_eq::*;
+
+	let text = "it should work\nfamous last word";
+
+	let shape: Shape = dessin!(*TextBox(
+		{ text },
+		fill = Srgb::<f32>::from_format(named::BLACK).into_linear(),
+		font_size = 5.,
+		align = TextAlign::Left,
+		line_spacing = 2.,
+	))
+	.into();
+
+	let bb = shape.local_bounding_box();
+
+	assert_float_absolute_eq!(bb.height(), 12., 0.0001);
+}
+
+#[test]
+fn should_break() {
+	use assert_float_eq::*;
+	use nalgebra::{convert, Translation2};
+
+	let text = "it should work, famous last word";
+
+	let mut shape: Shape = dessin!(
+		TextBox(
+			{ text },
+			font_size = 5.,
+			width = 40.,
+			align = TextAlign::Left,
+		) > ()
+	);
+
+	let shapes = shape.get_or_mutate_as_group().shapes.clone();
+	assert_eq!(shapes.len(), 2);
+
+	{
+		let Shape::Text(text) = shapes[0].clone() else {
+			unreachable!()
+		};
+
+		let lt = convert::<_, Transform2<f32>>(Translation2::new(0., (5. / 2.) * -1.));
+
+		assert_eq!(
+			text,
+			Text {
+				local_transform: lt,
+				text: "it should work,".to_string(),
+				align: TextAlign::Left,
+				vertical_align: Default::default(),
+				font_weight: Default::default(),
+				on_curve: None,
+				font_size: 5.,
+				font: None
+			}
+		);
+	}
+
+	{
+		let Shape::Text(text) = shapes[1].clone() else {
+			unreachable!()
+		};
+
+		let lt = convert::<_, Transform2<f32>>(Translation2::new(0., ((5. / 2.) + 5.) * -1.));
+
+		assert_eq!(
+			text,
+			Text {
+				local_transform: lt,
+				text: "famous last word".to_string(),
+				align: TextAlign::Left,
+				vertical_align: Default::default(),
+				font_weight: Default::default(),
+				on_curve: None,
+				font_size: 5.,
+				font: None
+			}
+		);
+	}
+
+	let bb = shape.local_bounding_box();
+	assert_float_absolute_eq!(bb.height(), 10., 0.001);
 }

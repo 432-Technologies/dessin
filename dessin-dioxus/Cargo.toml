@@ -1,0 +1,21 @@
+[package]
+authors = [
+	"Olivier Lemoine <olivier.lemoine@432technologies.com>",
+	"Francois Morillon <francois.morillon@432technologies.com>",
+]
+description = "Drawing SVG"
+categories = ["graphics", "gui", "rendering", "template-engine"]
+keywords = ["graphics", "draw", "layout", "dioxus"]
+edition = "2021"
+license = "MIT"
+name = "dessin-dioxus"
+repository = "https://github.com/432-technologies/dessin"
+version = "0.8.0"
+
+[dependencies]
+data-encoding = "^2.8.0"
+dessin = { version = "0.8.0", path = "../dessin" }
+image = "0.24"
+nalgebra = "^0.33"
+rand = "^0.9.0"
+dioxus = { version = "0.6" }

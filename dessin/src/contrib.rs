@@ -1,11 +1,24 @@
-mod arc;
-mod quarter_circle;
-mod rectangle;
-mod textbox;
-mod thick_arc;
+macro_rules! auto_import {
+    {$($v:ident,)*} => {
+		$(
+			mod $v;
+			pub use $v::*;
+		)*
+	};
+}
 
-pub use arc::*;
-pub use quarter_circle::*;
-pub use rectangle::*;
-pub use textbox::*;
-pub use thick_arc::*;
+auto_import! {
+	anchor,
+	arc,
+	circle,
+	fit,
+	layout,
+	line,
+	padding,
+	polygone,
+	rectangle,
+	textbox,
+	thick_arc,
+	triangle,
+	diamond,
+}

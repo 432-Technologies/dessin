@@ -1,3 +1,25 @@
 [workspace]
+resolver = "2"
+members = [
+	# Export
+	"dessin",
+	"dessin-svg",
+	"dessin-pdf",
+	"dessin-image",
+	"dessin-dioxus",
+	"dessin-macros",
 
-members = ["dessin", "dessin-svg", "dessin-pdf", "examples/svg-pdf"]
+	# Internal
+	"examples",
+]
+
+[workspace.package]
+version = "0.8.0"
+license = "MIT"
+edition = "2021"
+repository = "https://github.com/432-Technologies/dessin"
+keywords = ["dessin", "drawing", "pdf", "svg", "image", "layout"]
+authors = [
+	"Olivier Lemoine <olivier.lemoine@432technologies.com>",
+	"François Morillon <francois.morillon@432technologies.com>",
+]
