@@ -58,7 +58,12 @@ pub struct SVGOptions {
 }
 
 #[component]
-pub fn SVG(shape: ReadOnlySignal<Shape>, options: Option<SVGOptions>) -> Element {
+pub fn SVG(
+	class: Option<String>,
+	style: Option<String>,
+	shape: ReadOnlySignal<Shape>,
+	options: Option<SVGOptions>,
+) -> Element {
 	let options = options.unwrap_or_default();
 
 	let view_box = use_memo(move || {
@@ -105,7 +110,10 @@ pub fn SVG(shape: ReadOnlySignal<Shape>, options: Option<SVGOptions>) -> Element
 	let used_font = use_signal(|| HashSet::new());
 
 	rsx! {
-		svg { view_box,
+		svg {
+			class,
+			style,
+			view_box,
 			Shaper {
 				shape,
 				parent_transform: nalgebra::convert(Scale2::new(1., -1.)),
