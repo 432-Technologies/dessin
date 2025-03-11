@@ -5,7 +5,7 @@ use std::{
 	sync::{Arc, RwLock},
 };
 
-pub type Shaper = dyn Fn() -> Shape;
+pub type Shaper = dyn Fn() -> Shape + Send + Sync + 'static;
 
 pub trait DynamicShape: std::fmt::Debug {
 	fn as_shape(&self) -> Shape;
@@ -55,7 +55,7 @@ impl<T> DerefMut for Dynamic<T> {
 
 impl<T> From<Dynamic<T>> for Shape
 where
-	T: DynamicShape + 'static,
+	T: DynamicShape + Send + Sync + 'static,
 {
 	fn from(
 		Dynamic {
