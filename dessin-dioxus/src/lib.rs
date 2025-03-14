@@ -274,9 +274,8 @@ fn Shaper(
 				TextAlign::Right => "end",
 			};
 
-			let font = text.font.clone().unwrap_or(FontRef::default());
-			add_font((font.clone(), text.font_weight));
-			let font = font.name(text.font_weight);
+			let font_ref = text.font.clone().unwrap_or(FontRef::default());
+			let font = font_ref.name(text.font_weight);
 
 			let x = text.reference_start.x;
 			let y = text.reference_start.y;
@@ -284,6 +283,7 @@ fn Shaper(
 
 			rsx! {
 				text {
+					onmounted: move |_| add_font((font_ref.clone(), text.font_weight)),
 					font_family: "{font}",
 					text_anchor: "{align}",
 					font_size: "{text.font_size}px",
