@@ -107,7 +107,10 @@ pub fn SVG(
 		format!("{min_x} {min_y} {span_x} {span_y}")
 	});
 
-	let used_font = use_signal(|| HashSet::new());
+	let mut used_font = use_signal(|| HashSet::new());
+	let mut add_font = move |v: (FontRef, FontWeight)| {
+		used_font.write().insert(v);
+	};
 
 	rsx! {
 		svg {
@@ -117,7 +120,7 @@ pub fn SVG(
 			Shaper {
 				shape,
 				parent_transform: nalgebra::convert(Scale2::new(1., -1.)),
-				used_font,
+				add_font: move |ev| add_font(ev),
 			}
 		}
 	}
@@ -127,7 +130,7 @@ pub fn SVG(
 fn Shaper(
 	shape: ReadOnlySignal<Shape>,
 	parent_transform: Transform2<f32>,
-	used_font: Signal<HashSet<(FontRef, FontWeight)>>,
+	add_font: EventHandler<(FontRef, FontWeight)>,
 ) -> Element {
 	match shape() {
 		Shape::Group(dessin::shapes::Group {
@@ -150,7 +153,7 @@ fn Shaper(
 			rsx! {
 				g {
 					for shape in shapes {
-						Shaper { shape, parent_transform, used_font }
+						Shaper { shape, parent_transform, add_font }
 					}
 				}
 			}
@@ -210,7 +213,7 @@ fn Shaper(
 					stroke_width,
 					stroke_dasharray,
 
-					Shaper { parent_transform, shape: *shape, used_font }
+					Shaper { parent_transform, shape: *shape, add_font }
 				}
 			}
 		}
@@ -272,7 +275,7 @@ fn Shaper(
 			};
 
 			let font = text.font.clone().unwrap_or(FontRef::default());
-			used_font.write().insert((font.clone(), text.font_weight));
+			add_font((font.clone(), text.font_weight));
 			let font = font.name(text.font_weight);
 
 			let x = text.reference_start.x;
@@ -306,7 +309,7 @@ fn Shaper(
 			Shaper {
 				parent_transform: parent_transform * local_transform,
 				shape: shaper(),
-				used_font,
+				add_font,
 			}
 		},
 	}
