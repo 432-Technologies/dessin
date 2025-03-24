@@ -6,10 +6,6 @@ use std::{
 	ops::{Deref, DerefMut, Mul},
 };
 
-/// Color
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Color {}
-
 /// Calculated result style
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct StylePosition {
