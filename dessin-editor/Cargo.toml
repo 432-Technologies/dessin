@@ -10,7 +10,6 @@ edition = "2021"
 dessin = { version = "0.8.22", path = "../dessin" }
 dessin-dioxus = { version = "0.8.22", path = "../dessin-dioxus" }
 dioxus = { version = "0.6.0", features = [] }
-getrandom = { version = "0.3", features = ["wasm_js"] }
 
 [features]
 default = ["web"]

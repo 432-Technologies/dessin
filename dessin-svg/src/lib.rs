@@ -9,6 +9,7 @@ use std::{
 	collections::HashSet,
 	fmt::{self, Write},
 	io::Cursor,
+	sync::{atomic::AtomicU32, LazyLock},
 };
 
 #[derive(Debug)]
@@ -103,7 +104,7 @@ impl SVGExporter {
                 color.alpha
             )?,
             Some(Stroke::Full { color, width }) => {
-                write!(self.acc, "stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' ", 
+                write!(self.acc, "stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' ",
                 (color.red * 255.) as u32,
                 (color.green * 255.) as u32,
                 (color.blue * 255.) as u32,
@@ -331,7 +332,8 @@ impl Exporter for SVGExporter {
 			font,
 		}: TextPosition,
 	) -> Result<(), Self::Error> {
-		let id = rand::random::<u64>().to_string();
+		static ID: LazyLock<AtomicU32> = LazyLock::new(|| AtomicU32::new(0));
+		let id = ID.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
 
 		let weight = match font_weight {
 			FontWeight::Bold | FontWeight::BoldItalic => "bold",

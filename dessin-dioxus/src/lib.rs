@@ -9,6 +9,7 @@ use std::{
 	collections::HashSet,
 	fmt::{self},
 	io::Cursor,
+	sync::{atomic::AtomicU32, LazyLock},
 };
 
 #[derive(Debug)]
@@ -256,7 +257,8 @@ fn Shaper(
 			}
 		}
 		Shape::Text(text) => {
-			let id = rand::random::<u64>().to_string();
+			static ID: LazyLock<AtomicU32> = LazyLock::new(|| AtomicU32::new(0));
+			let id = ID.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
 
 			let text = text.position(&parent_transform);
 
@@ -291,7 +293,7 @@ fn Shaper(
 					"text-style": "{text_style}",
 					transform: "translate({x} {y}) rotate({r})",
 					if let Some(curve) = text.on_curve {
-						path { id: id.clone(), d: write_curve(curve) }
+						path { id: "{id}", d: write_curve(curve) }
 						textPath { href: id, {text.text} }
 					} else {
 						{text.text}
