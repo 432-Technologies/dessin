@@ -174,7 +174,7 @@ impl Exporter for ImageExporter {
 
 		let style = self.style();
 
-		if let Some(color) = style.fill {
+		if let Some(Fill::Solid { color }) = style.fill {
 			let (r, g, b, a) = (
 				color.into_format::<u8, f32>().red,
 				color.into_format::<u8, f32>().green,
@@ -189,7 +189,7 @@ impl Exporter for ImageExporter {
 		}
 
 		match style.stroke {
-			Some(Stroke::Full { color, width }) => {
+			Some(Stroke::Solid { color, width }) => {
 				let (r, g, b, a) = (
 					color.into_format::<u8, f32>().red,
 					color.into_format::<u8, f32>().green,
@@ -263,7 +263,7 @@ impl Exporter for ImageExporter {
 		// dt.set_transform(&Transform::rotation(euclid::Angle::degrees(15.0)));
 
 		let color = match self.style().fill {
-			Some(color) => color,
+			Some(Fill::Solid { color }) => color,
 			None => return Ok(()),
 		};
 		let (r, g, b, a) = (

@@ -518,7 +518,7 @@ pub enum Shape {
 	/// Block of style
 	Style {
 		/// Fill
-		fill: Option<Srgba>,
+		fill: Option<crate::style::Fill>,
 		/// Stroke
 		stroke: Option<crate::style::Stroke>,
 		/// Styled shape. (Or Shapes if it is a [`Groupe`][Shape::Group])

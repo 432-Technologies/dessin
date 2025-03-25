@@ -164,17 +164,16 @@ fn Shaper(
 			stroke,
 			shape,
 		} => {
-			let fill = fill
-				.map(|color| {
-					format!(
-						"rgb({} {} {} / {:.3})",
-						(color.red * 255.) as u32,
-						(color.green * 255.) as u32,
-						(color.blue * 255.) as u32,
-						color.alpha
-					)
-				})
-				.unwrap_or_else(|| "none".to_string());
+			let fill = match fill {
+				Some(Fill::Solid { color }) => format!(
+					"rgb({} {} {} / {:.3})",
+					(color.red * 255.) as u32,
+					(color.green * 255.) as u32,
+					(color.blue * 255.) as u32,
+					color.alpha
+				),
+				None => "none".to_string(),
+			};
 
 			let (stroke, stroke_width, stroke_dasharray) = match stroke {
 				Some(Stroke::Dashed {
@@ -193,7 +192,7 @@ fn Shaper(
 					Some(width),
 					Some(format!("{on},{off}")),
 				),
-				Some(Stroke::Full { color, width }) => (
+				Some(Stroke::Solid { color, width }) => (
 					Some(format!(
 						"rgb({} {} {} / {:.3})",
 						(color.red * 255.) as u32,

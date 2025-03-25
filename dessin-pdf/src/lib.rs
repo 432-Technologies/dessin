@@ -78,7 +78,7 @@ impl Exporter for PDFExporter<'_> {
 	) -> Result<(), Self::Error> {
 		if let Some(fill) = fill {
 			let (r, g, b) = match fill {
-				color => (
+				Fill::Solid { color } => (
 					color.into_format::<f32, f32>().red,
 					color.into_format::<f32, f32>().green,
 					color.into_format::<f32, f32>().blue,
@@ -96,7 +96,7 @@ impl Exporter for PDFExporter<'_> {
 
 		if let Some(stroke) = stroke {
 			let ((r, g, b), w) = match stroke {
-				Stroke::Full { color, width } => (
+				Stroke::Solid { color, width } => (
 					(
 						color.into_format::<f32, f32>().red,
 						color.into_format::<f32, f32>().green,

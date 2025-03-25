@@ -10,14 +10,14 @@ use std::{
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct StylePosition {
 	pub stroke: Option<Stroke>,
-	pub fill: Option<Srgba>,
+	pub fill: Option<Fill>,
 }
 
 /// `Stroke`
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Stroke {
 	/// Solid line
-	Full { color: Srgba, width: f32 },
+	Solid { color: Srgba, width: f32 },
 
 	/// Dashed line
 	Dashed {
@@ -27,12 +27,11 @@ pub enum Stroke {
 		off: f32,
 	},
 }
-
 impl Stroke {
 	/// Solid line
 	pub fn new_full<F: IntoColor<Srgba>>(color: F, width: f32) -> Self {
 		let color = color.into_color();
-		Self::Full { color, width }
+		Self::Solid { color, width }
 	}
 
 	/// Dashed line
@@ -47,12 +46,18 @@ impl Stroke {
 	}
 }
 
+impl<C: IntoColor<Srgba>> From<(C, f32)> for Stroke {
+	fn from((color, width): (C, f32)) -> Self {
+		Stroke::new_full(color, width)
+	}
+}
+
 impl Mul<Stroke> for Transform2<f32> {
 	type Output = Stroke;
 
 	fn mul(self, rhs: Stroke) -> Self::Output {
 		match rhs {
-			Stroke::Full { color, width } => Stroke::Full {
+			Stroke::Solid { color, width } => Stroke::Solid {
 				color,
 				width: (self * Vector2::new(FRAC_1_SQRT_2, FRAC_1_SQRT_2)).magnitude() * width,
 			},
@@ -75,14 +80,40 @@ impl Mul<Stroke> for Transform2<f32> {
 	}
 }
 
+/// `Stroke`
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Fill {
+	/// Solid fill
+	Solid { color: Srgba },
+}
+impl Stroke {}
+
+impl<C: IntoColor<Srgba>> From<C> for Fill {
+	fn from(color: C) -> Self {
+		Fill::Solid {
+			color: color.into_color(),
+		}
+	}
+}
+
+impl Mul<Fill> for Transform2<f32> {
+	type Output = Fill;
+
+	fn mul(self, rhs: Fill) -> Self::Output {
+		match rhs {
+			Fill::Solid { color } => Fill::Solid { color },
+		}
+	}
+}
+
 #[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Style<T> {
 	/// Wrapped `Shape`
 	pub shape: T,
 
-	/// Add a fill
+	/// Add a fill color
 	#[shape(into_some)]
-	pub fill: Option<Srgba>,
+	pub fill: Option<Fill>,
 
 	/// Add a `Stroke`
 	#[shape(into_some)]

@@ -77,7 +77,7 @@ impl SVGExporter {
 
 	fn write_style(&mut self, style: StylePosition) -> Result<(), SVGError> {
 		match style.fill {
-			Some(color) => write!(
+			Some(Fill::Solid { color }) => write!(
 				self.acc,
 				"fill='rgb({} {} {} / {:.3})' ",
 				(color.red * 255.) as u32,
@@ -103,7 +103,7 @@ impl SVGExporter {
                 (color.blue * 255.) as u32,
                 color.alpha
             )?,
-            Some(Stroke::Full { color, width }) => {
+            Some(Stroke::Solid { color, width }) => {
                 write!(self.acc, "stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' ",
                 (color.red * 255.) as u32,
                 (color.green * 255.) as u32,
