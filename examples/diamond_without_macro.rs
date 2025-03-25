@@ -25,7 +25,7 @@ fn main() {
 	diamond.fill(Srgba::new(0.746, 0.949, 1.0, 0.99));
 
 	// creates a black margin of 0.1 (0.05 outside and 0.05 inside the diamond)
-	diamond.stroke(Stroke::new_full(Srgba::new(0.0, 0.0, 0.0, 1.0), 0.1));
+	diamond.stroke(Stroke::new_solid(Srgba::new(0.0, 0.0, 0.0, 1.0), 0.1));
 
 	// chooses a rotation of -10 radians in the trigonometric direction
 	diamond.rotate(Rotation2::new(-10_f32.to_radians()));

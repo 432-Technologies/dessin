@@ -57,7 +57,7 @@ fn main() {
 
 	rectangle2.height(15.);
 
-	rectangle2.stroke(Stroke::new_full(Srgba::new(0.0, 0.0, 0.0, 0.01), 1.));
+	rectangle2.stroke(Stroke::new_solid(Srgba::new(0.0, 0.0, 0.0, 0.01), 1.));
 
 	// creates a white circle in the middle
 	let circle = Circle::default().with_radius(1.);

@@ -30,7 +30,7 @@ impl From<RotatedText> for Shape {
 					{ width },
 					{ height },
 					stroke =
-						Stroke::new_full(Srgb::<f32>::from_format(named::BLACK).into_linear(), 0.1)
+						Stroke::new_solid(Srgb::<f32>::from_format(named::BLACK).into_linear(), 0.1)
 				),
 				{ text },
 			] > (translate = [0., 15.], rotate = Rotation2::new(rotation),)

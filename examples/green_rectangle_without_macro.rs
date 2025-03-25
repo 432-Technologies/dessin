@@ -13,7 +13,7 @@ fn main() {
 	rectangle.fill(Srgb::new(0.0, 1.0, 0.0));
 
 	// creates a grey margin of 0.2 (0.05 outside and 0.05 inside the rectangle)
-	rectangle.stroke(Stroke::new_full(Srgb::new(0.576, 0.576, 0.576), 0.1));
+	rectangle.stroke(Stroke::new_solid(Srgb::new(0.576, 0.576, 0.576), 0.1));
 
 	//chooses a rotation of 6 radians in the trigonometric direction
 	rectangle.rotate(Rotation2::new(6_f32.to_radians()));

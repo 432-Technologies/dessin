@@ -13,7 +13,7 @@ fn main() {
 		// paints the inside of the triangle in green
 		fill = Srgb::new(0.0, 0.0, 1.0),
 		// creates a black margin of 0.1 (0.05 outside and the same inside the triangle)
-		stroke = Stroke::new_full(Srgb::new(0.0, 0.0, 0.0), 0.1),
+		stroke = Stroke::new_solid(Srgb::new(0.0, 0.0, 0.0), 0.1),
 		//chooses a rotation of 0 radians in the trigonometric direction
 		rotate = Rotation2::new(0_f32.to_radians()),
 	),]);

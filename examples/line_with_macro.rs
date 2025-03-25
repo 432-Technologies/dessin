@@ -15,7 +15,7 @@ fn main() {
 			to = Point2::new(12., 5.2),
 			// not needed here
 			fill = Srgba::new(1.0, 0.392, 0.392, 1.0),
-			stroke = Stroke::new_full(Srgba::new(1.0, 0.392, 0.392, 1.0), 0.05),
+			stroke = Stroke::new_solid(Srgba::new(1.0, 0.392, 0.392, 1.0), 0.05),
 			translate = [5., 1.]
 		)
 	]);

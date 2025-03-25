@@ -29,7 +29,7 @@ pub enum Stroke {
 }
 impl Stroke {
 	/// Solid line
-	pub fn new_full<F: IntoColor<Srgba>>(color: F, width: f32) -> Self {
+	pub fn new_solid<F: IntoColor<Srgba>>(color: F, width: f32) -> Self {
 		let color = color.into_color();
 		Self::Solid { color, width }
 	}
@@ -48,7 +48,7 @@ impl Stroke {
 
 impl<C: IntoColor<Srgba>> From<(C, f32)> for Stroke {
 	fn from((color, width): (C, f32)) -> Self {
-		Stroke::new_full(color, width)
+		Stroke::new_solid(color, width)
 	}
 }
 

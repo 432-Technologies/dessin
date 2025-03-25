@@ -18,14 +18,14 @@ impl From<InnerBubbleRing> for Shape {
 	fn from(_: InnerBubbleRing) -> Self {
 		let ring_strip = dessin!(
 			[
-				*Circle(stroke = Stroke::new_full(c(0.784), 0.1), radius = 1.,),
+				*Circle(stroke = Stroke::new_solid(c(0.784), 0.1), radius = 1.,),
 				*Circle(
-					stroke = Stroke::new_full(c(0.588), 0.1),
+					stroke = Stroke::new_solid(c(0.588), 0.1),
 					radius = 0.5,
 					translate = Translation2::new(2., 0.),
 				),
 				*Circle(
-					stroke = Stroke::new_full(c(0.392), 0.1),
+					stroke = Stroke::new_solid(c(0.392), 0.1),
 					radius = 0.25,
 					translate = Translation2::new(3.2, 0.),
 				),
@@ -94,7 +94,7 @@ impl From<TimerRing> for Shape {
 						rotate = Rotation2::new(x as f32 * PI / 160.)
 					))
 				},
-			] > *(stroke = Stroke::new_full(C, 0.2))
+			] > *(stroke = Stroke::new_solid(C, 0.2))
 		)
 		.into()
 	}
@@ -106,14 +106,14 @@ impl From<ThreeColoredRing> for Shape {
 	fn from(_: ThreeColoredRing) -> Self {
 		dessin!([
 			*Circle(
-				stroke = Stroke::new_full(Srgb::new(0.588, 0.588, 0.588), 0.2),
+				stroke = Stroke::new_solid(Srgb::new(0.588, 0.588, 0.588), 0.2),
 				radius = 40.,
 			),
 			*Circle(
-				stroke = Stroke::new_full(Srgb::new(0.180, 0.180, 0.180), 0.2),
+				stroke = Stroke::new_solid(Srgb::new(0.180, 0.180, 0.180), 0.2),
 				radius = 42.,
 			),
-			*Circle(stroke = Stroke::new_full(C, 0.2), radius = 44.,),
+			*Circle(stroke = Stroke::new_solid(C, 0.2), radius = 44.,),
 		])
 	}
 }
@@ -124,33 +124,33 @@ impl From<Squares> for Shape {
 	fn from(_: Squares) -> Self {
 		let square_line = dessin!(
 			[
-				*Rectangle(stroke = Stroke::new_full(C, 0.1), width = 2.5, height = 2.5,),
+				*Rectangle(stroke = Stroke::new_solid(C, 0.1), width = 2.5, height = 2.5,),
 				*Rectangle(
-					stroke = Stroke::new_full(c(0.784), 0.1),
+					stroke = Stroke::new_solid(c(0.784), 0.1),
 					width = 1.8,
 					height = 1.8,
 					translate = Translation2::new(2.8, 0.),
 				),
 				*Rectangle(
-					stroke = Stroke::new_full(c(0.588), 0.1),
+					stroke = Stroke::new_solid(c(0.588), 0.1),
 					width = 1.2,
 					height = 1.2,
 					translate = Translation2::new(4.8, 0.),
 				),
 				*Rectangle(
-					stroke = Stroke::new_full(c(0.392), 0.1),
+					stroke = Stroke::new_solid(c(0.392), 0.1),
 					width = 0.8,
 					height = 0.8,
 					translate = Translation2::new(6.2, 0.),
 				),
 				*Rectangle(
-					stroke = Stroke::new_full(c(0.196), 0.1),
+					stroke = Stroke::new_solid(c(0.196), 0.1),
 					width = 0.4,
 					height = 0.4,
 					translate = Translation2::new(7.2, 0.),
 				),
 				*Rectangle(
-					stroke = Stroke::new_full(c(0.098), 0.1),
+					stroke = Stroke::new_solid(c(0.098), 0.1),
 					width = 0.2,
 					height = 0.2,
 					translate = Translation2::new(7.8, 0.),
@@ -178,19 +178,19 @@ impl From<Symbol432> for Shape {
 	fn from(_: Symbol432) -> Self {
 		dessin!([
 			*Curve(
-				stroke = Stroke::new_full(Srgb::new(0.498, 0.498, 0.498), 0.6),
+				stroke = Stroke::new_solid(Srgb::new(0.498, 0.498, 0.498), 0.6),
 				then = Point2::new(0., 0.),
 				then = Point2::new(0., 20.),
 				then = Point2::new(-9.8, 0.),
 				then = Point2::new(-8., 0.),
 			),
 			*Line(
-				stroke = Stroke::new_full(Srgb::new(0.0, 0.008, 0.376), 0.6),
+				stroke = Stroke::new_solid(Srgb::new(0.0, 0.008, 0.376), 0.6),
 				from = [-10., 0.],
 				to = [13., 0.],
 			),
 			*Line(
-				stroke = Stroke::new_full(Srgb::new(0.0, 0.008, 0.376), 0.6),
+				stroke = Stroke::new_solid(Srgb::new(0.0, 0.008, 0.376), 0.6),
 				from = [0., 0.],
 				to = [0., -10.],
 			),
@@ -236,7 +236,7 @@ impl From<Logo432> for Shape {
 			ThreeColoredRing(),
 			Squares(),
 			BinaryRing(radius = 30.),
-			*Circle(stroke = Stroke::new_full(c(0.588), 0.2), radius = 70.,),
+			*Circle(stroke = Stroke::new_solid(c(0.588), 0.2), radius = 70.,),
 			Symbol432() > (scale = [4., 4.], translate = [-20., -20.],),
 		])
 	}
