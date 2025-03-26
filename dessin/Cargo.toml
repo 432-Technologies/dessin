@@ -18,6 +18,7 @@ default-font = []
 
 [dependencies]
 dessin-macros = { path = "../dessin-macros", version = "0.8.22" }
+ecow = "0.2.3"
 fontdue = "0.9"
 image = "0.24"
 nalgebra = "0.33"

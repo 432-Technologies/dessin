@@ -1,6 +1,7 @@
 use crate::{font::FontRef, prelude::*};
 use fontdue::{Font, FontSettings};
 use nalgebra::Transform2;
+use palette::{named, Srgb};
 
 /// Box of text, with auto wrapping text if width is too large
 #[derive(Debug, Clone, PartialEq, Shape)]
@@ -86,7 +87,8 @@ impl From<TextBox> for Shape {
 		}: TextBox,
 	) -> Self {
 		let font_ref = font.clone();
-		let fonts = crate::font::get(font.unwrap_or_default());
+
+		let fonts = crate::font::get_or_default(font.as_ref());
 		let raw_font = match fonts.get(FontWeight::Regular) {
 			crate::font::Font::OTF(bytes) => bytes,
 			crate::font::Font::TTF(bytes) => bytes,
@@ -161,7 +163,6 @@ impl From<TextBox> for Shape {
 	}
 }
 
-use palette::{named, Srgb};
 #[test]
 fn one_line() {
 	use assert_float_eq::*;

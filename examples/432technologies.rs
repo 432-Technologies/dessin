@@ -124,7 +124,11 @@ impl From<Squares> for Shape {
 	fn from(_: Squares) -> Self {
 		let square_line = dessin!(
 			[
-				*Rectangle(stroke = Stroke::new_solid(C, 0.1), width = 2.5, height = 2.5,),
+				*Rectangle(
+					stroke = Stroke::new_solid(C, 0.1),
+					width = 2.5,
+					height = 2.5,
+				),
 				*Rectangle(
 					stroke = Stroke::new_solid(c(0.784), 0.1),
 					width = 1.8,

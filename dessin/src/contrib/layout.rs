@@ -105,10 +105,10 @@ impl From<VerticalLayout> for Shape {
 
 				let y_translation = if start_bottom {
 					-bb.bottom() // Recenter the bottom of the shape to be 0
-                + y // And then, above all the others
+				+ y // And then, above all the others
 				} else {
 					-bb.top() // Recenter the top of the shape to be 0
-                - y // And then, below all the others
+				- y // And then, below all the others
 				};
 
 				shape.translate([0., y_translation]);

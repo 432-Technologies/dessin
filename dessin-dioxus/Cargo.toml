@@ -15,6 +15,7 @@ version = "0.8.22"
 [dependencies]
 data-encoding = "2.8.0"
 dessin = { version = "0.8.22", path = "../dessin" }
+dessin-svg = { version = "0.8.22", path = "../dessin-svg" }
 image = "0.24"
 nalgebra = "0.33"
 dioxus = { version = "0.6" }

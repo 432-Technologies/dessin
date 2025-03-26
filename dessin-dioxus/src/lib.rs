@@ -17,6 +17,7 @@ pub enum SVGError {
 	WriteError(fmt::Error),
 	CurveHasNoStartingPoint(CurvePosition),
 	RenderError(RenderError),
+	SvgError(dessin_svg::SVGError),
 }
 impl fmt::Display for SVGError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -31,6 +32,11 @@ impl From<fmt::Error> for SVGError {
 impl From<RenderError> for SVGError {
 	fn from(value: RenderError) -> Self {
 		SVGError::RenderError(value)
+	}
+}
+impl From<dessin_svg::SVGError> for SVGError {
+	fn from(value: dessin_svg::SVGError) -> Self {
+		SVGError::SvgError(value)
 	}
 }
 impl std::error::Error for SVGError {}
@@ -64,6 +70,7 @@ pub fn SVG(
 	style: Option<String>,
 	shape: ReadOnlySignal<Shape>,
 	options: Option<SVGOptions>,
+	use_string: Option<bool>,
 ) -> Element {
 	let options = options.unwrap_or_default();
 
@@ -113,16 +120,46 @@ pub fn SVG(
 		used_font.write().insert(v);
 	};
 
+	let (child, inner) = match use_string {
+		Some(true) => (
+			rsx! {},
+			Some(use_memo(move || {
+				use dessin::export::Export;
+
+				let mut exporter = dessin_svg::SVGExporter::new();
+				shape
+					.read()
+					.write_into_exporter(
+						&mut exporter,
+						&nalgebra::convert(Scale2::new(1., -1.)),
+						StylePosition {
+							fill: None,
+							stroke: None,
+						},
+					)
+					.unwrap_or_default();
+				exporter.finish("", "")
+			})),
+		),
+		_ => (
+			rsx! {
+				Shaper {
+					shape,
+					parent_transform: nalgebra::convert(Scale2::new(1., -1.)),
+					add_font: move |ev| add_font(ev),
+				}
+			},
+			None,
+		),
+	};
+
 	rsx! {
 		svg {
 			class,
 			style,
 			view_box,
-			Shaper {
-				shape,
-				parent_transform: nalgebra::convert(Scale2::new(1., -1.)),
-				add_font: move |ev| add_font(ev),
-			}
+			dangerous_inner_html: inner,
+			{child}
 		}
 	}
 }
@@ -137,19 +174,9 @@ fn Shaper(
 		Shape::Group(dessin::shapes::Group {
 			local_transform,
 			shapes,
-			metadata,
+			metadata: _,
 		}) => {
 			let parent_transform = parent_transform * local_transform;
-
-			// let attributes = metadata
-			// 	.into_iter()
-			// 	.map(|(name, value)| Attribute {
-			// 		name,
-			// 		value: dioxus_core::AttributeValue::Text(value),
-			// 		namespace: todo!(),
-			// 		volatile: todo!(),
-			// 	})
-			// 	.collect::<Vec<_>>();
 
 			rsx! {
 				g {
@@ -276,7 +303,7 @@ fn Shaper(
 			};
 
 			let font_ref = text.font.clone().unwrap_or(FontRef::default());
-			let font = font_ref.name(text.font_weight);
+			let font_ref2 = font_ref.clone();
 
 			let x = text.reference_start.x;
 			let y = text.reference_start.y;
@@ -285,7 +312,7 @@ fn Shaper(
 			rsx! {
 				text {
 					onmounted: move |_| add_font((font_ref.clone(), text.font_weight)),
-					font_family: "{font}",
+					font_family: "{font_ref2}",
 					text_anchor: "{align}",
 					font_size: "{text.font_size}px",
 					font_weight: "{weight}",

@@ -114,18 +114,18 @@ impl Exporter for ImageExporter {
 		// let data = data_encoding::BASE64.encode(&raw_image.into_inner());
 
 		// write!(
-		//     self.acc,
-		//     r#"<image width="{width}" height="{height}" x="{x}" y="{y}" "#,
-		//     x = center.x - width / 2.,
-		//     y = center.y - height / 2.,
+		//	 self.acc,
+		//	 r#"<image width="{width}" height="{height}" x="{x}" y="{y}" "#,
+		//	 x = center.x - width / 2.,
+		//	 y = center.y - height / 2.,
 		// )?;
 
 		// if rotation.abs() > 10e-6 {
-		//     write!(
-		//         self.acc,
-		//         r#" transform="rotate({rot})" "#,
-		//         rot = -rotation.to_degrees()
-		//     )?;
+		//	 write!(
+		//		 self.acc,
+		//		 r#" transform="rotate({rot})" "#,
+		//		 rot = -rotation.to_degrees()
+		//	 )?;
 		// }
 
 		// write!(self.acc, r#"href="data:image/png;base64,{data}"/>"#,)?;
@@ -255,8 +255,7 @@ impl Exporter for ImageExporter {
 			font,
 		}: TextPosition,
 	) -> Result<(), Self::Error> {
-		let font = font.clone().unwrap_or_default();
-		let fg = dessin::font::get(font);
+		let fg = dessin::font::get_or_default(font.as_ref());
 		let font = fg.get(font_weight).as_bytes();
 
 		//dt.set_transform(&Transform::create_translation(50.0, 0.0));
@@ -308,12 +307,12 @@ impl ToImage for Shape {
 		let mut exporter = ImageExporter::new(width, height);
 
 		// self.write_into_exporter(
-		//     &mut exporter,
-		//     &transform,
-		//     StylePosition {
-		//         stroke: None,
-		//         fill: None,
-		//     },
+		//	 &mut exporter,
+		//	 &transform,
+		//	 StylePosition {
+		//		 stroke: None,
+		//		 fill: None,
+		//	 },
 		// )?;
 
 		if let Shape::Style { fill, stroke, .. } = self {

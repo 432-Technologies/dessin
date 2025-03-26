@@ -50,29 +50,20 @@ pub enum ViewPort {
 #[derive(Default, Clone)]
 pub struct SVGOptions {
 	pub viewport: ViewPort,
+	pub skip_svg_tag: bool,
 }
 
 pub struct SVGExporter {
-	start: String,
 	acc: String,
 	used_font: HashSet<(FontRef, FontWeight)>,
 }
 
 impl SVGExporter {
-	// fn new(min_x: f32, min_y: f32, span_x: f32, span_y: f32) -> Self {
-	fn new(min_x: f32, min_y: f32, span_x: f32, span_y: f32) -> Self {
-		const SCHEME: &str =
-			r#"xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink""#;
-
-		let start = format!(r#"<svg viewBox="{min_x} {min_y} {span_x} {span_y}" {SCHEME}>"#,);
+	pub fn new() -> Self {
 		let acc = String::new();
-		let stock: HashSet<(FontRef, FontWeight)> = HashSet::default();
+		let used_font: HashSet<(FontRef, FontWeight)> = HashSet::default();
 
-		SVGExporter {
-			start,
-			acc,
-			used_font: stock,
-		}
+		SVGExporter { acc, used_font }
 	}
 
 	fn write_style(&mut self, style: StylePosition) -> Result<(), SVGError> {
@@ -90,30 +81,30 @@ impl SVGExporter {
 		}
 
 		match style.stroke {
-            Some(Stroke::Dashed {
-                color,
-                width,
-                on,
-                off,
-            }) => write!(
-                self.acc,
-                "stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' stroke-dasharray='{on},{off}' ",
-                (color.red * 255.) as u32,
-                (color.green * 255.) as u32,
-                (color.blue * 255.) as u32,
-                color.alpha
-            )?,
-            Some(Stroke::Solid { color, width }) => {
-                write!(self.acc, "stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' ",
-                (color.red * 255.) as u32,
-                (color.green * 255.) as u32,
-                (color.blue * 255.) as u32,
-                color.alpha
-            )?
-            }
+			Some(Stroke::Dashed {
+				color,
+				width,
+				on,
+				off,
+			}) => write!(
+				self.acc,
+				"stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' stroke-dasharray='{on},{off}' ",
+				(color.red * 255.) as u32,
+				(color.green * 255.) as u32,
+				(color.blue * 255.) as u32,
+				color.alpha
+			)?,
+			Some(Stroke::Solid { color, width }) => write!(
+				self.acc,
+				"stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' ",
+				(color.red * 255.) as u32,
+				(color.green * 255.) as u32,
+				(color.blue * 255.) as u32,
+				color.alpha
+			)?,
 
-            None => {}
-        }
+			None => {}
+		}
 
 		Ok(())
 	}
@@ -148,15 +139,15 @@ impl SVGExporter {
 					}
 
 					write!(
-                            self.acc,
-                            "C {start_ctrl_x} {start_ctrl_y} {end_ctrl_x} {end_ctrl_y} {end_x} {end_y} ",
-                            start_ctrl_x = b.start_control.x,
-                            start_ctrl_y = b.start_control.y,
-                            end_ctrl_x = b.end_control.x,
-                            end_ctrl_y = b.end_control.y,
-                            end_x = b.end.x,
-                            end_y = b.end.y,
-                        )?;
+							self.acc,
+							"C {start_ctrl_x} {start_ctrl_y} {end_ctrl_x} {end_ctrl_y} {end_x} {end_y} ",
+							start_ctrl_x = b.start_control.x,
+							start_ctrl_y = b.start_control.y,
+							end_ctrl_x = b.end_control.x,
+							end_ctrl_y = b.end_control.y,
+							end_x = b.end.x,
+							end_y = b.end.y,
+						)?;
 				}
 			}
 
@@ -170,34 +161,42 @@ impl SVGExporter {
 		Ok(())
 	}
 
-	fn finish(self) -> String {
+	pub fn finish(
+		self,
+		svg_start_tag: impl fmt::Display,
+		svg_end_tag: impl fmt::Display,
+	) -> String {
 		let return_fonts = self
 			.used_font
 			.into_iter()
 			.map(move |(font_ref, font_weight)| {
-				let font_name = font_ref.name(font_weight);
-				let font_group = font::get(font_ref);
+				let font_group = font::get(&font_ref);
 				let (mime, bytes) = match font_group.get(font_weight) {
 					dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
 					dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
+				};
+				let font_name = &*font_ref;
+
+				let styles = match font_weight {
+					FontWeight::Regular => "font-weight:normal;font-style:normal;",
+					FontWeight::Bold => "font-weight:bold;font-style:normal;",
+					FontWeight::Italic => "font-weight:normal;font-style:italic;",
+					FontWeight::BoldItalic => "font-weight:bold;font-style:italic;",
 				};
 
 				// creates a base 64 ending font using previous imports
 				let encoded_font_bytes = data_encoding::BASE64.encode(&bytes);
 				format!(
-					r#"@font-face{{font-family:{font_name};src:url("data:{mime};base64,{encoded_font_bytes}");}}"#
+					r#"@font-face{{font-family:{font_name};src:url("data:{mime};base64,{encoded_font_bytes}");{styles}}}"#
 				)
 			})
 			.collect::<String>();
 
-		if return_fonts.is_empty() {
-			format!("{}{}</svg>", self.start, self.acc)
-		} else {
-			format!(
-				"{}<defs><style>{return_fonts}</style></defs>{}</svg>",
-				self.start, self.acc
-			)
-		}
+		let fonts = (!return_fonts.is_empty())
+			.then(|| format!("<defs><style>{return_fonts}</style></defs>"))
+			.unwrap_or_default();
+		let content = self.acc;
+		format!("{svg_start_tag}{fonts}{content}{svg_end_tag}")
 	}
 }
 
@@ -350,33 +349,8 @@ impl Exporter for SVGExporter {
 		};
 
 		let text = text.replace("<", "&lt;").replace(">", "&gt;");
-
 		let font = font.clone().unwrap_or(FontRef::default());
-
 		self.used_font.insert((font.clone(), font_weight));
-
-		// let font_group = font::get(font.clone());
-
-		let font = font.name(font_weight);
-
-		// let raw_font = match font_weight {
-		//     FontWeight::Regular => font_group.regular,
-		//     FontWeight::Bold => font_group
-		//         .bold
-		//         .as_ref()
-		//         .unwrap_or_else(|| &font_group.regular)
-		//         .clone(),
-		//     FontWeight::BoldItalic => font_group
-		//         .bold_italic
-		//         .as_ref()
-		//         .unwrap_or_else(|| &font_group.regular)
-		//         .clone(),
-		//     FontWeight::Italic => font_group
-		//         .italic
-		//         .as_ref()
-		//         .unwrap_or_else(|| &font_group.regular)
-		//         .clone(),
-		// };
 
 		write!(
 			self.acc,
@@ -412,11 +386,7 @@ impl Exporter for SVGExporter {
 	}
 }
 
-pub fn to_string_with_options(
-	shape: &Shape,
-	options: SVGOptions,
-	// StylePosition { fill, stroke }: StylePosition, --
-) -> Result<String, SVGError> {
+pub fn to_string_with_options(shape: &Shape, options: SVGOptions) -> Result<String, SVGError> {
 	let (min_x, min_y, span_x, span_y) = match options.viewport {
 		ViewPort::ManualCentered { width, height } => (-width / 2., -height / 2., width, height),
 		ViewPort::ManualViewport {
@@ -450,18 +420,9 @@ pub fn to_string_with_options(
 		}
 	};
 
-	let mut exporter = SVGExporter::new(min_x, min_y, span_x, span_y);
+	let mut exporter = SVGExporter::new();
 
 	let parent_transform = nalgebra::convert(Scale2::new(1., -1.));
-
-	// shape.write_into_exporter(
-	//     &mut exporter,
-	//     &parent_transform,
-	//     StylePosition {
-	//         fill: None,
-	//         stroke: None,
-	//     },
-	// )?;
 
 	if let Shape::Style { fill, stroke, .. } = shape {
 		shape.write_into_exporter(
@@ -483,7 +444,19 @@ pub fn to_string_with_options(
 		)?
 	}
 
-	Ok(exporter.finish())
+	let (start, end) = if options.skip_svg_tag {
+		(String::new(), "")
+	} else {
+		const SCHEME: &str =
+			r#"xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink""#;
+
+		(
+			format!(r#"<svg viewBox="{min_x} {min_y} {span_x} {span_y}" {SCHEME}>"#),
+			"</svg>",
+		)
+	};
+
+	Ok(exporter.finish(start, end))
 }
 
 pub fn to_string(shape: &Shape) -> Result<String, SVGError> {

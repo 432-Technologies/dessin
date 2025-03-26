@@ -144,21 +144,21 @@ impl Exporter for PDFExporter<'_> {
 		}
 
 		// if let None = stroke {
-		//     // self.layer.set_overprint_fill(false)
+		//	 // self.layer.set_overprint_fill(false)
 		// }
 
 		// if let None = stroke {
-		//     // just works if we have a white background
-		//     let (r, g, b) = (1., 1., 1.);
-		//     self.layer
-		//         .set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
-		//             r,
-		//             g,
-		//             b,
-		//             icc_profile: None,
-		//         }));
-		//     self.layer
-		//         .set_outline_thickness(printpdf::Mm(0.).into_pt().0)
+		//	 // just works if we have a white background
+		//	 let (r, g, b) = (1., 1., 1.);
+		//	 self.layer
+		//		 .set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
+		//			 r,
+		//			 g,
+		//			 b,
+		//			 icc_profile: None,
+		//		 }));
+		//	 self.layer
+		//		 .set_outline_thickness(printpdf::Mm(0.).into_pt().0)
 		// }
 
 		Ok(())
@@ -243,39 +243,39 @@ impl Exporter for PDFExporter<'_> {
 		StylePosition { fill, stroke }: StylePosition,
 	) -> Result<(), Self::Error> {
 		let points1 = curve
-            .keypoints
-            .iter()
-            .enumerate()
-            .flat_map(|(i, key_point)| {
-                let next_control = matches!(curve.keypoints.get(i + 1), Some(KeypointPosition::Bezier(b)) if b.start.is_none());
-                match key_point {
-                    KeypointPosition::Point(p) => {
-                        vec![(Point::new(Mm(p.x), Mm(p.y)), next_control)]
-                    }
-                    KeypointPosition::Bezier(b) => {
-                        let mut res = vec![];
-                        if let Some(start) = b.start {
-                            res.push((Point::new(Mm(start.x), Mm(start.y)), true));
-                        }
-                        res.append(&mut vec![
-                            (
-                                Point::new(Mm(b.start_control.x), Mm(b.start_control.y)),
-                                true,
-                            ),
-                            (Point::new(Mm(b.end_control.x), Mm(b.end_control.y)), false),
-                            (Point::new(Mm(b.end.x), Mm(b.end.y)), next_control),
-                        ]);
-                        res
-                    }
-                }
-            })
-            .collect();
+			.keypoints
+			.iter()
+			.enumerate()
+			.flat_map(|(i, key_point)| {
+				let next_control = matches!(curve.keypoints.get(i + 1), Some(KeypointPosition::Bezier(b)) if b.start.is_none());
+				match key_point {
+					KeypointPosition::Point(p) => {
+						vec![(Point::new(Mm(p.x), Mm(p.y)), next_control)]
+					}
+					KeypointPosition::Bezier(b) => {
+						let mut res = vec![];
+						if let Some(start) = b.start {
+							res.push((Point::new(Mm(start.x), Mm(start.y)), true));
+						}
+						res.append(&mut vec![
+							(
+								Point::new(Mm(b.start_control.x), Mm(b.start_control.y)),
+								true,
+							),
+							(Point::new(Mm(b.end_control.x), Mm(b.end_control.y)), false),
+							(Point::new(Mm(b.end.x), Mm(b.end.y)), next_control),
+						]);
+						res
+					}
+				}
+			})
+			.collect();
 		//------------------------------------------------------------
 
 		// let line = Line {
-		//     // Seems to be good --
-		//     points: points1,
-		//     is_closed: curve.closed,
+		//	 // Seems to be good --
+		//	 points: points1,
+		//	 is_closed: curve.closed,
 		// };
 		// self.layer.add_line(line);
 		//-----------------------------------------------------------------
@@ -316,7 +316,7 @@ impl Exporter for PDFExporter<'_> {
 		let font = self
 			.used_font
 			.entry((font.clone(), font_weight))
-			.or_insert_with(|| match font::get(font.clone()).get(font_weight) {
+			.or_insert_with(|| match font::get(&font).get(font_weight) {
 				dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
 					if let Err(err) = self.doc.add_external_font(b.as_slice()) {
 						println!("Failed to add external font : {}", err);
@@ -330,8 +330,8 @@ impl Exporter for PDFExporter<'_> {
 		self.layer.begin_text_section();
 		self.layer.set_font(&font, font_size);
 		// if let Some(te) = text.on_curve {
-		//     self.layer.add_polygon()
-		//     todo!()
+		//	 self.layer.add_polygon()
+		//	 todo!()
 		// }
 		let rotation = direction.y.atan2(direction.x).to_degrees();
 		self.layer

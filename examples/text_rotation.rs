@@ -29,8 +29,10 @@ impl From<RotatedText> for Shape {
 				*Rectangle(
 					{ width },
 					{ height },
-					stroke =
-						Stroke::new_solid(Srgb::<f32>::from_format(named::BLACK).into_linear(), 0.1)
+					stroke = Stroke::new_solid(
+						Srgb::<f32>::from_format(named::BLACK).into_linear(),
+						0.1
+					)
 				),
 				{ text },
 			] > (translate = [0., 15.], rotate = Rotation2::new(rotation),)

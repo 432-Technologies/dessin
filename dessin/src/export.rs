@@ -39,7 +39,7 @@ where
 	/// 	shape.write_into_exporter( // Start walking the dessin
 	/// 		&mut my_dummy_exporter,
 	/// 		&Default::default(),
-	///         StylePosition {fill: None,stroke: None,},
+	///		 StylePosition {fill: None,stroke: None,},
 	/// 	);
 	/// }
 	///
@@ -173,7 +173,7 @@ where
 /// 		self.write_into_exporter( // Start walking the dessin
 /// 			&mut exporter,
 /// 			&Default::default(), // In the real implementation, we need to mirror the Y axis, as the positive side is in the DOWN side
-///             StylePosition {fill: None,stroke: None,},
+///			 StylePosition {fill: None,stroke: None,},
 /// 		).unwrap();
 ///
 /// 		exporter.finish()

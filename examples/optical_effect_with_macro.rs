@@ -55,6 +55,7 @@ fn main() {
 					width: 14.,
 					height: 14.,
 				},
+				..Default::default()
 			},
 		)
 		.unwrap(),

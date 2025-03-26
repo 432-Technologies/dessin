@@ -157,7 +157,7 @@ impl From<Text> for Shape {
 
 impl ShapeBoundingBox for Text {
 	fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
-		let fonts = crate::font::get(self.font.clone().unwrap_or_default());
+		let fonts = crate::font::get_or_default(self.font.as_ref());
 		let raw_font = match fonts.get(FontWeight::Regular) {
 			crate::font::Font::OTF(bytes) => bytes,
 			crate::font::Font::TTF(bytes) => bytes,
