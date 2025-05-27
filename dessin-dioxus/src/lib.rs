@@ -65,12 +65,89 @@ pub struct SVGOptions {
 }
 
 #[component]
+pub fn SVGString(
+	class: Option<String>,
+	style: Option<String>,
+	shape: ReadOnlySignal<Shape>,
+	options: Option<SVGOptions>,
+) -> Element {
+	let options = options.unwrap_or_default();
+
+	let view_box = use_memo(move || {
+		let shape = shape();
+
+		let (min_x, min_y, span_x, span_y) = match options.viewport {
+			ViewPort::ManualCentered { width, height } => {
+				(-width / 2., -height / 2., width, height)
+			}
+			ViewPort::ManualViewport {
+				x,
+				y,
+				width,
+				height,
+			} => (x - width / 2., y - height / 2., width, height),
+			ViewPort::AutoCentered => {
+				let bb = shape.local_bounding_box().straigthen();
+
+				let mirror_bb = bb
+					.transform(&nalgebra::convert::<_, Transform2<f32>>(Scale2::new(
+						-1., -1.,
+					)))
+					.into_straight();
+
+				let overall_bb = bb.join(mirror_bb);
+
+				(
+					-overall_bb.width() / 2.,
+					-overall_bb.height() / 2.,
+					overall_bb.width(),
+					overall_bb.height(),
+				)
+			}
+			ViewPort::AutoBoundingBox => {
+				let bb = shape.local_bounding_box().straigthen();
+
+				(bb.top_left().x, -bb.top_left().y, bb.width(), bb.height())
+			}
+		};
+
+		format!("{min_x} {min_y} {span_x} {span_y}")
+	});
+
+	let svg = use_memo(move || {
+		use dessin::export::Export;
+
+		let mut exporter = dessin_svg::SVGExporter::new();
+		shape
+			.read()
+			.write_into_exporter(
+				&mut exporter,
+				&nalgebra::convert(Scale2::new(1., -1.)),
+				StylePosition {
+					fill: None,
+					stroke: None,
+				},
+			)
+			.unwrap_or_default();
+		exporter.finish("", "")
+	});
+
+	rsx! {
+		svg {
+			class,
+			style,
+			view_box,
+			dangerous_inner_html: svg,
+		}
+	}
+}
+
+#[component]
 pub fn SVG(
 	class: Option<String>,
 	style: Option<String>,
 	shape: ReadOnlySignal<Shape>,
 	options: Option<SVGOptions>,
-	use_string: Option<bool>,
 ) -> Element {
 	let options = options.unwrap_or_default();
 
@@ -120,46 +197,19 @@ pub fn SVG(
 		used_font.write().insert(v);
 	};
 
-	let (child, inner) = match use_string {
-		Some(true) => (
-			rsx! {},
-			Some(use_memo(move || {
-				use dessin::export::Export;
-
-				let mut exporter = dessin_svg::SVGExporter::new();
-				shape
-					.read()
-					.write_into_exporter(
-						&mut exporter,
-						&nalgebra::convert(Scale2::new(1., -1.)),
-						StylePosition {
-							fill: None,
-							stroke: None,
-						},
-					)
-					.unwrap_or_default();
-				exporter.finish("", "")
-			})),
-		),
-		_ => (
-			rsx! {
-				Shaper {
-					shape,
-					parent_transform: nalgebra::convert(Scale2::new(1., -1.)),
-					add_font: move |ev| add_font(ev),
-				}
-			},
-			None,
-		),
-	};
-
 	rsx! {
 		svg {
 			class,
 			style,
 			view_box,
-			dangerous_inner_html: inner,
-			{child}
+			Shaper {
+				shape,
+				parent_transform: nalgebra::convert(Scale2::new(1., -1.)),
+				add_font: move |ev| add_font(ev),
+			}
+			defs {
+				style {}
+			}
 		}
 	}
 }

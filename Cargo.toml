@@ -8,9 +8,10 @@ members = [
 	"dessin-image",
 	"dessin-dioxus",
 	"dessin-macros",
+	"dessin-editor",
 
 	# Internal
-	"examples", "dessin-editor",
+	"examples",
 ]
 
 [workspace.package]
