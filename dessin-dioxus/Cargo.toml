@@ -13,9 +13,9 @@ repository = "https://github.com/432-technologies/dessin"
 version = "0.8.22"
 
 [dependencies]
-dioxus = { version = "^0.7.0-alpha.3" }
-data-encoding = "2.8.0"
-dessin = { version = "0.8.22", path = "../dessin" }
-dessin-svg = { version = "0.8.22", path = "../dessin-svg" }
-image = "0.24"
-nalgebra = "0.33"
+dioxus = { version = "^0.7.0-rc.0" }
+data-encoding = "^2.9"
+dessin = { version = "^0.8.22", path = "../dessin" }
+dessin-svg = { version = "^0.8.22", path = "../dessin-svg" }
+image = "^0.25"
+nalgebra = "^0.34"

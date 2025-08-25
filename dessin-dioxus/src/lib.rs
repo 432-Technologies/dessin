@@ -395,31 +395,26 @@ fn Shaper(
 
 fn write_curve(curve: CurvePosition) -> String {
 	let mut acc = String::new();
-	let mut has_start = false;
+	let mut is_first = true;
 
 	for keypoint in &curve.keypoints {
 		match keypoint {
 			KeypointPosition::Point(p) => {
-				if has_start {
-					acc.push_str("L ");
-				} else {
-					acc.push_str("M ");
-					has_start = true;
-				}
-				acc.push_str(&format!("{} {} ", p.x, p.y));
+				acc.push_str(&format!(
+					"{} {} {} ",
+					if is_first { "M" } else { "L" },
+					p.x,
+					p.y
+				));
 			}
 			KeypointPosition::Bezier(b) => {
-				if has_start {
-					if let Some(v) = b.start {
-						acc.push_str(&format!("L {} {} ", v.x, v.y));
-					}
-				} else {
-					if let Some(v) = b.start {
-						acc.push_str(&format!("M {} {} ", v.x, v.y));
-						has_start = true;
-					} else {
-						return String::new();
-					}
+				if let Some(v) = b.start {
+					acc.push_str(&format!(
+						"{} {} {} ",
+						if is_first { "M" } else { "L" },
+						v.x,
+						v.y
+					));
 				}
 
 				acc.push_str(&format!(
@@ -434,7 +429,7 @@ fn write_curve(curve: CurvePosition) -> String {
 			}
 		}
 
-		has_start = true;
+		is_first = false;
 	}
 
 	if curve.closed {

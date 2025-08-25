@@ -46,34 +46,40 @@ impl<T> Padding<T> {
 		}
 	}
 
+	/// Add padding left and right
 	#[inline]
 	pub fn padding_x(&mut self, padding: f32) -> &mut Self {
 		self.padding_left = padding;
 		self.padding_right = padding;
 		self
 	}
+	/// Add padding left and right
 	#[inline]
 	pub fn with_padding_x(mut self, padding: f32) -> Self {
 		self.padding_x(padding);
 		self
 	}
 
+	/// Add padding top and bottom
 	#[inline]
 	pub fn padding_y(&mut self, padding: f32) -> &mut Self {
 		self.padding_top = padding;
 		self.padding_bottom = padding;
 		self
 	}
+	/// Add padding top and bottom
 	#[inline]
 	pub fn with_padding_y(mut self, padding: f32) -> Self {
 		self.padding_y(padding);
 		self
 	}
 
+	/// Add padding left, right, top and bottom
 	#[inline]
 	pub fn padding(&mut self, padding: f32) -> &mut Self {
 		self.padding_x(padding).padding_y(padding)
 	}
+	/// Add padding left, right, top and bottom
 	#[inline]
 	pub fn with_padding(mut self, padding: f32) -> Self {
 		self.padding(padding);

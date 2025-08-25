@@ -6,57 +6,71 @@ use crate::{
 use nalgebra::{Point2, Scale2, Transform2, Vector2};
 
 #[derive(Debug, Clone, PartialEq)]
+///
 pub struct EllipsePosition {
+	///
 	pub center: Point2<f32>,
 
+	///
 	pub semi_major_axis: f32,
+	///
 	pub semi_minor_axis: f32,
 
+	///
 	pub rotation: f32,
 }
 
 #[derive(Default, Debug, Clone, PartialEq)]
+///
 pub struct Ellipse {
+	///
 	pub local_transform: Transform2<f32>,
 }
 
 impl Ellipse {
 	#[inline]
+	///
 	pub fn axis<S: Into<Scale2<f32>>>(&mut self, scale: S) -> &mut Self {
 		self.scale(scale);
 		self
 	}
 
 	#[inline]
+	///
 	pub fn with_axis<S: Into<Scale2<f32>>>(mut self, scale: S) -> Self {
 		self.axis(scale);
 		self
 	}
 
 	#[inline]
+	///
 	pub fn semi_major_axis(&mut self, value: f32) -> &mut Self {
 		self.scale(Scale2::new(2. * value, 1.));
 		self
 	}
 
 	#[inline]
+	///
 	pub fn with_semi_major_axis(mut self, value: f32) -> Self {
 		self.semi_major_axis(value);
 		self
 	}
 
 	#[inline]
+	///
 	pub fn semi_minor_axis(&mut self, value: f32) -> &mut Self {
 		self.scale(Scale2::new(1., 2. * value));
 		self
 	}
 
 	#[inline]
+	///
 	pub fn with_semi_minor_axis(mut self, value: f32) -> Self {
 		self.semi_minor_axis(value);
 		self
 	}
 
+	///
 	pub fn position(&self, parent_transform: &Transform2<f32>) -> EllipsePosition {
 		let transform = self.global_transform(parent_transform);
 

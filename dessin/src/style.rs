@@ -9,7 +9,9 @@ use std::{
 /// Calculated result style
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct StylePosition {
+	///
 	pub stroke: Option<Stroke>,
+	///
 	pub fill: Option<Fill>,
 }
 
@@ -17,13 +19,22 @@ pub struct StylePosition {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Stroke {
 	/// Solid line
-	Solid { color: Srgba, width: f32 },
+	Solid {
+		///
+		color: Srgba,
+		///
+		width: f32,
+	},
 
 	/// Dashed line
 	Dashed {
+		///
 		color: Srgba,
+		///
 		width: f32,
+		///
 		on: f32,
+		///
 		off: f32,
 	},
 }
@@ -84,7 +95,10 @@ impl Mul<Stroke> for Transform2<f32> {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Fill {
 	/// Solid fill
-	Solid { color: Srgba },
+	Solid {
+		///
+		color: Srgba,
+	},
 }
 impl Stroke {}
 
@@ -106,6 +120,7 @@ impl Mul<Fill> for Transform2<f32> {
 	}
 }
 
+///
 #[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Style<T> {
 	/// Wrapped `Shape`

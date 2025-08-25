@@ -5,8 +5,8 @@ use dessin::{
 	palette::Srgba,
 	prelude::*,
 };
-use dessin_dioxus::{SVGOptions, ViewPort, SVG};
-use dioxus::{logger::tracing::debug, prelude::*};
+use dessin_dioxus::ViewPort;
+use dioxus::prelude::*;
 
 const FAVICON: Asset = asset!("/assets/favicon.ico");
 
@@ -16,7 +16,7 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-	let mut shape = use_signal(|| {
+	let shape = use_signal(|| {
 		Shape::from(WindToggle {
 			color: Srgba::new(1., 0.2, 0.1, 1.),
 			morph: 0.,
@@ -92,7 +92,6 @@ impl From<CanvasSize> for ViewPort {
 #[component]
 fn Canvas(shape: Signal<Shape>, canvas_size: Signal<CanvasSize>) -> Element {
 	let mut size = use_signal(|| Vector2::new(0., 0.));
-	let width = use_memo(move || size().min());
 
 	let points = use_signal(|| {
 		vec![Point {

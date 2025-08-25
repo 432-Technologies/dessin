@@ -4,61 +4,81 @@ use image::DynamicImage;
 use nalgebra::{Point2, Scale2, Transform2, Vector2};
 
 #[derive(Debug, Clone, PartialEq)]
+///
 pub struct ImagePosition<'a> {
+	///
 	pub top_left: Point2<f32>,
+	///
 	pub top_right: Point2<f32>,
+	///
 	pub bottom_right: Point2<f32>,
+	///
 	pub bottom_left: Point2<f32>,
+	///
 	pub center: Point2<f32>,
 
+	///
 	pub width: f32,
+	///
 	pub height: f32,
 
+	///
 	pub rotation: f32,
 
+	///
 	pub image: &'a DynamicImage,
 }
 
 #[derive(Default, Debug, Clone, PartialEq)]
+///
 pub struct Image {
+	///
 	pub image: DynamicImage,
+	///
 	pub local_transform: Transform2<f32>,
 }
 impl Image {
 	#[inline]
+	///
 	pub fn image_size_pixel(&self) -> (u32, u32) {
 		(self.image.width(), self.image.height())
 	}
 
 	#[inline]
+	///
 	pub fn aspect_ratio(&self) -> f32 {
 		let (w, h) = self.image_size_pixel();
 		w as f32 / h as f32
 	}
 
+	///
 	pub fn image(&mut self, image: DynamicImage) -> &mut Self {
 		self.image = image;
 		self
 	}
 
 	#[inline]
+	///
 	pub fn with_image(mut self, image: DynamicImage) -> Self {
 		self.image(image);
 		self
 	}
 
+	///
 	pub fn keep_aspect_ratio(&mut self) -> &mut Self {
 		self.scale(Scale2::new(self.aspect_ratio(), 1.));
 		self
 	}
 
 	#[inline]
+	///
 	pub fn with_keep_aspect_ratio(mut self) -> Self {
 		self.keep_aspect_ratio();
 		self
 	}
 
-	pub fn position<'a>(&'a self, parent_transform: &Transform2<f32>) -> ImagePosition {
+	///
+	pub fn position<'a>(&'a self, parent_transform: &Transform2<f32>) -> ImagePosition<'a> {
 		let transform = self.global_transform(parent_transform);
 
 		let top_left = transform * Point2::new(-0.5, 0.5);

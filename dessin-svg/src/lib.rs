@@ -284,6 +284,7 @@ impl Exporter for SVGExporter {
 			semi_minor_axis,
 			rotation,
 		}: EllipsePosition,
+		_: StylePosition,
 	) -> Result<(), Self::Error> {
 		write!(
 			self.acc,
@@ -306,11 +307,7 @@ impl Exporter for SVGExporter {
 		Ok(())
 	}
 
-	fn export_curve(
-		&mut self,
-		curve: CurvePosition,
-		StylePosition { fill, stroke }: StylePosition,
-	) -> Result<(), Self::Error> {
+	fn export_curve(&mut self, curve: CurvePosition, _: StylePosition) -> Result<(), Self::Error> {
 		write!(self.acc, r#"<path d=""#)?;
 		self.write_curve(curve)?;
 		write!(self.acc, r#""/>"#)?;
@@ -330,6 +327,7 @@ impl Exporter for SVGExporter {
 			direction,
 			font,
 		}: TextPosition,
+		_: StylePosition,
 	) -> Result<(), Self::Error> {
 		static ID: LazyLock<AtomicU32> = LazyLock::new(|| AtomicU32::new(0));
 		let id = ID.fetch_add(1, std::sync::atomic::Ordering::AcqRel);

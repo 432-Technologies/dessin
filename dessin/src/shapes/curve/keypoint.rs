@@ -5,19 +5,27 @@ use crate::{
 };
 use nalgebra::{Point2, Transform2, Vector2};
 
+/// Final position of a point
 #[derive(Debug, Clone, PartialEq)]
 pub enum KeypointPosition {
+	/// 2d point
 	Point(Point2<f32>),
+	/// Bezier point
 	Bezier(Bezier),
 }
 
+/// Position of a point
 #[derive(Debug, Clone, PartialEq)]
 pub enum Keypoint {
+	/// 2d point
 	Point(Point2<f32>),
+	/// Bezier point
 	Bezier(Bezier),
+	/// Nested curve
 	Curve(Curve),
 }
 impl Keypoint {
+	/// Transform
 	pub fn transform(&self, parent_transform: &Transform2<f32>) -> Self {
 		match self {
 			Keypoint::Point(p) => Keypoint::Point(parent_transform * p),
@@ -26,6 +34,7 @@ impl Keypoint {
 		}
 	}
 
+	/// bounding_box
 	pub fn bounding_box(&self) -> BoundingBox<UnParticular> {
 		match self {
 			Keypoint::Curve(c) => c.local_bounding_box(),
@@ -51,15 +60,21 @@ impl Default for Keypoint {
 	}
 }
 
+/// Cubic bezier point
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Bezier {
+	/// Move first point
 	pub start: Option<Point2<f32>>,
+	/// 1st control point
 	pub start_control: Point2<f32>,
 
+	/// 2nd control point
 	pub end_control: Point2<f32>,
+	/// End point
 	pub end: Point2<f32>,
 }
 impl Bezier {
+	/// New with a start point
 	pub fn new_with_start(
 		start: Point2<f32>,
 		start_control: Point2<f32>,
@@ -74,6 +89,7 @@ impl Bezier {
 		}
 	}
 
+	/// New without a start point
 	pub fn new(start_control: Point2<f32>, end_control: Point2<f32>, end: Point2<f32>) -> Self {
 		Bezier {
 			start: None,
@@ -83,6 +99,7 @@ impl Bezier {
 		}
 	}
 
+	/// New with control points relative to their points
 	pub fn new_relative_with_start(
 		start: Point2<f32>,
 		start_control: Vector2<f32>,
@@ -97,6 +114,7 @@ impl Bezier {
 		}
 	}
 
+	/// New with control points relative to their points, without a start point
 	pub fn new_relative(
 		start: &Point2<f32>,
 		start_control: Vector2<f32>,
@@ -111,6 +129,7 @@ impl Bezier {
 		}
 	}
 
+	/// Transform
 	pub fn transform(&self, parent_transform: &Transform2<f32>) -> Self {
 		Bezier {
 			start: self.start.map(|v| parent_transform * v),

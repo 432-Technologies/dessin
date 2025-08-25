@@ -102,7 +102,10 @@ where
 			Shape::Image(image) => exporter.export_image(image.position(parent_transform)),
 			Shape::Ellipse(ellipse) => {
 				if E::CAN_EXPORT_ELLIPSE {
-					exporter.export_ellipse(ellipse.position(parent_transform))
+					exporter.export_ellipse(
+						ellipse.position(parent_transform),
+						StylePosition { fill, stroke },
+					)
 				} else {
 					exporter.export_curve(
 						ellipse.as_curve().position(parent_transform),
@@ -114,7 +117,10 @@ where
 				curve.position(parent_transform),
 				StylePosition { fill, stroke },
 			),
-			Shape::Text(text) => exporter.export_text(text.position(parent_transform)),
+			Shape::Text(text) => exporter.export_text(
+				text.position(parent_transform),
+				StylePosition { fill, stroke },
+			),
 			Shape::Dynamic {
 				local_transform,
 				shaper,
@@ -210,7 +216,11 @@ pub trait Exporter {
 	/// Export an [`Image`][crate::shapes::image::Image]
 	fn export_image(&mut self, image: ImagePosition) -> Result<(), Self::Error>;
 	/// Export an [`Ellipse`][crate::shapes::ellipse::Ellipse]
-	fn export_ellipse(&mut self, _ellipse: EllipsePosition) -> Result<(), Self::Error> {
+	fn export_ellipse(
+		&mut self,
+		_ellipse: EllipsePosition,
+		_style: StylePosition,
+	) -> Result<(), Self::Error> {
 		Ok(())
 	}
 	/// Export a [`Curve`][crate::shapes::curve::Curve]
@@ -220,5 +230,5 @@ pub trait Exporter {
 		style_position: StylePosition,
 	) -> Result<(), Self::Error>;
 	/// Export a [`Text`][crate::shapes::text::Text]
-	fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error>;
+	fn export_text(&mut self, text: TextPosition, style: StylePosition) -> Result<(), Self::Error>;
 }

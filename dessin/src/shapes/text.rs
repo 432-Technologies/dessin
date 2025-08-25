@@ -61,38 +61,55 @@ pub enum TextVerticalAlign {
 	Top,
 }
 
+///
 pub struct TextPosition<'a> {
+	///
 	pub text: &'a str,
+	///
 	pub align: TextAlign,
+	///
 	pub font_weight: FontWeight,
+	///
 	pub on_curve: Option<CurvePosition>,
+	///
 	pub font_size: f32,
+	///
 	pub reference_start: Point2<f32>,
+	///
 	pub direction: Unit<Vector2<f32>>,
+	///
 	pub font: &'a Option<FontRef>,
 }
 
 #[derive(Debug, Clone, PartialEq, Shape)]
+///
 pub struct Text {
 	/// [`ShapeOp`]
 	#[local_transform]
 	pub local_transform: Transform2<f32>,
 
 	#[shape(into)]
+	///
 	pub text: String,
 
+	///
 	pub align: TextAlign,
 
+	///
 	pub vertical_align: TextVerticalAlign,
 
+	///
 	pub font_weight: FontWeight,
 
 	#[shape(into_some)]
+	///
 	pub on_curve: Option<Curve>,
 
+	///
 	pub font_size: f32,
 
 	#[shape(into_some)]
+	///
 	pub font: Option<FontRef>,
 }
 impl Default for Text {
@@ -111,18 +128,21 @@ impl Default for Text {
 }
 impl Text {
 	#[inline]
+	///
 	pub fn maybe_font<F: Into<FontRef>>(&mut self, font: Option<F>) -> &mut Self {
 		self.font = font.map(Into::into).into();
 		self
 	}
 
 	#[inline]
+	///
 	pub fn with_maybe_font<F: Into<FontRef>>(mut self, font: Option<F>) -> Self {
 		self.maybe_font(font);
 		self
 	}
 
-	pub fn position(&self, parent_transform: &Transform2<f32>) -> TextPosition {
+	///
+	pub fn position<'a>(&'a self, parent_transform: &Transform2<f32>) -> TextPosition<'a> {
 		let transform = self.global_transform(parent_transform);
 
 		let font_size = self.font_size * (transform * Vector2::new(0., 1.)).magnitude();

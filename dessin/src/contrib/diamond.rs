@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use nalgebra::{Point2, Transform2};
 
+/// A 4 sided polygon
 #[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Diamond {
 	/// [`ShapeOp`]

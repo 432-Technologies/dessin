@@ -24,26 +24,31 @@ fn font_holder_mut<T, F: FnOnce(&mut FontHolder) -> T>(f: F) -> T {
 }
 
 #[inline]
+///
 pub fn get(idx: &FontRef) -> FontGroup<Font> {
 	font_holder(|f| f.fonts[&idx.0].clone())
 }
 
 #[inline]
+///
 pub fn get_or_default(idx: Option<&FontRef>) -> FontGroup<Font> {
 	idx.map(get).unwrap_or_else(|| get(&*DEFAULT_FONT))
 }
 
 #[inline]
+///
 pub fn fonts() -> HashMap<EcoString, FontGroup<Font>> {
 	font_holder(|f| f.fonts.clone())
 }
 
 #[inline]
+///
 pub fn font_names() -> Vec<EcoString> {
 	font_holder(|f| f.fonts.keys().cloned().collect())
 }
 
 #[inline]
+///
 pub fn add_font<S: Into<EcoString>>(font_name: S, font: FontGroup<Font>) -> FontRef {
 	font_holder_mut(move |f| {
 		let font_name = font_name.into();
@@ -52,10 +57,12 @@ pub fn add_font<S: Into<EcoString>>(font_name: S, font: FontGroup<Font>) -> Font
 	})
 }
 
+///
 pub const DEFAULT_FONT: LazyLock<FontRef> = LazyLock::new(|| FontRef("Hyperlegible".into()));
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 #[repr(transparent)]
+///
 pub struct FontRef(EcoString);
 impl FontRef {}
 impl Deref for FontRef {
@@ -83,12 +90,16 @@ impl<S: Into<EcoString>> From<S> for FontRef {
 }
 
 #[derive(Clone)]
+///
 pub enum Font {
+	/// OTF font
 	OTF(Vec<u8>),
+	/// TTF font
 	TTF(Vec<u8>),
 }
 
 impl Font {
+	///
 	pub fn as_bytes(&self) -> &[u8] {
 		match self {
 			Font::OTF(b) | Font::TTF(b) => b.as_slice(),
@@ -97,13 +108,19 @@ impl Font {
 }
 
 #[derive(Clone)]
+///
 pub struct FontGroup<T> {
+	///
 	pub regular: T,
+	///
 	pub bold: Option<T>,
+	///
 	pub italic: Option<T>,
+	///
 	pub bold_italic: Option<T>,
 }
 impl FontGroup<Font> {
+	///
 	pub fn get(&self, font_weight: FontWeight) -> &Font {
 		match font_weight {
 			FontWeight::Regular => &self.regular,
@@ -114,6 +131,7 @@ impl FontGroup<Font> {
 	}
 
 	#[cfg(feature = "default-font")]
+	///
 	pub fn hyperlegible() -> FontGroup<Font> {
 		FontGroup {
 			regular: Font::OTF(
@@ -132,6 +150,7 @@ impl FontGroup<Font> {
 	}
 
 	#[cfg(not(feature = "default-font"))]
+	///
 	pub fn hyperlegible() -> FontGroup<Font> {
 		FontGroup {
 			regular: Font::ByName("HyperlegibleRegular".to_string()),
@@ -142,6 +161,7 @@ impl FontGroup<Font> {
 	}
 }
 
+///
 pub struct FontHolder {
 	fonts: HashMap<EcoString, FontGroup<Font>>,
 }

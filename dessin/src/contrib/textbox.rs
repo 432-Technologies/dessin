@@ -1,7 +1,6 @@
 use crate::{font::FontRef, prelude::*};
 use fontdue::{Font, FontSettings};
 use nalgebra::Transform2;
-use palette::{named, Srgb};
 
 /// Box of text, with auto wrapping text if width is too large
 #[derive(Debug, Clone, PartialEq, Shape)]

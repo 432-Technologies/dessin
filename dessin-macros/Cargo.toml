@@ -10,7 +10,7 @@ edition = "2021"
 license = "MIT"
 name = "dessin-macros"
 repository = "https://github.com/432-technologies/dessin"
-version = "0.8.22"
+version = "0.8.23"
 
 [lib]
 proc-macro = true

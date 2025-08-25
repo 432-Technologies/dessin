@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use nalgebra::{Point2, Transform2};
 
-// create a struct which will be composed by 3 vectors (3 points of the vertex of the triangle)
+/// Create a struct which will be composed by 3 vectors (3 points of the vertex of the triangle)
 #[derive(Default, Debug, Clone, PartialEq, Shape)]
 pub struct Triangle {
 	/// [`ShapeOp`]

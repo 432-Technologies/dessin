@@ -133,11 +133,7 @@ impl Exporter for ImageExporter {
 		Ok(())
 	}
 
-	fn export_curve(
-		&mut self,
-		curve: CurvePosition,
-		StylePosition { stroke, fill }: StylePosition,
-	) -> Result<(), Self::Error> {
+	fn export_curve(&mut self, curve: CurvePosition, _: StylePosition) -> Result<(), Self::Error> {
 		let mut path = PathBuilder::new();
 
 		for (idx, k) in curve.keypoints.iter().enumerate() {
@@ -254,6 +250,7 @@ impl Exporter for ImageExporter {
 			direction: _,
 			font,
 		}: TextPosition,
+		_: StylePosition,
 	) -> Result<(), Self::Error> {
 		let fg = dessin::font::get_or_default(font.as_ref());
 		let font = fg.get(font_weight).as_bytes();
