@@ -114,18 +114,18 @@ impl Exporter for ImageExporter {
 		// let data = data_encoding::BASE64.encode(&raw_image.into_inner());
 
 		// write!(
-		//     self.acc,
-		//     r#"<image width="{width}" height="{height}" x="{x}" y="{y}" "#,
-		//     x = center.x - width / 2.,
-		//     y = center.y - height / 2.,
+		//	 self.acc,
+		//	 r#"<image width="{width}" height="{height}" x="{x}" y="{y}" "#,
+		//	 x = center.x - width / 2.,
+		//	 y = center.y - height / 2.,
 		// )?;
 
 		// if rotation.abs() > 10e-6 {
-		//     write!(
-		//         self.acc,
-		//         r#" transform="rotate({rot})" "#,
-		//         rot = -rotation.to_degrees()
-		//     )?;
+		//	 write!(
+		//		 self.acc,
+		//		 r#" transform="rotate({rot})" "#,
+		//		 rot = -rotation.to_degrees()
+		//	 )?;
 		// }
 
 		// write!(self.acc, r#"href="data:image/png;base64,{data}"/>"#,)?;
@@ -133,11 +133,7 @@ impl Exporter for ImageExporter {
 		Ok(())
 	}
 
-	fn export_curve(
-		&mut self,
-		curve: CurvePosition,
-		StylePosition { stroke, fill }: StylePosition,
-	) -> Result<(), Self::Error> {
+	fn export_curve(&mut self, curve: CurvePosition, _: StylePosition) -> Result<(), Self::Error> {
 		let mut path = PathBuilder::new();
 
 		for (idx, k) in curve.keypoints.iter().enumerate() {
@@ -174,7 +170,7 @@ impl Exporter for ImageExporter {
 
 		let style = self.style();
 
-		if let Some(color) = style.fill {
+		if let Some(Fill::Solid { color }) = style.fill {
 			let (r, g, b, a) = (
 				color.into_format::<u8, f32>().red,
 				color.into_format::<u8, f32>().green,
@@ -189,7 +185,7 @@ impl Exporter for ImageExporter {
 		}
 
 		match style.stroke {
-			Some(Stroke::Full { color, width }) => {
+			Some(Stroke::Solid { color, width }) => {
 				let (r, g, b, a) = (
 					color.into_format::<u8, f32>().red,
 					color.into_format::<u8, f32>().green,
@@ -254,16 +250,16 @@ impl Exporter for ImageExporter {
 			direction: _,
 			font,
 		}: TextPosition,
+		_: StylePosition,
 	) -> Result<(), Self::Error> {
-		let font = font.clone().unwrap_or_default();
-		let fg = dessin::font::get(font);
+		let fg = dessin::font::get_or_default(font.as_ref());
 		let font = fg.get(font_weight).as_bytes();
 
 		//dt.set_transform(&Transform::create_translation(50.0, 0.0));
 		// dt.set_transform(&Transform::rotation(euclid::Angle::degrees(15.0)));
 
 		let color = match self.style().fill {
-			Some(color) => color,
+			Some(Fill::Solid { color }) => color,
 			None => return Ok(()),
 		};
 		let (r, g, b, a) = (
@@ -308,12 +304,12 @@ impl ToImage for Shape {
 		let mut exporter = ImageExporter::new(width, height);
 
 		// self.write_into_exporter(
-		//     &mut exporter,
-		//     &transform,
-		//     StylePosition {
-		//         stroke: None,
-		//         fill: None,
-		//     },
+		//	 &mut exporter,
+		//	 &transform,
+		//	 StylePosition {
+		//		 stroke: None,
+		//		 fill: None,
+		//	 },
 		// )?;
 
 		if let Shape::Style { fill, stroke, .. } = self {

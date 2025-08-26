@@ -5,65 +5,81 @@ use crate::shapes::{Shape, ShapeOp};
 pub use keypoint::*;
 use nalgebra::{Point2, Transform2};
 
+/// Final curve position for render
 #[derive(Debug, Clone, PartialEq)]
 pub struct CurvePosition {
+	/// Keypoints
 	pub keypoints: Vec<KeypointPosition>,
+	/// Is the curve closing between last and first point ?
 	pub closed: bool,
 }
 
+/// Multipoint curve
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct Curve {
+	/// Positionming
 	pub local_transform: Transform2<f32>,
+	/// Keypoints
 	pub keypoints: Vec<Keypoint>,
+	/// Is the curve closing between last and first point ?
 	pub closed: bool,
 }
 impl Curve {
+	/// Add points
 	#[inline]
 	pub fn extend<T: IntoIterator<Item = Keypoint>>(&mut self, shapes: T) -> &mut Self {
 		self.keypoints.extend(shapes);
 		self
 	}
 
+	/// Add a point
 	#[inline]
 	pub fn then<K: Into<Keypoint>>(&mut self, keypoint: K) -> &mut Self {
 		self.keypoints.push(keypoint.into());
 		self
 	}
 
+	/// Add a point
 	#[inline]
 	pub fn with_then<K: Into<Keypoint>>(mut self, keypoint: K) -> Self {
 		self.then(keypoint);
 		self
 	}
 
+	/// Close the shape
 	#[inline]
 	pub fn close(&mut self, is_closed: bool) -> &mut Self {
 		self.closed = is_closed;
 		self
 	}
 
+	/// Close the shape
 	#[inline]
 	pub fn with_close(mut self, is_closed: bool) -> Self {
 		self.close(is_closed);
 		self
 	}
 
+	/// Close the shape
 	#[inline]
 	pub fn closed(&mut self) -> &mut Self {
 		self.close(true)
 	}
 
+	/// Un-close the shape
 	#[inline]
 	pub fn opened(&mut self) -> &mut Self {
 		self.close(false)
 	}
 
+	/// Reverse points order
 	#[inline]
 	pub fn reverse(&mut self) -> &mut Self {
 		*self = self.reversed();
 		self
 	}
 
+	/// Get first point of the curve if any
 	pub fn start_point(&self) -> Option<Point2<f32>> {
 		match self.keypoints.first() {
 			Some(Keypoint::Point(p)) => Some(*p),
@@ -73,6 +89,7 @@ impl Curve {
 		}
 	}
 
+	/// Reverse points order
 	pub fn reversed(&self) -> Self {
 		let (c, b) = self._reversed();
 		if b.is_some() {
@@ -166,6 +183,7 @@ impl Curve {
 		)
 	}
 
+	/// Get the final curve position for render
 	pub fn position(&self, parent_transform: &Transform2<f32>) -> CurvePosition {
 		fn flatten_curve(
 			curve: &Curve,
@@ -235,7 +253,9 @@ where
 	}
 }
 
+/// Helpfull trait
 pub trait CurveOp {
+	/// Mutate self as curve
 	fn as_curve(&self) -> Curve;
 }
 

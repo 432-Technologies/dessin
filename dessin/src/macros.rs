@@ -44,8 +44,8 @@
 //! ```
 //! # use dessin::prelude::*;
 //! dessin!([
-//!     Circle(),
-//!     Text(),
+//!	 Circle(),
+//!	 Text(),
 //! ]);
 //! ```
 //!
@@ -57,16 +57,16 @@
 //! ```
 //! # use dessin::prelude::*;
 //! dessin!(Text(
-//!     // here type is `Text`
+//!	 // here type is `Text`
 //! ) > (
-//!     // here type is `Shape`
+//!	 // here type is `Shape`
 //! ));
 //!
 //! dessin!([
-//!     Circle(),
-//!     Text(),
+//!	 Circle(),
+//!	 Text(),
 //! ] > (
-//!     // Transform this group
+//!	 // Transform this group
 //! ));
 //! ```
 //!
@@ -75,22 +75,22 @@
 //! ```
 //! # use dessin::prelude::*;
 //! dessin!(for x in 0..10 {
-//!     // Here, rust code is expected. But return type must be a `Shape`
-//!     let x = x as f32;
+//!	 // Here, rust code is expected. But return type must be a `Shape`
+//!	 let x = x as f32;
 //!
-//!     dessin!(Circle(
-//!         radius=x,
-//!         translate=[x, x * 2.]
-//!     ))
+//!	 dessin!(Circle(
+//!		 radius=x,
+//!		 translate=[x, x * 2.]
+//!	 ))
 //! });
 //!
 //! // Same as before, we can transform the group after
 //! dessin!(for text in ["Hello", "World"] {
-//!     dessin!(Text(
-//!         { text },
-//!     ))
+//!	 dessin!(Text(
+//!		 { text },
+//!	 ))
 //! } > (
-//!     scale=[2., 2.],
+//!	 scale=[2., 2.],
 //! ));
 //! ```
 //!
@@ -99,20 +99,20 @@
 //! ```
 //! # use dessin::prelude::*;
 //! dessin!(if true {
-//!     Circle()
+//!	 Circle()
 //! });
 //!
 //! // Both side must return the same type
 //! dessin!(if true {
-//!     Circle()
+//!	 Circle()
 //! } else {
-//!     Circle()
+//!	 Circle()
 //! });
 //!
 //! // That's why the type of each branch can be erased
 //! dessin!(if true {
-//!     Circle() > ()
+//!	 Circle() > ()
 //! } else {
-//!     Text() > ()
+//!	 Text() > ()
 //! });
 //! ```

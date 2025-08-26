@@ -18,7 +18,7 @@ fn main() {
 		// paints the inside of the text in bright orange
 		fill = Srgba::new(1.0, 0.749, 0.0, 1.0),
 		// We decide to not use stroke but it is possible
-		stroke = Stroke::new_full(Srgb::new(0.588, 0.039, 0.039), 0.1),
+		stroke = Stroke::new_solid(Srgb::new(0.588, 0.039, 0.039), 0.1),
 		// chooses a rotation of 6 radians in the trigonometric direction
 		rotate = Rotation2::new(6_f32.to_radians())
 	),]);

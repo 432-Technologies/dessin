@@ -5,9 +5,12 @@ use std::{
 	sync::{Arc, RwLock},
 };
 
-pub type Shaper = dyn Fn() -> Shape;
+/// Dyn shape
+pub type Shaper = dyn Fn() -> Shape + Send + Sync + 'static;
 
+/// Dyn shape
 pub trait DynamicShape: std::fmt::Debug {
+	/// Dyn shape
 	fn as_shape(&self) -> Shape;
 }
 
@@ -17,6 +20,7 @@ impl<T: std::fmt::Debug + Clone + Into<Shape>> DynamicShape for T {
 	}
 }
 
+/// Dyn shape
 #[derive(Clone, Debug, Shape)]
 pub struct Dynamic<T> {
 	#[local_transform]
@@ -55,7 +59,7 @@ impl<T> DerefMut for Dynamic<T> {
 
 impl<T> From<Dynamic<T>> for Shape
 where
-	T: DynamicShape + 'static,
+	T: DynamicShape + Send + Sync + 'static,
 {
 	fn from(
 		Dynamic {
@@ -80,11 +84,13 @@ where
 }
 
 impl<T> Dynamic<T> {
+	/// Dyn shape
 	pub fn _ref(&mut self, _ref: &Arc<RwLock<T>>) -> &mut Self {
 		self._ref = Some(_ref.clone());
 		self
 	}
 
+	/// Dyn shape
 	pub fn with_ref(mut self, _ref: &Arc<RwLock<T>>) -> Self {
 		self._ref(_ref);
 		self

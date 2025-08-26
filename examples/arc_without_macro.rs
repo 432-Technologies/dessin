@@ -14,7 +14,7 @@ fn main() {
 	arc.end_angle(PI / 4.);
 
 	// creates a margin of 0.1
-	arc.stroke(Stroke::new_full(Srgb::new(0.0, 0.196, 0.294), 0.1));
+	arc.stroke(Stroke::new_solid(Srgb::new(0.0, 0.196, 0.294), 0.1));
 
 	// chooses a rotation of -10 radians in the trigonometric direction
 	arc.rotate(Rotation2::new(-10_f32.to_radians()));

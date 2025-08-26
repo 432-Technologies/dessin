@@ -5,33 +5,32 @@ use dessin::{
 };
 use nalgebra::Translation2;
 use printpdf::{
-	color,
-	path::{PaintMode, WindingOrder},
-	BuiltinFont, IndirectFontRef, Line, Mm, PdfDocument, PdfDocumentReference, PdfLayerReference,
-	Point,
+	Color, FontId, Layer, LayerIntent, LayerInternalId, LayerSubtype, Line, LinePoint, Mm, Op,
+	PaintMode, ParsedFont, PdfDocument, PdfPage, PdfSaveOptions, Point, Polygon, PolygonRing, Px,
+	RawImage, Rgb, TextItem, TextMatrix, TextRenderingMode, WindingOrder, XObjectRotation,
+	XObjectTransform,
 };
-use std::{collections::HashMap, fmt};
+use std::{collections::HashMap, convert::identity, fmt};
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
 pub enum PDFError {
-	PrintPDF(printpdf::Error),
-	WriteError(fmt::Error),
+	#[error("PrintPDF Image error: {0}")]
+	PrintPDFImageError(String),
+	#[error("{0}")]
+	WriteError(#[from] fmt::Error),
+	#[error("Curve has no starting point: {0:?}")]
 	CurveHasNoStartingPoint(Curve),
+	#[error("Unknown builtin font: {0}")]
 	UnknownBuiltinFont(String),
+	#[error("Orphelin layer")]
 	OrphelinLayer,
-}
-impl From<fmt::Error> for PDFError {
-	fn from(e: fmt::Error) -> Self {
-		PDFError::WriteError(e)
-	}
-}
-impl From<printpdf::Error> for PDFError {
-	fn from(e: printpdf::Error) -> Self {
-		PDFError::PrintPDF(e)
-	}
+	#[error("Can't parse font `{0} {1:?}`")]
+	CantParseFont(FontRef, FontWeight),
+	#[error("Internal error: No layer started")]
+	NoLayerStarted,
 }
 
-type PDFFontHolder = HashMap<(FontRef, FontWeight), IndirectFontRef>;
+type PDFFontHolder = HashMap<(FontRef, FontWeight), FontId>;
 
 #[derive(Default)]
 pub struct PDFOptions {
@@ -40,30 +39,23 @@ pub struct PDFOptions {
 }
 
 pub struct PDFExporter<'a> {
-	layer: PdfLayerReference,
-	doc: &'a PdfDocumentReference,
+	doc: &'a mut PdfDocument,
 	used_font: PDFFontHolder,
+	content: Vec<Op>,
+	layers: Vec<LayerInternalId>,
 }
 impl<'a> PDFExporter<'a> {
-	pub fn new_with_font(
-		layer: PdfLayerReference,
-		doc: &'a PdfDocumentReference,
-		used_font: PDFFontHolder,
-	) -> Self {
+	pub fn new_with_font(doc: &'a mut PdfDocument, used_font: PDFFontHolder) -> Self {
 		PDFExporter {
-			layer,
 			doc,
 			used_font,
+			content: vec![],
+			layers: vec![],
 		}
 	}
 
-	pub fn new(layer: PdfLayerReference, doc: &'a PdfDocumentReference) -> Self {
-		let stock: PDFFontHolder = HashMap::default();
-		PDFExporter {
-			layer,
-			doc,
-			used_font: stock,
-		}
+	pub fn new(doc: &'a mut PdfDocument) -> Self {
+		PDFExporter::new_with_font(doc, HashMap::default())
 	}
 }
 
@@ -76,27 +68,37 @@ impl Exporter for PDFExporter<'_> {
 		&mut self,
 		StylePosition { fill, stroke }: StylePosition,
 	) -> Result<(), Self::Error> {
+		let layer_id = self.doc.add_layer(&Layer {
+			creator: String::new(),
+			name: String::new(),
+			intent: LayerIntent::Design,
+			usage: LayerSubtype::Artwork,
+		});
+
+		self.content.push(Op::BeginLayer { layer_id });
+
 		if let Some(fill) = fill {
 			let (r, g, b) = match fill {
-				color => (
+				Fill::Solid { color } => (
 					color.into_format::<f32, f32>().red,
 					color.into_format::<f32, f32>().green,
 					color.into_format::<f32, f32>().blue,
 				),
 			};
 
-			self.layer
-				.set_fill_color(printpdf::Color::Rgb(printpdf::Rgb {
+			self.content.push(Op::SetFillColor {
+				col: Color::Rgb(Rgb {
 					r,
 					g,
 					b,
 					icc_profile: None,
-				}));
+				}),
+			});
 		}
 
 		if let Some(stroke) = stroke {
 			let ((r, g, b), w) = match stroke {
-				Stroke::Full { color, width } => (
+				Stroke::Solid { color, width } => (
 					(
 						color.into_format::<f32, f32>().red,
 						color.into_format::<f32, f32>().green,
@@ -107,18 +109,20 @@ impl Exporter for PDFExporter<'_> {
 				Stroke::Dashed {
 					color,
 					width,
-					on,
-					off,
+					on: _,
+					off: _,
 				} => {
-					self.layer.set_line_dash_pattern(printpdf::LineDashPattern {
-						offset: 0,
-						dash_1: Some(on as i64),
-						gap_1: Some(off as i64),
-						dash_2: None,
-						gap_2: None,
-						dash_3: None,
-						gap_3: None,
-					});
+					eprintln!("TODO: LineDashPattern");
+
+					// self.content.push(printpdf::LineDashPattern {
+					// 	offset: 0,
+					// 	dash_1: Some(on as i64),
+					// 	gap_1: Some(off as i64),
+					// 	dash_2: None,
+					// 	gap_2: None,
+					// 	dash_3: None,
+					// 	gap_3: None,
+					// });
 
 					(
 						(
@@ -131,66 +135,28 @@ impl Exporter for PDFExporter<'_> {
 				}
 			};
 
-			self.layer
-				.set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
-					r,
-					g,
-					b,
-					icc_profile: None,
-				}));
-
-			self.layer
-				.set_outline_thickness(printpdf::Mm(w).into_pt().0);
+			self.content.extend([
+				Op::SetOutlineColor {
+					col: Color::Rgb(Rgb {
+						r,
+						g,
+						b,
+						icc_profile: None,
+					}),
+				},
+				Op::SetOutlineThickness {
+					pt: printpdf::Mm(w).into_pt(),
+				},
+			]);
 		}
-
-		// if let None = stroke {
-		//     // self.layer.set_overprint_fill(false)
-		// }
-
-		// if let None = stroke {
-		//     // just works if we have a white background
-		//     let (r, g, b) = (1., 1., 1.);
-		//     self.layer
-		//         .set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
-		//             r,
-		//             g,
-		//             b,
-		//             icc_profile: None,
-		//         }));
-		//     self.layer
-		//         .set_outline_thickness(printpdf::Mm(0.).into_pt().0)
-		// }
 
 		Ok(())
 	}
 
 	fn end_style(&mut self) -> Result<(), Self::Error> {
-		self.layer
-			.set_outline_color(printpdf::Color::Rgb(printpdf::Rgb {
-				r: 0.,
-				g: 0.,
-				b: 0.,
-				icc_profile: None,
-			}));
-		self.layer.set_outline_thickness(0.);
-		self.layer.set_line_dash_pattern(printpdf::LineDashPattern {
-			offset: 0,
-			dash_1: None,
-			gap_1: None,
-			dash_2: None,
-			gap_2: None,
-			dash_3: None,
-			gap_3: None,
+		self.content.push(Op::EndLayer {
+			layer_id: self.layers.pop().ok_or(PDFError::NoLayerStarted)?,
 		});
-
-		self.layer
-			.set_fill_color(printpdf::Color::Rgb(printpdf::Rgb {
-				r: 0.,
-				g: 0.,
-				b: 0.,
-				icc_profile: None,
-			}));
-
 		Ok(())
 	}
 
@@ -218,21 +184,26 @@ impl Exporter for PDFExporter<'_> {
 		let scale_width = width / raw_width;
 		let scale_height = height / raw_height;
 
-		printpdf::Image::from_dynamic_image(image).add_to_layer(
-			self.layer.clone(),
-			printpdf::ImageTransform {
-				translate_x: Some(Mm(bottom_left.x)),
-				translate_y: Some(Mm(bottom_left.y)),
-				rotate: Some(printpdf::ImageRotation {
+		let img_id = self.doc.add_image(
+			&RawImage::decode_from_bytes(image.as_bytes(), &mut vec![])
+				.map_err(PDFError::PrintPDFImageError)?,
+		);
+
+		self.content.push(Op::UseXobject {
+			id: img_id,
+			transform: XObjectTransform {
+				translate_x: Some(Mm(bottom_left.x).into()),
+				translate_y: Some(Mm(bottom_left.y).into()),
+				rotate: Some(XObjectRotation {
 					angle_ccw_degrees: rotation.to_degrees(),
-					rotation_center_x: printpdf::Px((width_px / 2) as usize),
-					rotation_center_y: printpdf::Px((height_px / 2) as usize),
+					rotation_center_x: Px((width_px / 2) as usize),
+					rotation_center_y: Px((height_px / 2) as usize),
 				}),
 				scale_x: Some(scale_width),
 				scale_y: Some(scale_height),
 				dpi: Some(dpi),
 			},
-		);
+		});
 
 		Ok(())
 	}
@@ -242,58 +213,70 @@ impl Exporter for PDFExporter<'_> {
 		curve: CurvePosition,
 		StylePosition { fill, stroke }: StylePosition,
 	) -> Result<(), Self::Error> {
-		let points1 = curve
-            .keypoints
-            .iter()
-            .enumerate()
-            .flat_map(|(i, key_point)| {
-                let next_control = matches!(curve.keypoints.get(i + 1), Some(KeypointPosition::Bezier(b)) if b.start.is_none());
-                match key_point {
-                    KeypointPosition::Point(p) => {
-                        vec![(Point::new(Mm(p.x), Mm(p.y)), next_control)]
-                    }
-                    KeypointPosition::Bezier(b) => {
-                        let mut res = vec![];
-                        if let Some(start) = b.start {
-                            res.push((Point::new(Mm(start.x), Mm(start.y)), true));
-                        }
-                        res.append(&mut vec![
-                            (
-                                Point::new(Mm(b.start_control.x), Mm(b.start_control.y)),
-                                true,
-                            ),
-                            (Point::new(Mm(b.end_control.x), Mm(b.end_control.y)), false),
-                            (Point::new(Mm(b.end.x), Mm(b.end.y)), next_control),
-                        ]);
-                        res
-                    }
-                }
-            })
-            .collect();
-		//------------------------------------------------------------
+		let points = curve
+			.keypoints
+			.into_iter()
+			.flat_map(|v| match v {
+				KeypointPosition::Point(p) => [
+					Some(LinePoint {
+						p: Point::new(Mm(p.x), Mm(p.y)),
+						bezier: false,
+					}),
+					None,
+					None,
+					None,
+				]
+				.into_iter(),
+				KeypointPosition::Bezier(Bezier {
+					start,
+					start_control,
+					end_control,
+					end,
+				}) => [
+					start.map(|v| LinePoint {
+						p: Point::new(Mm(v.x), Mm(v.y)),
+						bezier: false,
+					}),
+					Some(LinePoint {
+						p: Point::new(Mm(start_control.x), Mm(start_control.y)),
+						bezier: true,
+					}),
+					Some(LinePoint {
+						p: Point::new(Mm(end_control.x), Mm(end_control.y)),
+						bezier: true,
+					}),
+					Some(LinePoint {
+						p: Point::new(Mm(end.x), Mm(end.y)),
+						bezier: true,
+					}),
+				]
+				.into_iter(),
+			})
+			.filter_map(identity)
+			.collect::<Vec<_>>();
 
-		// let line = Line {
-		//     // Seems to be good --
-		//     points: points1,
-		//     is_closed: curve.closed,
-		// };
-		// self.layer.add_line(line);
-		//-----------------------------------------------------------------
-		let line = printpdf::Polygon {
-			rings: vec![points1],
-			// mode: PaintMode::FillStroke,
-			mode: match (fill, stroke) {
-				(Some(fill), None) => PaintMode::Fill,
-				(None, Some(stroke)) => PaintMode::Stroke,
-				(Some(fill), Some(stroke)) => PaintMode::FillStroke,
-				(None, None) => PaintMode::Clip,
-			},
-			winding_order: WindingOrder::NonZero, // WindingOrder::EvenOdd, is also possible --
-		};
+		self.content.push(if curve.closed {
+			Op::DrawPolygon {
+				polygon: Polygon {
+					mode: match (fill, stroke) {
+						(Some(_), Some(_)) => PaintMode::FillStroke,
+						(Some(_), None) => PaintMode::Fill,
+						(None, Some(_)) => PaintMode::Stroke,
+						(None, None) => PaintMode::Clip,
+					},
+					rings: vec![PolygonRing { points }],
+					winding_order: WindingOrder::NonZero,
+				},
+			}
+		} else {
+			Op::DrawLine {
+				line: Line {
+					points,
+					is_closed: false,
+				},
+			}
+		});
 
-		self.layer.add_polygon(line);
-
-		//-----------------------------------------------------------------
 		Ok(())
 	}
 
@@ -309,42 +292,55 @@ impl Exporter for PDFExporter<'_> {
 			direction,
 			font,
 		}: TextPosition,
+		StylePosition { fill, stroke }: StylePosition,
 	) -> Result<(), Self::Error> {
 		let font = font.clone().unwrap_or(FontRef::default());
 
-		// search if (font_ref, font_weight) is stocked in used_font
-		let font = self
-			.used_font
-			.entry((font.clone(), font_weight))
-			.or_insert_with(|| match font::get(font.clone()).get(font_weight) {
+		let key = (font.clone(), font_weight);
+		if !self.used_font.contains_key(&key) {
+			match font::get(&font).get(font_weight) {
 				dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
-					if let Err(err) = self.doc.add_external_font(b.as_slice()) {
-						println!("Failed to add external font : {}", err);
-						Err(err).unwrap()
-					} else {
-						self.doc.add_external_font(b.as_slice()).unwrap()
-					}
+					let font_id = self.doc.add_font(
+						&ParsedFont::from_bytes(&b, 0, &mut vec![])
+							.ok_or_else(|| PDFError::CantParseFont(font.clone(), font_weight))?,
+					);
+
+					self.used_font.insert(key.clone(), font_id);
 				}
-			});
+			}
+		}
 
-		self.layer.begin_text_section();
-		self.layer.set_font(&font, font_size);
-		// if let Some(te) = text.on_curve {
-		//     self.layer.add_polygon()
-		//     todo!()
-		// }
+		let font = self.used_font[&key].clone();
+
 		let rotation = direction.y.atan2(direction.x).to_degrees();
-		self.layer
-			.set_text_rendering_mode(printpdf::TextRenderingMode::Fill);
-		self.layer
-			.set_text_matrix(printpdf::TextMatrix::TranslateRotate(
-				Mm(reference_start.x).into_pt(),
-				Mm(reference_start.y).into_pt(),
-				rotation,
-			));
 
-		self.layer.write_text(text, &font);
-		self.layer.end_text_section();
+		self.content.extend([
+			Op::SetLineHeight {
+				lh: Mm(font_size).into_pt(),
+			},
+			Op::SetWordSpacing {
+				pt: Mm(font_size).into_pt(),
+			},
+			Op::SetTextRenderingMode {
+				mode: match (fill, stroke) {
+					(Some(_), Some(_)) => TextRenderingMode::FillStroke,
+					(Some(_), None) => TextRenderingMode::Fill,
+					(None, Some(_)) => TextRenderingMode::Stroke,
+					(None, None) => TextRenderingMode::Clip,
+				},
+			},
+			Op::SetTextMatrix {
+				matrix: TextMatrix::TranslateRotate(
+					Mm(reference_start.x).into_pt(),
+					Mm(reference_start.y).into_pt(),
+					rotation,
+				),
+			},
+			Op::WriteText {
+				items: vec![TextItem::Text(text.to_string())],
+				font,
+			},
+		]);
 
 		Ok(())
 	}
@@ -352,15 +348,14 @@ impl Exporter for PDFExporter<'_> {
 
 pub fn write_to_pdf_with_options(
 	shape: &Shape,
-	layer: PdfLayerReference,
 	options: PDFOptions,
-	doc: &PdfDocumentReference,
-) -> Result<(), PDFError> {
+	doc: &mut PdfDocument,
+) -> Result<PdfPage, PDFError> {
 	let (width, height) = options.size.unwrap_or_else(|| {
 		let bb = shape.local_bounding_box();
 		(bb.width(), bb.height())
 	});
-	let mut exporter = PDFExporter::new_with_font(layer, doc, options.used_font);
+	let mut exporter = PDFExporter::new_with_font(doc, options.used_font);
 	let translation = Translation2::new(width / 2., height / 2.);
 	let parent_transform = nalgebra::convert(translation);
 
@@ -372,7 +367,7 @@ pub fn write_to_pdf_with_options(
 				fill: *fill,
 				stroke: *stroke,
 			},
-		) //TODO Needed to be complete ? --MathNuba
+		)?
 	} else {
 		shape.write_into_exporter(
 			&mut exporter,
@@ -381,39 +376,36 @@ pub fn write_to_pdf_with_options(
 				fill: None,
 				stroke: None,
 			},
-		)
+		)?
 	}
+
+	Ok(PdfPage::new(Mm(width), Mm(height), exporter.content))
 }
 
-pub fn to_pdf_with_options(
-	shape: &Shape,
-	mut options: PDFOptions,
-) -> Result<PdfDocumentReference, PDFError> {
-	let size = options.size.get_or_insert_with(|| {
-		let bb = shape.local_bounding_box();
-		(bb.width(), bb.height())
-	});
-	let (doc, page, layer) = PdfDocument::new("", Mm(size.0), Mm(size.1), "Layer 1");
+pub fn to_pdf_with_options(shape: &Shape, options: PDFOptions) -> Result<PdfDocument, PDFError> {
+	let mut doc = PdfDocument::new("");
 
-	let layer = doc.get_page(page).get_layer(layer);
-
-	write_to_pdf_with_options(shape, layer, options, &doc)?;
+	_ = write_to_pdf_with_options(shape, options, &mut doc)?;
 
 	Ok(doc)
 }
 
-pub fn write_to_pdf(
-	shape: &Shape,
-	layer: PdfLayerReference,
-	doc: &PdfDocumentReference,
-) -> Result<(), PDFError> {
-	write_to_pdf_with_options(shape, layer, PDFOptions::default(), doc)
+pub fn write_to_pdf(shape: &Shape, doc: &mut PdfDocument) -> Result<PdfPage, PDFError> {
+	write_to_pdf_with_options(shape, PDFOptions::default(), doc)
 }
 
-pub fn to_pdf(shape: &Shape) -> Result<PdfDocumentReference, PDFError> {
+pub fn to_pdf(shape: &Shape) -> Result<PdfDocument, PDFError> {
 	to_pdf_with_options(shape, PDFOptions::default())
 }
 
 pub fn to_pdf_bytes(shape: &Shape) -> Result<Vec<u8>, PDFError> {
-	Ok(to_pdf(shape)?.save_to_bytes()?)
+	Ok(to_pdf(shape)?.save(
+		&PdfSaveOptions {
+			optimize: true,
+			secure: true,
+			subset_fonts: true,
+			..Default::default()
+		},
+		&mut vec![],
+	))
 }

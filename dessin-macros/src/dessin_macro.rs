@@ -467,9 +467,9 @@ fn group_complex() {
 fn for_loop() {
 	syn::parse_str::<Dessin>(
 		"for x in 0..10 {
-            let y = x as f32 * 2.;
-            dessin!(Circle( radius={y}) )
-        }",
+			let y = x as f32 * 2.;
+			dessin!(Circle( radius={y}) )
+		}",
 	)
 	.unwrap();
 }
@@ -477,9 +477,9 @@ fn for_loop() {
 fn for_loop_par() {
 	syn::parse_str::<Dessin>(
 		"for x in (it) {
-            let y = x as f32 * 2.;
-            dessin!(Circle( radius={y}) )
-        }",
+			let y = x as f32 * 2.;
+			dessin!(Circle( radius={y}) )
+		}",
 	)
 	.unwrap();
 }
@@ -487,29 +487,29 @@ fn for_loop_par() {
 fn for_loop_var() {
 	syn::parse_str::<Dessin>(
 		"for x in it {
-            let y = x as f32 * 2.;
-            dessin!(Circle ( radius={y}) )
-        }",
+			let y = x as f32 * 2.;
+			dessin!(Circle ( radius={y}) )
+		}",
 	)
 	.unwrap();
 }
 // #[test]
 // fn for_loop_range_var() {
-//     syn::parse_str::<Dessin>(
-//         "for x in 0..n {
-//             let y = x as f32 * 2.;
-//             dessin!(Circle: ( radius={y}) )
-//         }",
-//     )
-//     .unwrap();
+//	 syn::parse_str::<Dessin>(
+//		 "for x in 0..n {
+//			 let y = x as f32 * 2.;
+//			 dessin!(Circle: ( radius={y}) )
+//		 }",
+//	 )
+//	 .unwrap();
 // }
 #[test]
 fn simple_for_loop() {
 	syn::parse_str::<Dessin>(
 		"for x in xs {
-            let y = x as f32 * 2.;
-            dessin!(Circle( radius={y}) )
-        }",
+			let y = x as f32 * 2.;
+			dessin!(Circle( radius={y}) )
+		}",
 	)
 	.unwrap();
 }
@@ -517,9 +517,9 @@ fn simple_for_loop() {
 fn for_loop_range_var_par() {
 	syn::parse_str::<Dessin>(
 		"for x in 0..(n) {
-            let y = x as f32 * 2.;
-            dessin!(Circle( radius={y}) )
-        }",
+			let y = x as f32 * 2.;
+			dessin!(Circle( radius={y}) )
+		}",
 	)
 	.unwrap();
 }
@@ -527,8 +527,8 @@ fn for_loop_range_var_par() {
 fn branch_if() {
 	syn::parse_str::<Dessin>(
 		"if test_fn() == 2 {
-            Circle()
-        }",
+			Circle()
+		}",
 	)
 	.unwrap();
 }
@@ -536,10 +536,10 @@ fn branch_if() {
 fn branch_if_else() {
 	syn::parse_str::<Dessin>(
 		"if test_fn() == 2 {
-            Circle()
-        } else {
-            Ellipse()
-        }",
+			Circle()
+		} else {
+			Ellipse()
+		}",
 	)
 	.unwrap();
 }
@@ -558,8 +558,8 @@ fn combined_group_erased() {
 fn simple_if() {
 	syn::parse_str::<Dessin>(
 		"if my_condition {
-            Circle()
-        }",
+			Circle()
+		}",
 	)
 	.unwrap();
 }
@@ -567,8 +567,8 @@ fn simple_if() {
 fn if_let() {
 	syn::parse_str::<Dessin>(
 		"if let Some(x) = my_condition {
-            Circle()
-        }",
+			Circle()
+		}",
 	)
 	.unwrap();
 }
@@ -576,8 +576,8 @@ fn if_let() {
 fn combined_if() {
 	syn::parse_str::<Dessin>(
 		"if test_fn() == 2 {
-            Circle() > ()
-        }",
+			Circle() > ()
+		}",
 	)
 	.unwrap();
 }
@@ -585,8 +585,8 @@ fn combined_if() {
 fn mod_if() {
 	syn::parse_str::<Dessin>(
 		"if test_fn() == 2 {
-            my_mod::Circle() > ()
-        }",
+			my_mod::Circle() > ()
+		}",
 	)
 	.unwrap();
 }
@@ -594,8 +594,8 @@ fn mod_if() {
 fn var_if() {
 	syn::parse_str::<Dessin>(
 		"if test_fn() == 2 {
-            { circle } > ()
-        }",
+			{ circle } > ()
+		}",
 	)
 	.unwrap();
 }
@@ -605,11 +605,11 @@ fn if_if_group() {
 		"[
 			{ circle }(),
 			if test_fn() == 2 {
-            	{ circle } > ()
-        	},
-            for x in 0..1 {
-                dessin!()
-            },
+				{ circle } > ()
+			},
+			for x in 0..1 {
+				dessin!()
+			},
 			Circle(),
 		]",
 	)
@@ -628,16 +628,16 @@ fn group_in_group() {
 				{ circle },
 			],
 			{ circle },
-            for x in (var) {
-                dessin!()
-            },
+			for x in (var) {
+				dessin!()
+			},
 			[],
 			if test_fn() == 2 {
-            	[
+				[
 					[],
 					{ circle },
 				]
-        	},
+			},
 			Circle(),
 		]",
 	)

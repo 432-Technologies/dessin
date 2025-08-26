@@ -1,7 +1,10 @@
 use super::FontWeight;
+use ecow::EcoString;
 use std::{
 	collections::HashMap,
-	sync::{OnceLock, RwLock},
+	fmt,
+	ops::Deref,
+	sync::{LazyLock, OnceLock, RwLock},
 };
 
 static FONT_HOLDER: OnceLock<RwLock<FontHolder>> = OnceLock::new();
@@ -21,22 +24,32 @@ fn font_holder_mut<T, F: FnOnce(&mut FontHolder) -> T>(f: F) -> T {
 }
 
 #[inline]
-pub fn get(idx: FontRef) -> FontGroup<Font> {
+///
+pub fn get(idx: &FontRef) -> FontGroup<Font> {
 	font_holder(|f| f.fonts[&idx.0].clone())
 }
 
 #[inline]
-pub fn fonts() -> HashMap<String, FontGroup<Font>> {
+///
+pub fn get_or_default(idx: Option<&FontRef>) -> FontGroup<Font> {
+	idx.map(get).unwrap_or_else(|| get(&*DEFAULT_FONT))
+}
+
+#[inline]
+///
+pub fn fonts() -> HashMap<EcoString, FontGroup<Font>> {
 	font_holder(|f| f.fonts.clone())
 }
 
 #[inline]
-pub fn font_names() -> Vec<String> {
+///
+pub fn font_names() -> Vec<EcoString> {
 	font_holder(|f| f.fonts.keys().cloned().collect())
 }
 
 #[inline]
-pub fn add_font<S: Into<String>>(font_name: S, font: FontGroup<Font>) -> FontRef {
+///
+pub fn add_font<S: Into<EcoString>>(font_name: S, font: FontGroup<Font>) -> FontRef {
 	font_holder_mut(move |f| {
 		let font_name = font_name.into();
 		f.fonts.insert(font_name.clone(), font);
@@ -44,42 +57,49 @@ pub fn add_font<S: Into<String>>(font_name: S, font: FontGroup<Font>) -> FontRef
 	})
 }
 
+///
+pub const DEFAULT_FONT: LazyLock<FontRef> = LazyLock::new(|| FontRef("Hyperlegible".into()));
+
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 #[repr(transparent)]
-pub struct FontRef(String);
-impl FontRef {
-	pub fn name(&self, font_weight: FontWeight) -> String {
-		match font_weight {
-			FontWeight::Regular => format!("{}Regular", self.0),
-			FontWeight::Bold => format!("{}Bold", self.0),
-			FontWeight::Italic => format!("{}Italic", self.0),
-			FontWeight::BoldItalic => format!("{}BoldItalic", self.0),
-		}
-	}
+///
+pub struct FontRef(EcoString);
+impl FontRef {}
+impl Deref for FontRef {
+	type Target = str;
 
-	pub fn font_family(&self) -> &str {
+	fn deref(&self) -> &Self::Target {
 		&self.0
 	}
 }
 impl Default for FontRef {
 	fn default() -> Self {
-		FontRef("Hyperlegible".to_string())
+		DEFAULT_FONT.clone()
+	}
+}
+impl fmt::Display for FontRef {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		self.0.fmt(f)
 	}
 }
 
-impl<S: Into<String>> From<S> for FontRef {
+impl<S: Into<EcoString>> From<S> for FontRef {
 	fn from(value: S) -> Self {
 		FontRef(value.into())
 	}
 }
 
 #[derive(Clone)]
+///
 pub enum Font {
+	/// OTF font
 	OTF(Vec<u8>),
+	/// TTF font
 	TTF(Vec<u8>),
 }
 
 impl Font {
+	///
 	pub fn as_bytes(&self) -> &[u8] {
 		match self {
 			Font::OTF(b) | Font::TTF(b) => b.as_slice(),
@@ -88,13 +108,19 @@ impl Font {
 }
 
 #[derive(Clone)]
+///
 pub struct FontGroup<T> {
+	///
 	pub regular: T,
+	///
 	pub bold: Option<T>,
+	///
 	pub italic: Option<T>,
+	///
 	pub bold_italic: Option<T>,
 }
 impl FontGroup<Font> {
+	///
 	pub fn get(&self, font_weight: FontWeight) -> &Font {
 		match font_weight {
 			FontWeight::Regular => &self.regular,
@@ -105,6 +131,7 @@ impl FontGroup<Font> {
 	}
 
 	#[cfg(feature = "default-font")]
+	///
 	pub fn hyperlegible() -> FontGroup<Font> {
 		FontGroup {
 			regular: Font::OTF(
@@ -123,6 +150,7 @@ impl FontGroup<Font> {
 	}
 
 	#[cfg(not(feature = "default-font"))]
+	///
 	pub fn hyperlegible() -> FontGroup<Font> {
 		FontGroup {
 			regular: Font::ByName("HyperlegibleRegular".to_string()),
@@ -133,14 +161,15 @@ impl FontGroup<Font> {
 	}
 }
 
+///
 pub struct FontHolder {
-	fonts: HashMap<String, FontGroup<Font>>,
+	fonts: HashMap<EcoString, FontGroup<Font>>,
 }
 impl FontHolder {
 	fn new() -> Self {
 		let mut fonts = HashMap::new();
 
-		fonts.insert("Hyperlegible".to_string(), FontGroup::hyperlegible());
+		fonts.insert("Hyperlegible".into(), FontGroup::hyperlegible());
 
 		FontHolder { fonts }
 	}

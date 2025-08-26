@@ -10,11 +10,12 @@ edition = "2021"
 license = "MIT"
 name = "dessin-pdf"
 repository = "https://github.com/432-technologies/dessin"
-version = "0.8.22"
+version = "0.8.23"
 
 [dependencies]
-dessin = { version = "0.8.22", path = "../dessin" }
+dessin = { version = "^0.8.23", path = "../dessin" }
 fontdue = "^0.9"
-image = "0.24"
-nalgebra = "^0.33"
-printpdf = { version = "^0.7", features = ["webp", "svg"] }
+image = "^0.25"
+nalgebra = "^0.34"
+printpdf = { version = "^0.8", features = ["webp"] }
+thiserror = "2.0.16"

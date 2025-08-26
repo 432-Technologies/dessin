@@ -25,21 +25,21 @@
 //!
 //! fn main() {
 //!   let dessin = dessin!(for x in 0..10 {
-//!     let radius = x as f32 * 10.;
+//!   let radius = x as f32 * 10.;
 //!
-//!     dessin!([
-//!       *Circle(
-//!         fill = Srgb::<f32>::from_format(named::RED).into_linear(),
-//!         { radius },
-//!         translate = [x as f32 * 5., 10.],
-//!       ),
-//!       *Text(fill = Srgb::<f32>::from_format(named::BLACK).into_linear(), font_size = 10., text = "Hi !",),
-//!     ])
+//!   dessin!([
+//!    *Circle(
+//!      fill = Srgb::<f32>::from_format(named::RED).into_linear(),
+//!      { radius },
+//!      translate = [x as f32 * 5., 10.],
+//!    ),
+//!    *Text(fill = Srgb::<f32>::from_format(named::BLACK).into_linear(), font_size = 10., text = "Hi !",),
+//!  ])
 //!   });
 //!
 //!   let dessin = dessin!([
-//!     { dessin }(scale = [2., 2.]),
-//!     MyShape(say_this = "Hello world"),
+//!  { dessin }(scale = [2., 2.]),
+//!  MyShape(say_this = "Hello world"),
 //!   ]);
 //! }
 //! ```
@@ -61,11 +61,11 @@
 //! struct MyComponent {}
 //!
 //! impl From<MyComponent> for Shape {
-//! 	fn from(my_component: MyComponent) -> Shape {
-//! 		dessin!(
-//! 			// Implementation...
-//! 		)
-//! 	}
+//!   fn from(my_component: MyComponent) -> Shape {
+//!     dessin!(
+//!       // Implementation...
+//!     )
+//!   }
 //! }
 //! ```
 //!
@@ -81,26 +81,26 @@
 //! # use dessin::prelude::*;
 //! # pub trait ShapeOp {}
 //! # #[derive(Clone)]
-//!	#[derive(Default, Shape)]
+//! #[derive(Default, Shape)]
 //! struct MyComponent {
-//! 	// This auto implements ShapeOp for MyComponent using `my_local_transform` as the storage.
-//! 	#[local_transform]
-//!		my_local_transform: Transform2<f32>,
+//!   // This auto implements ShapeOp for MyComponent using `my_local_transform` as the storage.
+//!   #[local_transform]
+//!   my_local_transform: Transform2<f32>,
 //!
-//! 	// Generate a function for u32
-//! 	value: u32,
+//!   // Generate a function for u32
+//!   value: u32,
 //!
-//! 	// Does not generate a function for this field
-//! 	#[shape(skip)]
-//! 	skip_value: u32,
+//!   // Does not generate a function for this field
+//!   #[shape(skip)]
+//!   skip_value: u32,
 //!
-//! 	// Generates a function for Into<u32>
-//! 	#[shape(into)]
-//! 	into_value: u32,
+//!   // Generates a function for Into<u32>
+//!   #[shape(into)]
+//!   into_value: u32,
 //!
-//! 	// Generates a function that does not take any arguments, but set `my_bool` to true
-//! 	#[shape(bool)]
-//! 	my_bool: bool,
+//!   // Generates a function that does not take any arguments, but set `my_bool` to true
+//!   #[shape(bool)]
+//!   my_bool: bool,
 //! }
 //!
 //! # impl From<MyComponent> for Shape {
@@ -114,30 +114,30 @@
 //! # use dessin::prelude::*;
 //! # pub trait ShapeOp {}
 //!
-//!	#[derive(Default)]
+//! #[derive(Default)]
 //! struct MyComponent {
-//! 	my_local_transform: Transform2<f32>,
-//! 	value: u32,
-//! 	skip_value: u32,
-//! 	into_value: u32,
-//! 	my_bool: bool,
+//!   my_local_transform: Transform2<f32>,
+//!   value: u32,
+//!   skip_value: u32,
+//!   into_value: u32,
+//!   my_bool: bool,
 //! }
 //!
 //! impl ShapeOp for MyComponent { /* skip impl */ }
 //!
 //! impl MyComponent {
-//! 	pub fn value(&mut self, value: u32) -> &mut Self {
-//! #       self
-//!         /* skip impl */
-//!     }
-//! 	pub fn into_value<T: Into<u32>>(&mut self, value: T) -> &mut Self {
-//! #       self
-//!         /* skip impl */
-//!     }
-//! 	pub fn my_bool(&mut self) -> &mut Self {
-//! #       self
-//!         /* skip impl */
-//!     }
+//!   pub fn value(&mut self, value: u32) -> &mut Self {
+//! #   self
+//!     /* skip impl */
+//!  }
+//!   pub fn into_value<T: Into<u32>>(&mut self, value: T) -> &mut Self {
+//! #   self
+//!    /* skip impl */
+//!  }
+//!   pub fn my_bool(&mut self) -> &mut Self {
+//! #   self
+//!     /* skip impl */
+//!  }
 //! }
 //!
 //! # impl From<MyComponent> for Shape {

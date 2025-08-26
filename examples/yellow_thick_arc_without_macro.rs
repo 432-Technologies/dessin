@@ -22,7 +22,7 @@ fn main() {
 	thick_arc.fill(Srgba::new(1.0, 1.0, 0.0, 1.0));
 
 	// creates a black margin of 0.1 (0.05 outside and 0.05 inside the thick_arc)
-	thick_arc.stroke(Stroke::new_full(Srgba::new(0.0, 0.0, 0.0, 0.5), 0.5));
+	thick_arc.stroke(Stroke::new_solid(Srgba::new(0.0, 0.0, 0.0, 0.5), 0.5));
 
 	// chooses a rotation of PI/3 radians in the trigonometric direction
 	thick_arc.rotate(Rotation2::new(PI / 3_f32.to_radians()));

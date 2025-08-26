@@ -9,6 +9,7 @@ use std::{
 	collections::HashSet,
 	fmt::{self},
 	io::Cursor,
+	sync::{atomic::AtomicU32, LazyLock},
 };
 
 #[derive(Debug)]
@@ -16,6 +17,7 @@ pub enum SVGError {
 	WriteError(fmt::Error),
 	CurveHasNoStartingPoint(CurvePosition),
 	RenderError(RenderError),
+	SvgError(dessin_svg::SVGError),
 }
 impl fmt::Display for SVGError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -30,6 +32,11 @@ impl From<fmt::Error> for SVGError {
 impl From<RenderError> for SVGError {
 	fn from(value: RenderError) -> Self {
 		SVGError::RenderError(value)
+	}
+}
+impl From<dessin_svg::SVGError> for SVGError {
+	fn from(value: dessin_svg::SVGError) -> Self {
+		SVGError::SvgError(value)
 	}
 }
 impl std::error::Error for SVGError {}
@@ -58,7 +65,12 @@ pub struct SVGOptions {
 }
 
 #[component]
-pub fn SVG(shape: ReadOnlySignal<Shape>, options: Option<SVGOptions>) -> Element {
+pub fn SVGString(
+	class: Option<String>,
+	style: Option<String>,
+	shape: ReadOnlySignal<Shape>,
+	options: Option<SVGOptions>,
+) -> Element {
 	let options = options.unwrap_or_default();
 
 	let view_box = use_memo(move || {
@@ -102,14 +114,101 @@ pub fn SVG(shape: ReadOnlySignal<Shape>, options: Option<SVGOptions>) -> Element
 		format!("{min_x} {min_y} {span_x} {span_y}")
 	});
 
-	let used_font = use_signal(|| HashSet::new());
+	let svg = use_memo(move || {
+		use dessin::export::Export;
+
+		let mut exporter = dessin_svg::SVGExporter::new();
+		shape
+			.read()
+			.write_into_exporter(
+				&mut exporter,
+				&nalgebra::convert(Scale2::new(1., -1.)),
+				StylePosition {
+					fill: None,
+					stroke: None,
+				},
+			)
+			.unwrap_or_default();
+		exporter.finish("", "")
+	});
 
 	rsx! {
-		svg { view_box,
+		svg {
+			class,
+			style,
+			view_box,
+			dangerous_inner_html: svg,
+		}
+	}
+}
+
+#[component]
+pub fn SVG(
+	class: Option<String>,
+	style: Option<String>,
+	shape: ReadOnlySignal<Shape>,
+	options: Option<SVGOptions>,
+) -> Element {
+	let options = options.unwrap_or_default();
+
+	let view_box = use_memo(move || {
+		let shape = shape();
+
+		let (min_x, min_y, span_x, span_y) = match options.viewport {
+			ViewPort::ManualCentered { width, height } => {
+				(-width / 2., -height / 2., width, height)
+			}
+			ViewPort::ManualViewport {
+				x,
+				y,
+				width,
+				height,
+			} => (x - width / 2., y - height / 2., width, height),
+			ViewPort::AutoCentered => {
+				let bb = shape.local_bounding_box().straigthen();
+
+				let mirror_bb = bb
+					.transform(&nalgebra::convert::<_, Transform2<f32>>(Scale2::new(
+						-1., -1.,
+					)))
+					.into_straight();
+
+				let overall_bb = bb.join(mirror_bb);
+
+				(
+					-overall_bb.width() / 2.,
+					-overall_bb.height() / 2.,
+					overall_bb.width(),
+					overall_bb.height(),
+				)
+			}
+			ViewPort::AutoBoundingBox => {
+				let bb = shape.local_bounding_box().straigthen();
+
+				(bb.top_left().x, -bb.top_left().y, bb.width(), bb.height())
+			}
+		};
+
+		format!("{min_x} {min_y} {span_x} {span_y}")
+	});
+
+	let mut used_font = use_signal(|| HashSet::new());
+	let mut add_font = move |v: (FontRef, FontWeight)| {
+		used_font.write().insert(v);
+	};
+
+	rsx! {
+		svg {
+			class,
+			style,
+			view_box,
 			Shaper {
 				shape,
 				parent_transform: nalgebra::convert(Scale2::new(1., -1.)),
-				used_font,
+				add_font: move |ev| add_font(ev),
+			}
+			defs {
+				style {}
 			}
 		}
 	}
@@ -119,30 +218,20 @@ pub fn SVG(shape: ReadOnlySignal<Shape>, options: Option<SVGOptions>) -> Element
 fn Shaper(
 	shape: ReadOnlySignal<Shape>,
 	parent_transform: Transform2<f32>,
-	used_font: Signal<HashSet<(FontRef, FontWeight)>>,
+	add_font: EventHandler<(FontRef, FontWeight)>,
 ) -> Element {
 	match shape() {
 		Shape::Group(dessin::shapes::Group {
 			local_transform,
 			shapes,
-			metadata,
+			metadata: _,
 		}) => {
 			let parent_transform = parent_transform * local_transform;
-
-			// let attributes = metadata
-			// 	.into_iter()
-			// 	.map(|(name, value)| Attribute {
-			// 		name,
-			// 		value: dioxus_core::AttributeValue::Text(value),
-			// 		namespace: todo!(),
-			// 		volatile: todo!(),
-			// 	})
-			// 	.collect::<Vec<_>>();
 
 			rsx! {
 				g {
 					for shape in shapes {
-						Shaper { shape, parent_transform, used_font }
+						Shaper { shape, parent_transform, add_font }
 					}
 				}
 			}
@@ -152,17 +241,16 @@ fn Shaper(
 			stroke,
 			shape,
 		} => {
-			let fill = fill
-				.map(|color| {
-					format!(
-						"rgb({} {} {} / {:.3})",
-						(color.red * 255.) as u32,
-						(color.green * 255.) as u32,
-						(color.blue * 255.) as u32,
-						color.alpha
-					)
-				})
-				.unwrap_or_else(|| "none".to_string());
+			let fill = match fill {
+				Some(Fill::Solid { color }) => format!(
+					"rgb({} {} {} / {:.3})",
+					(color.red * 255.) as u32,
+					(color.green * 255.) as u32,
+					(color.blue * 255.) as u32,
+					color.alpha
+				),
+				None => "none".to_string(),
+			};
 
 			let (stroke, stroke_width, stroke_dasharray) = match stroke {
 				Some(Stroke::Dashed {
@@ -181,7 +269,7 @@ fn Shaper(
 					Some(width),
 					Some(format!("{on},{off}")),
 				),
-				Some(Stroke::Full { color, width }) => (
+				Some(Stroke::Solid { color, width }) => (
 					Some(format!(
 						"rgb({} {} {} / {:.3})",
 						(color.red * 255.) as u32,
@@ -202,7 +290,7 @@ fn Shaper(
 					stroke_width,
 					stroke_dasharray,
 
-					Shaper { parent_transform, shape: *shape, used_font }
+					Shaper { parent_transform, shape: *shape, add_font }
 				}
 			}
 		}
@@ -245,7 +333,8 @@ fn Shaper(
 			}
 		}
 		Shape::Text(text) => {
-			let id = rand::random::<u64>().to_string();
+			static ID: LazyLock<AtomicU32> = LazyLock::new(|| AtomicU32::new(0));
+			let id = ID.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
 
 			let text = text.position(&parent_transform);
 
@@ -263,9 +352,8 @@ fn Shaper(
 				TextAlign::Right => "end",
 			};
 
-			let font = text.font.clone().unwrap_or(FontRef::default());
-			used_font.write().insert((font.clone(), text.font_weight));
-			let font = font.name(text.font_weight);
+			let font_ref = text.font.clone().unwrap_or(FontRef::default());
+			let font_ref2 = font_ref.clone();
 
 			let x = text.reference_start.x;
 			let y = text.reference_start.y;
@@ -273,14 +361,15 @@ fn Shaper(
 
 			rsx! {
 				text {
-					font_family: "{font}",
+					onmounted: move |_| add_font((font_ref.clone(), text.font_weight)),
+					font_family: "{font_ref2}",
 					text_anchor: "{align}",
 					font_size: "{text.font_size}px",
 					font_weight: "{weight}",
 					"text-style": "{text_style}",
 					transform: "translate({x} {y}) rotate({r})",
 					if let Some(curve) = text.on_curve {
-						path { id: id.clone(), d: write_curve(curve) }
+						path { id: "{id}", d: write_curve(curve) }
 						textPath { href: id, {text.text} }
 					} else {
 						{text.text}
@@ -298,7 +387,7 @@ fn Shaper(
 			Shaper {
 				parent_transform: parent_transform * local_transform,
 				shape: shaper(),
-				used_font,
+				add_font,
 			}
 		},
 	}
@@ -306,31 +395,26 @@ fn Shaper(
 
 fn write_curve(curve: CurvePosition) -> String {
 	let mut acc = String::new();
-	let mut has_start = false;
+	let mut is_first = true;
 
 	for keypoint in &curve.keypoints {
 		match keypoint {
 			KeypointPosition::Point(p) => {
-				if has_start {
-					acc.push_str("L ");
-				} else {
-					acc.push_str("M ");
-					has_start = true;
-				}
-				acc.push_str(&format!("{} {} ", p.x, p.y));
+				acc.push_str(&format!(
+					"{} {} {} ",
+					if is_first { "M" } else { "L" },
+					p.x,
+					p.y
+				));
 			}
 			KeypointPosition::Bezier(b) => {
-				if has_start {
-					if let Some(v) = b.start {
-						acc.push_str(&format!("L {} {} ", v.x, v.y));
-					}
-				} else {
-					if let Some(v) = b.start {
-						acc.push_str(&format!("M {} {} ", v.x, v.y));
-						has_start = true;
-					} else {
-						return String::new();
-					}
+				if let Some(v) = b.start {
+					acc.push_str(&format!(
+						"{} {} {} ",
+						if is_first { "M" } else { "L" },
+						v.x,
+						v.y
+					));
 				}
 
 				acc.push_str(&format!(
@@ -345,7 +429,7 @@ fn write_curve(curve: CurvePosition) -> String {
 			}
 		}
 
-		has_start = true;
+		is_first = false;
 	}
 
 	if curve.closed {

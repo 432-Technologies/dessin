@@ -1,5 +1,5 @@
 macro_rules! auto_import {
-    {$($v:ident,)*} => {
+	{$($v:ident,)*} => {
 		$(
 			mod $v;
 			pub use $v::*;

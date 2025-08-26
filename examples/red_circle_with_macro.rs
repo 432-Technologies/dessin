@@ -10,7 +10,7 @@ fn main() {
 		// paints the inside of the circle in red
 		fill = Srgba::new(1.0, 0.0, 0.0, 1.0),
 		// creates a grey margin of 0.2 (0.1 outside and 0.1 inside the circle)
-		stroke = Stroke::new_full(Srgb::new(0.576, 0.576, 0.576), 0.2),
+		stroke = Stroke::new_solid(Srgb::new(0.576, 0.576, 0.576), 0.2),
 		rotate = Rotation2::new(0_f32.to_radians()), //not visible yet but it's possible to see it in some conditions
 	),]);
 

@@ -24,7 +24,7 @@ fn main() {
 		*Rectangle(
 			width = 15.,
 			height = 15.,
-			stroke = Stroke::new_full(Srgba::new(0.0, 0.0, 0.0, 0.01), 1.)
+			stroke = Stroke::new_solid(Srgba::new(0.0, 0.0, 0.0, 0.01), 1.)
 		)
 	]);
 
@@ -55,6 +55,7 @@ fn main() {
 					width: 14.,
 					height: 14.,
 				},
+				..Default::default()
 			},
 		)
 		.unwrap(),

@@ -24,7 +24,7 @@ fn main() {
 	let frame = dessin!(
 		[
 			*Circle(
-				stroke = Stroke::new_full(Srgb::<f32>::from_format(named::RED).into_linear(), 0.5),
+				stroke = Stroke::new_solid(Srgb::<f32>::from_format(named::RED).into_linear(), 0.5),
 				radius = 5.
 			),
 			Dynamic::<Image>(_ref = &triangle, image = test_img, scale = [3., 3.],),

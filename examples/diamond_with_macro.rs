@@ -17,7 +17,7 @@ fn main() {
 			// paints the inside of the diamond in diamond color
 			fill = Srgba::new(0.746, 0.949, 1.0, 0.99),
 			// creates a black margin with a width of 0.1 (0.05 outside and the same inside the diamond)
-			stroke = Stroke::new_full(Srgba::new(0.0, 0.0, 0.0, 1.0), 0.1),
+			stroke = Stroke::new_solid(Srgba::new(0.0, 0.0, 0.0, 1.0), 0.1),
 			// chooses a rotation of -10 radians in the trigonometric direction
 			rotate = Rotation2::new(-10_f32.to_radians()),
 			// moves of 15 following the x axis and 5 following the y axis

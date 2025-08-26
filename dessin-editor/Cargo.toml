@@ -1,0 +1,18 @@
+[package]
+name = "dessin-editor"
+version = "0.1.0"
+authors = ["Olivier Lemoine <olivier.lemoine@432technologies.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dessin = { version = "0.8.22", path = "../dessin" }
+dessin-dioxus = { version = "0.8.22", path = "../dessin-dioxus" }
+dioxus = { version = "0.6.0", features = [] }
+
+[features]
+default = ["web"]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
+mobile = ["dioxus/mobile"]

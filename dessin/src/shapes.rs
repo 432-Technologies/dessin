@@ -80,7 +80,6 @@ pub use dynamic::*;
 pub use ellipse::*;
 use na::{Point2, Rotation2, Scale2, Vector2};
 use nalgebra::{self as na, Transform2, Translation2};
-use palette::{IntoColor, Srgb, Srgba};
 use std::{fmt, marker::PhantomData, sync::Arc};
 pub use text::*;
 
@@ -518,7 +517,7 @@ pub enum Shape {
 	/// Block of style
 	Style {
 		/// Fill
-		fill: Option<Srgba>,
+		fill: Option<crate::style::Fill>,
 		/// Stroke
 		stroke: Option<crate::style::Stroke>,
 		/// Styled shape. (Or Shapes if it is a [`Groupe`][Shape::Group])
@@ -538,7 +537,9 @@ pub enum Shape {
 	///
 	/// See [`Dynamic`] for more details.
 	Dynamic {
+		/// Transform of the whole group
 		local_transform: Transform2<f32>,
+		/// The shape at run time
 		shaper: Arc<Shaper>,
 	},
 }
@@ -578,6 +579,8 @@ impl PartialEq for Shape {
 }
 
 impl Shape {
+	/// Get current shape as group
+	/// If current shape isn't a group, morph it into a group
 	pub fn get_or_mutate_as_group(&mut self) -> &mut Group {
 		if let Shape::Group(g) = self {
 			g
@@ -601,6 +604,7 @@ impl Shape {
 		}
 	}
 
+	/// Add some metadata
 	pub fn extend_metadata<K: ToString, V: ToString, E: IntoIterator<Item = (K, V)>>(
 		&mut self,
 		extend: E,
@@ -612,6 +616,7 @@ impl Shape {
 		);
 	}
 
+	/// Add some metadata
 	pub fn add_metadata<K: ToString, V: ToString>(&mut self, (key, value): (K, V)) {
 		let key = key.to_string();
 		let value = value.to_string();

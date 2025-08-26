@@ -8,6 +8,7 @@ members = [
 	"dessin-image",
 	"dessin-dioxus",
 	"dessin-macros",
+	"dessin-editor",
 
 	# Internal
 	"examples",
@@ -23,3 +24,15 @@ authors = [
 	"Olivier Lemoine <olivier.lemoine@432technologies.com>",
 	"François Morillon <francois.morillon@432technologies.com>",
 ]
+
+[profile]
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"
