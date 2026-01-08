@@ -5,16 +5,22 @@ publish = false
 edition = "2021"
 
 [dev-dependencies]
-dessin = { version = "0.8.22", path = "../dessin" }
-dessin-svg = { version = "0.8.22", path = "../dessin-svg" }
-dessin-image = { version = "0.8.22", path = "../dessin-image" }
-dessin-pdf = { version = "0.8.22", path = "../dessin-pdf" }
+dessin = { path = "../dessin" }
+dessin-svg = { path = "../dessin-svg" }
+dessin-image = { path = "../dessin-image" }
+dessin-pdf = { path = "../dessin-pdf" }
+dessin-iced = { path = "../dessin-iced" }
 project-root = "0.2.2"
 palette = "0.7.6"
+iced = "^0.14.0"
 
 [[example]]
 name = "432technologies"
 path = "./432technologies.rs"
+
+[[example]]
+name = "iced"
+path = "./iced.rs"
 
 [[example]]
 name = "text_rotation"
