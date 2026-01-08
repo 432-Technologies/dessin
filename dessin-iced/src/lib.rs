@@ -146,10 +146,10 @@ impl<Renderer: geometry::Renderer> Exporter for IcedExporter<Renderer> {
 				x: text.reference_start.x,
 				y: text.reference_start.y,
 			},
-			max_width: todo!(),
+			max_width: f32::MAX,
 			color,
 			size: iced_core::Pixels(text.font_size),
-			line_height: todo!(),
+			line_height: iced_core::text::LineHeight::Relative(1.),
 			font: iced_core::Font::DEFAULT,
 			align_x: match text.align {
 				TextAlign::Left => iced_core::text::Alignment::Left,
@@ -157,7 +157,7 @@ impl<Renderer: geometry::Renderer> Exporter for IcedExporter<Renderer> {
 				TextAlign::Right => iced_core::text::Alignment::Right,
 			},
 			align_y: iced_core::alignment::Vertical::Center,
-			shaping: todo!(),
+			shaping: iced_core::text::Shaping::Basic,
 		});
 
 		Ok(())
