@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::{convert::Infallible, ops::Deref};
 
 use dessin::{
 	export::{Export, Exporter},
@@ -11,55 +11,19 @@ use iced_widget::{
 	renderer::geometry::{self, Frame},
 };
 
-pub enum IcedError {}
-
 struct IcedExporter<Renderer: geometry::Renderer> {
 	frame: Frame<Renderer>,
 }
 impl<Renderer: geometry::Renderer> Exporter for IcedExporter<Renderer> {
-	type Error = IcedError;
+	type Error = Infallible;
 
-	const CAN_EXPORT_ELLIPSE: bool = true;
+	const CAN_EXPORT_ELLIPSE: bool = false;
 
 	fn start_style(&mut self, _style: StylePosition) -> Result<(), Self::Error> {
 		Ok(())
 	}
 
 	fn end_style(&mut self) -> Result<(), Self::Error> {
-		Ok(())
-	}
-
-	fn export_ellipse(
-		&mut self,
-		ellipse: EllipsePosition,
-		style_position: StylePosition,
-	) -> Result<(), Self::Error> {
-		eprintln!("export_ellipse: {ellipse:?} {style_position:?}");
-
-		let circle = canvas::Path::circle(
-			Point {
-				x: ellipse.center.x,
-				y: -ellipse.center.y,
-			},
-			ellipse.semi_major_axis,
-		);
-
-		if let Some(fill) = style_position.fill {
-			let fill = match fill {
-				Fill::Solid { color } => canvas::Fill {
-					style: canvas::Style::Solid(iced_core::Color {
-						r: color.red,
-						g: color.green,
-						b: color.blue,
-						a: color.alpha,
-					}),
-					rule: geometry::fill::Rule::NonZero,
-				},
-			};
-
-			self.frame.fill(&circle, fill);
-		}
-
 		Ok(())
 	}
 
@@ -72,8 +36,6 @@ impl<Renderer: geometry::Renderer> Exporter for IcedExporter<Renderer> {
 		curve: CurvePosition,
 		style_position: StylePosition,
 	) -> Result<(), Self::Error> {
-		eprintln!("export_curve: {curve:?} {style_position:?}");
-
 		let path = canvas::Path::new(|builder| {
 			for kp in curve.keypoints {
 				match kp {
@@ -123,10 +85,81 @@ impl<Renderer: geometry::Renderer> Exporter for IcedExporter<Renderer> {
 			self.frame.fill(&path, fill);
 		}
 
+		if let Some(stroke) = style_position.stroke {
+			let stroke = match stroke {
+				Stroke::Solid { color, width } => canvas::Stroke {
+					style: canvas::Style::Solid(iced_core::Color {
+						r: color.red,
+						g: color.green,
+						b: color.blue,
+						a: color.alpha,
+					}),
+					width,
+					..Default::default()
+				},
+				Stroke::Dashed {
+					color,
+					width,
+					on,
+					off,
+				} => canvas::Stroke {
+					style: canvas::Style::Solid(iced_core::Color {
+						r: color.red,
+						g: color.green,
+						b: color.blue,
+						a: color.alpha,
+					}),
+					width,
+					line_dash: canvas::LineDash {
+						segments: &[on, off],
+						offset: 0,
+					},
+					..Default::default()
+				},
+			};
+
+			self.frame.stroke(&path, stroke);
+		}
+
 		Ok(())
 	}
 
 	fn export_text(&mut self, text: TextPosition, style: StylePosition) -> Result<(), Self::Error> {
+		let color = match style.fill {
+			Some(Fill::Solid { color }) => iced_core::Color {
+				r: color.red,
+				g: color.green,
+				b: color.blue,
+				a: color.alpha,
+			},
+			_ => iced_core::Color {
+				r: 0.,
+				g: 0.,
+				b: 0.,
+				a: 0.,
+			},
+		};
+
+		self.frame.fill_text(canvas::Text {
+			content: text.text.to_owned(),
+			position: Point {
+				x: text.reference_start.x,
+				y: text.reference_start.y,
+			},
+			max_width: todo!(),
+			color,
+			size: iced_core::Pixels(text.font_size),
+			line_height: todo!(),
+			font: iced_core::Font::DEFAULT,
+			align_x: match text.align {
+				TextAlign::Left => iced_core::text::Alignment::Left,
+				TextAlign::Center => iced_core::text::Alignment::Center,
+				TextAlign::Right => iced_core::text::Alignment::Right,
+			},
+			align_y: iced_core::alignment::Vertical::Center,
+			shaping: todo!(),
+		});
+
 		Ok(())
 	}
 }
