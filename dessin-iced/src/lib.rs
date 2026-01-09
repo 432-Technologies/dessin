@@ -144,7 +144,7 @@ impl<Renderer: geometry::Renderer> Exporter for IcedExporter<Renderer> {
 			content: text.text.to_owned(),
 			position: Point {
 				x: text.reference_start.x,
-				y: text.reference_start.y,
+				y: -text.reference_start.y,
 			},
 			max_width: f32::MAX,
 			color,
@@ -182,7 +182,7 @@ impl<Message, Theme, Renderer: geometry::Renderer> canvas::Program<Message, Them
 		_state: &Self::State,
 		renderer: &Renderer,
 		_theme: &Theme,
-		bounds: iced_core::Rectangle,
+		mut bounds: iced_core::Rectangle,
 		_cursor: iced_core::mouse::Cursor,
 	) -> Vec<canvas::Geometry<Renderer>> {
 		let mut exporter = IcedExporter {
@@ -191,31 +191,15 @@ impl<Message, Theme, Renderer: geometry::Renderer> canvas::Program<Message, Them
 
 		let shape_bb = self.local_bounding_box().straigthen();
 
+		let translate =
+			nalgebra::convert::<_, Transform2<f32>>(Translation2::from(-shape_bb.top_left()));
+
 		let scale_x = bounds.width / shape_bb.width();
 		let scale_y = bounds.height / shape_bb.height();
 
 		let scale_min = scale_x.min(scale_y);
 
-		let x_diff = bounds.x / scale_min - shape_bb.left();
-		let y_diff = bounds.y / scale_min - shape_bb.top();
-
-		let center = shape_bb.center();
-
-		eprintln!(
-			"shape_bb = {shape_bb:?}
-bb_center = {center:?},
-bounds = {bounds:?}
-
-scale_x = {scale_x}
-scale_x = {scale_x}
-
-x_diff = {x_diff}
-y_diff = {y_diff}
-"
-		);
-
 		let scale = nalgebra::convert::<_, Transform2<f32>>(Scale2::new(scale_min, scale_min));
-		let translate = nalgebra::convert::<_, Transform2<f32>>(Translation2::new(x_diff, y_diff));
 
 		let default_transform = Transform2::identity() * scale * translate;
 

@@ -3,7 +3,10 @@ use dessin::{
 	prelude::*,
 };
 use dessin_iced::IcedShape;
-use iced::{widget::canvas, Element, Renderer, Theme};
+use iced::{
+	widget::{canvas, column},
+	Element, Renderer, Theme,
+};
 use palette::{rgb::Rgba, Srgba};
 use project_root::get_project_root;
 use std::{f32::consts::FRAC_PI_6, fs};
@@ -42,7 +45,7 @@ fn boot() -> () {
 fn update(state: &mut (), message: ()) {}
 
 fn view(state: &()) -> Element<'_, ()> {
-	let dessin = dessin!([
+	let dessin1 = dessin!([
 		*Circle(
 			radius = 10.,
 			translate = [5., 5.],
@@ -59,8 +62,16 @@ fn view(state: &()) -> Element<'_, ()> {
 		)
 	]);
 
-	canvas::<IcedShape, (), Theme, Renderer>(IcedShape(dessin))
-		.width(500.)
-		.height(500.)
-		.into()
+	let dessin2 = dessin!({ dessin1.clone() }(scale = [100., 50.]));
+
+	column![
+		canvas::<IcedShape, (), Theme, Renderer>(IcedShape(dessin2))
+			.width(50.)
+			.height(50.),
+		canvas::<IcedShape, (), Theme, Renderer>(IcedShape(dessin1))
+			.width(500.)
+			.height(500.),
+	]
+	.spacing(0.)
+	.into()
 }
