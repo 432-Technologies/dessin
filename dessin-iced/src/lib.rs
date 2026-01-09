@@ -44,6 +44,7 @@ impl<Renderer: geometry::Renderer> Deref for CachedDessin<Renderer> {
 }
 impl<Renderer: geometry::Renderer> DerefMut for CachedDessin<Renderer> {
 	fn deref_mut(&mut self) -> &mut Self::Target {
+		self.request_redraw();
 		&mut self.shape
 	}
 }
