@@ -1,6 +1,9 @@
 use dessin::prelude::*;
 use dessin_iced::DessinIced;
-use iced::{widget::column, Element};
+use iced::{
+	widget::{column, container},
+	Background, Color, Element,
+};
 use palette::rgb::Rgba;
 
 fn main() {
@@ -34,9 +37,11 @@ fn view(_state: &()) -> Element<'_, ()> {
 	let dessin2 = dessin!({ dessin1.clone() }(scale = [100., 50.]));
 
 	column![
-		dessin2.view().width(50.).height(50.),
-		dessin1.view().width(500.).height(500.),
+		container(dessin2.view().width(50.).height(50.))
+			.style(|_| container::background(Background::Color(Color::from_rgb(1., 0., 0.)))),
+		container(dessin1.view().width(500.).height(500.))
+			.style(|_| container::background(Background::Color(Color::from_rgb(0., 0., 1.)))),
 	]
-	.spacing(0.)
+	.spacing(10.)
 	.into()
 }
