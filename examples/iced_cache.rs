@@ -1,3 +1,5 @@
+use std::fs;
+
 use dessin::prelude::*;
 use dessin_iced::{CachedDessin, DessinIced};
 use iced::{
@@ -30,7 +32,11 @@ fn boot() -> App {
 		)
 	]);
 
-	let dessin2 = dessin!({ dessin1.clone() }(scale = [100., 50.]));
+	let dessin2 = dessin!([Image(
+		image = dessin::image::load_from_memory(include_bytes!("out/432technologies.png")).unwrap(),
+		keep_aspect_ratio,
+		scale = [10., 10.],
+	)]);
 
 	(CachedDessin::new(dessin1), CachedDessin::new(dessin2))
 }
@@ -39,10 +45,10 @@ fn update(_state: &mut App, _message: ()) {}
 
 fn view(state: &App) -> Element<'_, ()> {
 	column![
-		container(state.1.view().width(50.).height(50.))
-			.style(|_| container::background(Background::Color(Color::from_rgb(1., 0., 0.)))),
-		container(state.0.view().width(500.).height(500.))
-			.style(|_| container::background(Background::Color(Color::from_rgb(0., 0., 1.)))),
+		container(state.0.view().width(200.).height(200.))
+			.style(|_| container::background(Background::Color(Color::from_rgba(1., 0., 0., 0.1)))),
+		container(state.1.view().width(200.).height(200.))
+			.style(|_| container::background(Background::Color(Color::from_rgba(0., 0., 1., 0.1)))),
 	]
 	.spacing(10.)
 	.into()

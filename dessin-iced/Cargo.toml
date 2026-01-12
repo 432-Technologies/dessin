@@ -10,4 +10,4 @@ authors.workspace = true
 [dependencies]
 dessin = { version = "^0.8.23", path = "../dessin" }
 iced_core = { version = "^0.14.0", default-features = false }
-iced_widget = { version = "^0.14.0", default-features = false, features = ["canvas"] }
+iced_widget = { version = "^0.14.0", default-features = false, features = ["canvas", "image"] }

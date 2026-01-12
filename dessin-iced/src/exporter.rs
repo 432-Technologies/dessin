@@ -1,5 +1,5 @@
 use dessin::{export::Exporter, prelude::*};
-use iced_core::Point;
+use iced_core::{Point, Rectangle, Size};
 use iced_widget::renderer::geometry::{self, Frame};
 use std::convert::Infallible;
 
@@ -19,7 +19,29 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 		Ok(())
 	}
 
-	fn export_image(&mut self, _image: ImagePosition) -> Result<(), Self::Error> {
+	fn export_image(&mut self, image: ImagePosition) -> Result<(), Self::Error> {
+		let mut png = std::io::Cursor::new(Vec::new());
+		image
+			.image
+			.write_to(&mut png, dessin::image::ImageFormat::Png)
+			.unwrap();
+
+		let img_bytes =
+			iced_widget::canvas::Image::new(iced_core::image::Handle::from_bytes(png.into_inner()))
+				.filter_method(iced_core::image::FilterMethod::Linear)
+				.rotation(image.rotation);
+
+		self.frame.draw_image(
+			Rectangle::new(
+				Point::new(image.top_left.x, image.top_left.y),
+				Size {
+					width: image.width,
+					height: image.height,
+				},
+			),
+			img_bytes,
+		);
+
 		Ok(())
 	}
 
@@ -58,6 +80,10 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 						);
 					}
 				}
+			}
+
+			if curve.closed {
+				builder.close();
 			}
 		});
 
