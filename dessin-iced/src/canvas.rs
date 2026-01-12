@@ -98,7 +98,7 @@ impl<'a, Message, Theme, Renderer: geometry::Renderer>
 		bounds: iced_core::Rectangle,
 		_cursor: iced_core::mouse::Cursor,
 	) -> Vec<iced_widget::canvas::Geometry<Renderer>> {
-		let frame = self.cache.draw_with_bounds(renderer, bounds, |frame| {
+		let frame = self.cache.draw(renderer, bounds.size(), |frame| {
 			let mut exporter = IcedExporter { frame };
 
 			let shape_bb = self.local_bounding_box().straigthen();

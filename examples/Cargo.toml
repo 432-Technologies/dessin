@@ -23,6 +23,10 @@ name = "iced"
 path = "./iced.rs"
 
 [[example]]
+name = "iced_cache"
+path = "./iced_cache.rs"
+
+[[example]]
 name = "text_rotation"
 path = "./text_rotation.rs"
 
