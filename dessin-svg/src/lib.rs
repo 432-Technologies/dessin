@@ -51,19 +51,25 @@ pub enum ViewPort {
 pub struct SVGOptions {
 	pub viewport: ViewPort,
 	pub skip_svg_tag: bool,
+	pub embed_fonts: bool,
 }
 
 pub struct SVGExporter {
 	acc: String,
 	used_font: HashSet<(FontRef, FontWeight)>,
+	embed_fonts: bool,
 }
 
 impl SVGExporter {
-	pub fn new() -> Self {
+	pub fn new(embed_fonts: bool) -> Self {
 		let acc = String::new();
 		let used_font: HashSet<(FontRef, FontWeight)> = HashSet::default();
 
-		SVGExporter { acc, used_font }
+		SVGExporter {
+			acc,
+			used_font,
+			embed_fonts,
+		}
 	}
 
 	fn write_style(&mut self, style: StylePosition) -> Result<(), SVGError> {
@@ -166,15 +172,16 @@ impl SVGExporter {
 		svg_start_tag: impl fmt::Display,
 		svg_end_tag: impl fmt::Display,
 	) -> String {
-		let return_fonts = self
+		let return_fonts = self.embed_fonts.then(||
+		 self
 			.used_font
 			.into_iter()
 			.map(move |(font_ref, font_weight)| {
 				let font_group = font::get(&font_ref);
-				let (mime, bytes) = match font_group.get(font_weight) {
-					dessin::font::Font::OTF(bytes) => ("font/otf", bytes),
-					dessin::font::Font::TTF(bytes) => ("font/ttf", bytes),
-				};
+				let bytes =  font_group.get(font_weight);
+
+				let mime = if bytes.starts_with(&[0x4F, 0x54, 0x54, 0x4F]) {"font/otf"} else if bytes.starts_with(&[0x00, 0x01, 0x00, 0x00, 0x00]) {"font/ttf"} else {"font"};
+
 				let font_name = &*font_ref;
 
 				let styles = match font_weight {
@@ -190,7 +197,7 @@ impl SVGExporter {
 					r#"@font-face{{font-family:{font_name};src:url("data:{mime};base64,{encoded_font_bytes}");{styles}}}"#
 				)
 			})
-			.collect::<String>();
+			.collect::<String>()).unwrap_or_default();
 
 		let fonts = (!return_fonts.is_empty())
 			.then(|| format!("<defs><style>{return_fonts}</style></defs>"))
@@ -418,7 +425,7 @@ pub fn to_string_with_options(shape: &Shape, options: SVGOptions) -> Result<Stri
 		}
 	};
 
-	let mut exporter = SVGExporter::new();
+	let mut exporter = SVGExporter::new(options.embed_fonts);
 
 	let parent_transform = nalgebra::convert(Scale2::new(1., -1.));
 

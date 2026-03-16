@@ -253,7 +253,7 @@ impl Exporter for ImageExporter {
 		_: StylePosition,
 	) -> Result<(), Self::Error> {
 		let fg = dessin::font::get_or_default(font.as_ref());
-		let font = fg.get(font_weight).as_bytes();
+		let font = fg.get(font_weight);
 
 		//dt.set_transform(&Transform::create_translation(50.0, 0.0));
 		// dt.set_transform(&Transform::rotation(euclid::Angle::degrees(15.0)));

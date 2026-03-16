@@ -298,16 +298,15 @@ impl Exporter for PDFExporter<'_> {
 
 		let key = (font.clone(), font_weight);
 		if !self.used_font.contains_key(&key) {
-			match font::get(&font).get(font_weight) {
-				dessin::font::Font::OTF(b) | dessin::font::Font::TTF(b) => {
-					let font_id = self.doc.add_font(
-						&ParsedFont::from_bytes(&b, 0, &mut vec![])
-							.ok_or_else(|| PDFError::CantParseFont(font.clone(), font_weight))?,
-					);
+			let fg = font::get(&font);
+			let b = fg.get(font_weight);
 
-					self.used_font.insert(key.clone(), font_id);
-				}
-			}
+			let font_id = self.doc.add_font(
+				&ParsedFont::from_bytes(&b, 0, &mut vec![])
+					.ok_or_else(|| PDFError::CantParseFont(font.clone(), font_weight))?,
+			);
+
+			self.used_font.insert(key.clone(), font_id);
 		}
 
 		let font = self.used_font[&key].clone();

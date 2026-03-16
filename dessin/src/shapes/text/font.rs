@@ -1,6 +1,7 @@
 use super::FontWeight;
 use ecow::EcoString;
 use std::{
+	borrow::Cow,
 	collections::HashMap,
 	fmt,
 	ops::Deref,
@@ -25,19 +26,19 @@ fn font_holder_mut<T, F: FnOnce(&mut FontHolder) -> T>(f: F) -> T {
 
 #[inline]
 ///
-pub fn get(idx: &FontRef) -> FontGroup<Font> {
+pub fn get(idx: &FontRef) -> FontGroup {
 	font_holder(|f| f.fonts[&idx.0].clone())
 }
 
 #[inline]
 ///
-pub fn get_or_default(idx: Option<&FontRef>) -> FontGroup<Font> {
+pub fn get_or_default(idx: Option<&FontRef>) -> FontGroup {
 	idx.map(get).unwrap_or_else(|| get(&*DEFAULT_FONT))
 }
 
 #[inline]
 ///
-pub fn fonts() -> HashMap<EcoString, FontGroup<Font>> {
+pub fn fonts() -> HashMap<EcoString, FontGroup> {
 	font_holder(|f| f.fonts.clone())
 }
 
@@ -49,7 +50,7 @@ pub fn font_names() -> Vec<EcoString> {
 
 #[inline]
 ///
-pub fn add_font<S: Into<EcoString>>(font_name: S, font: FontGroup<Font>) -> FontRef {
+pub fn add_font(font_name: impl Into<EcoString>, font: FontGroup) -> FontRef {
 	font_holder_mut(move |f| {
 		let font_name = font_name.into();
 		f.fonts.insert(font_name.clone(), font);
@@ -64,7 +65,13 @@ pub const DEFAULT_FONT: LazyLock<FontRef> = LazyLock::new(|| FontRef("Hyperlegib
 #[repr(transparent)]
 ///
 pub struct FontRef(EcoString);
-impl FontRef {}
+impl FontRef {
+	#[doc(alias = "add")]
+	///
+	pub fn new(font_name: impl Into<EcoString>, font: FontGroup) -> Self {
+		add_font(font_name, font)
+	}
+}
 impl Deref for FontRef {
 	type Target = str;
 
@@ -91,37 +98,19 @@ impl<S: Into<EcoString>> From<S> for FontRef {
 
 #[derive(Clone)]
 ///
-pub enum Font {
-	/// OTF font
-	OTF(Vec<u8>),
-	/// TTF font
-	TTF(Vec<u8>),
+pub struct FontGroup {
+	///
+	pub regular: Cow<'static, [u8]>,
+	///
+	pub bold: Option<Cow<'static, [u8]>>,
+	///
+	pub italic: Option<Cow<'static, [u8]>>,
+	///
+	pub bold_italic: Option<Cow<'static, [u8]>>,
 }
-
-impl Font {
+impl FontGroup {
 	///
-	pub fn as_bytes(&self) -> &[u8] {
-		match self {
-			Font::OTF(b) | Font::TTF(b) => b.as_slice(),
-		}
-	}
-}
-
-#[derive(Clone)]
-///
-pub struct FontGroup<T> {
-	///
-	pub regular: T,
-	///
-	pub bold: Option<T>,
-	///
-	pub italic: Option<T>,
-	///
-	pub bold_italic: Option<T>,
-}
-impl FontGroup<Font> {
-	///
-	pub fn get(&self, font_weight: FontWeight) -> &Font {
+	pub fn get(&self, font_weight: FontWeight) -> &[u8] {
 		match font_weight {
 			FontWeight::Regular => &self.regular,
 			FontWeight::Bold => self.bold.as_ref().unwrap_or_else(|| &self.regular),
@@ -132,20 +121,20 @@ impl FontGroup<Font> {
 
 	#[cfg(feature = "default-font")]
 	///
-	pub fn hyperlegible() -> FontGroup<Font> {
+	pub fn hyperlegible() -> FontGroup {
 		FontGroup {
-			regular: Font::OTF(
-				include_bytes!("../../../Atkinson-Hyperlegible-Regular-102.otf").to_vec(),
-			),
-			bold: Some(Font::OTF(
-				include_bytes!("../../../Atkinson-Hyperlegible-Bold-102.otf").to_vec(),
+			regular: Cow::Borrowed(include_bytes!(
+				"../../../Atkinson-Hyperlegible-Regular-102.otf"
 			)),
-			italic: Some(Font::OTF(
-				include_bytes!("../../../Atkinson-Hyperlegible-Italic-102.otf").to_vec(),
-			)),
-			bold_italic: Some(Font::OTF(
-				include_bytes!("../../../Atkinson-Hyperlegible-BoldItalic-102.otf").to_vec(),
-			)),
+			bold: Some(Cow::Borrowed(include_bytes!(
+				"../../../Atkinson-Hyperlegible-Bold-102.otf"
+			))),
+			italic: Some(Cow::Borrowed(include_bytes!(
+				"../../../Atkinson-Hyperlegible-Italic-102.otf"
+			))),
+			bold_italic: Some(Cow::Borrowed(include_bytes!(
+				"../../../Atkinson-Hyperlegible-BoldItalic-102.otf"
+			))),
 		}
 	}
 
@@ -163,7 +152,7 @@ impl FontGroup<Font> {
 
 ///
 pub struct FontHolder {
-	fonts: HashMap<EcoString, FontGroup<Font>>,
+	fonts: HashMap<EcoString, FontGroup>,
 }
 impl FontHolder {
 	fn new() -> Self {

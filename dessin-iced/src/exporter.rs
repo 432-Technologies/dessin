@@ -1,7 +1,7 @@
 use dessin::{export::Exporter, prelude::*};
 use iced_core::{Point, Rectangle, Size};
 use iced_widget::renderer::geometry::{self, Frame};
-use std::convert::Infallible;
+use std::{convert::Infallible, sync::RwLock};
 
 pub struct IcedExporter<'a, Renderer: geometry::Renderer> {
 	pub frame: &'a mut Frame<Renderer>,
@@ -158,6 +158,26 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 			},
 		};
 
+		static FONT_REFS: RwLock<Vec<std::sync::Arc<&'static str>>> = RwLock::new(Vec::new());
+
+		let font = text
+			.font
+			.as_ref()
+			.map(|font| {
+				let mut refs = FONT_REFS.write().unwrap();
+
+				if let Some(r) = refs.iter().find(|&v| **v == &**font).cloned() {
+					iced_core::Font::with_name(*r)
+				} else {
+					let f = &*font.to_string().leak();
+
+					refs.push(std::sync::Arc::new(f));
+
+					iced_core::Font::with_name(f)
+				}
+			})
+			.unwrap_or(iced_core::Font::DEFAULT);
+
 		self.frame.fill_text(iced_widget::canvas::Text {
 			content: text.text.to_owned(),
 			position: Point {
@@ -168,7 +188,7 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 			color,
 			size: iced_core::Pixels(text.font_size),
 			line_height: iced_core::text::LineHeight::Relative(1.),
-			font: iced_core::Font::DEFAULT,
+			font,
 			align_x: match text.align {
 				TextAlign::Left => iced_core::text::Alignment::Left,
 				TextAlign::Center => iced_core::text::Alignment::Center,

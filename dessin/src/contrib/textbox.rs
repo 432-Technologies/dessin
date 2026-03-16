@@ -86,14 +86,8 @@ impl From<TextBox> for Shape {
 		}: TextBox,
 	) -> Self {
 		let font_ref = font.clone();
-
 		let fonts = crate::font::get_or_default(font.as_ref());
-		let raw_font = match fonts.get(FontWeight::Regular) {
-			crate::font::Font::OTF(bytes) => bytes,
-			crate::font::Font::TTF(bytes) => bytes,
-		};
-
-		let font = Font::from_bytes(raw_font.as_slice(), FontSettings::default()).unwrap();
+		let font = Font::from_bytes(fonts.get(font_weight), FontSettings::default()).unwrap();
 
 		let mut lines = vec![];
 		let mut height = height.unwrap_or(f32::MAX);
@@ -171,7 +165,7 @@ fn one_line() {
 	let shape: Shape = dessin!(
 		*TextBox(
 			{ text },
-			fill = Srgb::<f32>::from_format(named::BLACK).into_linear(),
+			fill = palette::Srgb::<f32>::new(0., 0., 0.).into_linear(),
 			font_size = 5.,
 			align = TextAlign::Left,
 			line_spacing = 2.,
@@ -190,7 +184,7 @@ fn two_lines() {
 
 	let shape: Shape = dessin!(*TextBox(
 		{ text },
-		fill = Srgb::<f32>::from_format(named::BLACK).into_linear(),
+		fill = palette::Srgb::<f32>::new(0., 0., 0.).into_linear(),
 		font_size = 5.,
 		align = TextAlign::Left,
 		line_spacing = 2.,

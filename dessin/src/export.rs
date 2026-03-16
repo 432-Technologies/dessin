@@ -28,9 +28,9 @@ where
 	/// # fn start_style(&mut self, style: StylePosition) -> Result<(), Self::Error> { Ok(()) }
 	/// # fn end_style(&mut self) -> Result<(), Self::Error> { Ok(()) }
 	/// # fn export_image(&mut self, image: ImagePosition) -> Result<(), Self::Error> { Ok(()) }
-	/// # fn export_ellipse(&mut self, ellipse: EllipsePosition) -> Result<(), Self::Error> { Ok(()) }
+	/// # fn export_ellipse(&mut self, ellipse: EllipsePosition, _style: StylePosition) -> Result<(), Self::Error> { Ok(()) }
 	/// # fn export_curve(&mut self, curve: CurvePosition, StylePosition {fill,stroke,} : StylePosition,) -> Result<(), Self::Error> { Ok(()) }
-	/// # fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> { Ok(()) }
+	/// # fn export_text(&mut self, text: TextPosition, _style: StylePosition) -> Result<(), Self::Error> { Ok(()) }
 	/// }
 	///
 	/// fn export_shape(shape: Shape) {
@@ -164,9 +164,9 @@ where
 /// # fn start_style(&mut self, style: StylePosition) -> Result<(), Self::Error> { Ok(()) }
 /// # fn end_style(&mut self) -> Result<(), Self::Error> { Ok(()) }
 /// # fn export_image(&mut self, image: ImagePosition) -> Result<(), Self::Error> { Ok(()) }
-/// # fn export_ellipse(&mut self, ellipse: EllipsePosition) -> Result<(), Self::Error> { Ok(()) }
+/// # fn export_ellipse(&mut self, ellipse: EllipsePosition, _style: StylePosition) -> Result<(), Self::Error> { Ok(()) }
 /// # fn export_curve(&mut self, curve: CurvePosition, StylePosition {fill,stroke,}: StylePosition,) -> Result<(), Self::Error> { Ok(()) }
-/// # fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> { Ok(()) }
+/// # fn export_text(&mut self, text: TextPosition, _style: StylePosition) -> Result<(), Self::Error> { Ok(()) }
 /// }
 ///
 /// trait ToSVG {

@@ -178,13 +178,12 @@ impl From<Text> for Shape {
 impl ShapeBoundingBox for Text {
 	fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
 		let fonts = crate::font::get_or_default(self.font.as_ref());
-		let raw_font = match fonts.get(FontWeight::Regular) {
-			crate::font::Font::OTF(bytes) => bytes,
-			crate::font::Font::TTF(bytes) => bytes,
-		};
 
-		let font = fontdue::Font::from_bytes(raw_font.as_slice(), fontdue::FontSettings::default())
-			.unwrap();
+		let font = fontdue::Font::from_bytes(
+			fonts.get(self.font_weight),
+			fontdue::FontSettings::default(),
+		)
+		.unwrap();
 
 		let width = size_of(&font, &self.text, self.font_size);
 
@@ -245,7 +244,11 @@ mod tests {
 				Ok(())
 			}
 
-			fn export_ellipse(&mut self, ellipse: EllipsePosition) -> Result<(), Self::Error> {
+			fn export_ellipse(
+				&mut self,
+				ellipse: EllipsePosition,
+				_style: StylePosition,
+			) -> Result<(), Self::Error> {
 				let expected_position = Point2::new(-25. * FRAC_1_SQRT_2, 25. * FRAC_1_SQRT_2);
 				assert!(
 					(ellipse.center - expected_position).magnitude() < 10e-6,
@@ -265,7 +268,11 @@ mod tests {
 				Ok(())
 			}
 
-			fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> {
+			fn export_text(
+				&mut self,
+				text: TextPosition,
+				style: StylePosition,
+			) -> Result<(), Self::Error> {
 				match text.text {
 					"1" => {
 						let expected_position =
