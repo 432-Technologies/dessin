@@ -164,17 +164,19 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 			.font
 			.as_ref()
 			.map(|font| {
-				let mut refs = FONT_REFS.write().unwrap();
+				iced_core::Font::DEFAULT
 
-				if let Some(r) = refs.iter().find(|&v| **v == &**font).cloned() {
-					iced_core::Font::with_name(*r)
-				} else {
-					let f = &*font.to_string().leak();
+				// let mut refs = FONT_REFS.write().unwrap();
 
-					refs.push(std::sync::Arc::new(f));
+				// if let Some(r) = refs.iter().find(|&v| **v == &**font).cloned() {
+				// 	iced_core::Font::new(*r)
+				// } else {
+				// 	let f = &*font.to_string().leak();
 
-					iced_core::Font::with_name(f)
-				}
+				// 	refs.push(std::sync::Arc::new(f));
+
+				// 	iced_core::Font::new(f)
+				// }
 			})
 			.unwrap_or(iced_core::Font::DEFAULT);
 
@@ -196,6 +198,8 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 			},
 			align_y: iced_core::alignment::Vertical::Center,
 			shaping: iced_core::text::Shaping::Basic,
+			wrapping: iced_core::text::Wrapping::None,
+			ellipsis: iced_core::text::Ellipsis::None,
 		});
 
 		Ok(())

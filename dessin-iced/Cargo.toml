@@ -9,6 +9,6 @@ authors.workspace = true
 
 [dependencies]
 dessin = { version = "^0.8.23", path = "../dessin" }
-iced_core = { version = "^0.14.0", default-features = false }
-iced_widget = { version = "^0.14.0", default-features = false, features = ["canvas", "image"] }
-iced_graphics = { version = "^0.14.0", default-features = false, features = ["image"] }
+iced_core = { git = "https://github.com/iced-rs/iced", rev = "12a0126", default-features = false }
+iced_widget = { git = "https://github.com/iced-rs/iced", rev = "12a0126", default-features = false, features = ["canvas", "image"] }
+iced_graphics = { git = "https://github.com/iced-rs/iced", rev = "12a0126", default-features = false, features = ["image"] }

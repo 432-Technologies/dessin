@@ -1,5 +1,3 @@
-use std::fs;
-
 use dessin::prelude::*;
 use dessin_iced::{CachedDessin, DessinIced};
 use iced::{
@@ -7,6 +5,7 @@ use iced::{
 	Background, Color, Element, Renderer,
 };
 use palette::rgb::Rgba;
+use std::fs;
 
 type App = (CachedDessin<Renderer>, CachedDessin<Renderer>);
 

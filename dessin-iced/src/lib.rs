@@ -1,11 +1,10 @@
 mod canvas;
 mod exporter;
 
-use std::ops::{Deref, DerefMut};
-
 use crate::canvas::{IcedShape, IcedShapeCached, IcedShapeRef};
 use dessin::prelude::*;
 use iced_widget::renderer::geometry;
+use std::ops::{Deref, DerefMut};
 
 pub trait DessinIced<Message, Theme, Renderer: geometry::Renderer> {
 	type Out: iced_widget::canvas::Program<Message, Theme, Renderer>;
