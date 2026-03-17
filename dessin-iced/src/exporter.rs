@@ -160,25 +160,23 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 
 		static FONT_REFS: RwLock<Vec<std::sync::Arc<&'static str>>> = RwLock::new(Vec::new());
 
-		let font = text
+		let iced_font = text
 			.font
 			.as_ref()
-			.map(|font| {
-				iced_core::Font::DEFAULT
+			.map(|font_ref| {
+				let mut refs = FONT_REFS.write().unwrap();
 
-				// let mut refs = FONT_REFS.write().unwrap();
-
-				// if let Some(r) = refs.iter().find(|&v| **v == &**font).cloned() {
-				// 	iced_core::Font::new(*r)
-				// } else {
-				// 	let f = &*font.to_string().leak();
-
-				// 	refs.push(std::sync::Arc::new(f));
-
-				// 	iced_core::Font::new(f)
-				// }
+				if let Some(r) = refs.iter().find(|&v| **v == &**font_ref).cloned() {
+					iced_core::Font::with_name(*r)
+				} else {
+					let f = &*font_ref.to_string().leak();
+					refs.push(std::sync::Arc::new(f));
+					iced_core::Font::with_name(f)
+				}
 			})
-			.unwrap_or(iced_core::Font::DEFAULT);
+			.unwrap_or(
+				iced_core::Font::DEFAULT, // This won't work on wasm32
+			);
 
 		self.frame.fill_text(iced_widget::canvas::Text {
 			content: text.text.to_owned(),
@@ -190,7 +188,7 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 			color,
 			size: iced_core::Pixels(text.font_size),
 			line_height: iced_core::text::LineHeight::Relative(1.),
-			font,
+			font: iced_font,
 			align_x: match text.align {
 				TextAlign::Left => iced_core::text::Alignment::Left,
 				TextAlign::Center => iced_core::text::Alignment::Center,
@@ -198,8 +196,6 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 			},
 			align_y: iced_core::alignment::Vertical::Center,
 			shaping: iced_core::text::Shaping::Basic,
-			wrapping: iced_core::text::Wrapping::None,
-			ellipsis: iced_core::text::Ellipsis::None,
 		});
 
 		Ok(())
