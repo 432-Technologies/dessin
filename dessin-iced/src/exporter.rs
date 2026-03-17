@@ -160,7 +160,7 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 
 		static FONT_REFS: RwLock<Vec<std::sync::Arc<&'static str>>> = RwLock::new(Vec::new());
 
-		let iced_font = text
+		let font = text
 			.font
 			.as_ref()
 			.map(|font_ref| {
@@ -174,9 +174,7 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 					iced_core::Font::with_name(f)
 				}
 			})
-			.unwrap_or(
-				iced_core::Font::DEFAULT, // This won't work on wasm32
-			);
+			.unwrap_or_default();
 
 		self.frame.fill_text(iced_widget::canvas::Text {
 			content: text.text.to_owned(),
@@ -188,7 +186,7 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 			color,
 			size: iced_core::Pixels(text.font_size),
 			line_height: iced_core::text::LineHeight::Relative(1.),
-			font: iced_font,
+			font,
 			align_x: match text.align {
 				TextAlign::Left => iced_core::text::Alignment::Left,
 				TextAlign::Center => iced_core::text::Alignment::Center,

@@ -5,7 +5,7 @@ use std::{
 	collections::HashMap,
 	fmt,
 	ops::Deref,
-	sync::{LazyLock, OnceLock, RwLock},
+	sync::{OnceLock, RwLock},
 };
 
 static FONT_HOLDER: OnceLock<RwLock<FontHolder>> = OnceLock::new();
@@ -33,7 +33,8 @@ pub fn get(idx: &FontRef) -> FontGroup {
 #[inline]
 ///
 pub fn get_or_default(idx: Option<&FontRef>) -> FontGroup {
-	idx.map(get).unwrap_or_else(|| get(&*DEFAULT_FONT))
+	idx.map(get)
+		.unwrap_or_else(|| get(DEFAULT_FONT.get().unwrap()))
 }
 
 #[inline]
@@ -59,10 +60,11 @@ pub fn add_font(font_name: impl Into<EcoString>, font: FontGroup) -> FontRef {
 }
 
 ///
-pub const DEFAULT_FONT: LazyLock<FontRef> = LazyLock::new(|| FontRef("Hyperlegible".into()));
+pub static DEFAULT_FONT: OnceLock<FontRef> = OnceLock::new();
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 #[repr(transparent)]
+///
 pub struct FontRef(EcoString);
 impl Deref for FontRef {
 	type Target = str;
@@ -73,7 +75,7 @@ impl Deref for FontRef {
 }
 impl Default for FontRef {
 	fn default() -> Self {
-		DEFAULT_FONT.clone()
+		DEFAULT_FONT.get_or_init(|| "Hyperlegible".into()).clone()
 	}
 }
 impl fmt::Display for FontRef {
