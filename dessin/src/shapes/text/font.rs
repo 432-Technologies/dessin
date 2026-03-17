@@ -63,15 +63,7 @@ pub const DEFAULT_FONT: LazyLock<FontRef> = LazyLock::new(|| FontRef("Hyperlegib
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 #[repr(transparent)]
-///
-pub struct FontRef(Cow<'static, str>);
-impl FontRef {
-	#[doc(alias = "add")]
-	///
-	pub fn new(font_name: impl Into<EcoString>, font: FontGroup) -> Self {
-		add_font(font_name, font)
-	}
-}
+pub struct FontRef(EcoString);
 impl Deref for FontRef {
 	type Target = str;
 
@@ -152,7 +144,7 @@ impl FontGroup {
 
 ///
 pub struct FontHolder {
-	fonts: HashMap<Cow<'static, str>, FontGroup>,
+	fonts: HashMap<EcoString, FontGroup>,
 }
 impl FontHolder {
 	fn new() -> Self {
