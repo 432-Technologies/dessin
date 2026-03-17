@@ -160,21 +160,17 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 
 		static FONT_REFS: RwLock<Vec<std::sync::Arc<&'static str>>> = RwLock::new(Vec::new());
 
-		let font = text
-			.font
-			.as_ref()
-			.map(|font_ref| {
-				let mut refs = FONT_REFS.write().unwrap();
+		let font = text.font.clone().unwrap_or_default();
+		let font_name = &*font;
 
-				if let Some(r) = refs.iter().find(|&v| **v == &**font_ref).cloned() {
-					iced_core::Font::with_name(*r)
-				} else {
-					let f = &*font_ref.to_string().leak();
-					refs.push(std::sync::Arc::new(f));
-					iced_core::Font::with_name(f)
-				}
-			})
-			.unwrap_or_default();
+		let mut font_refs = FONT_REFS.write().unwrap();
+		let font = if let Some(v) = font_refs.iter().find(|&v| **v == font_name) {
+			iced_core::Font::with_name(&*v)
+		} else {
+			let f = &*font_name.to_string().leak();
+			font_refs.push(std::sync::Arc::new(f));
+			iced_core::Font::with_name(f)
+		};
 
 		self.frame.fill_text(iced_widget::canvas::Text {
 			content: text.text.to_owned(),
