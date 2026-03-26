@@ -30,10 +30,17 @@ impl<Message, Theme, Renderer: geometry::Renderer> DessinIced<Message, Theme, Re
 	}
 }
 
-#[derive(Default)]
 pub struct CachedDessin<Renderer: geometry::Renderer> {
 	shape: Shape,
 	cache: iced_widget::canvas::Cache<Renderer>,
+}
+impl<Renderer: geometry::Renderer> Default for CachedDessin<Renderer> {
+	fn default() -> Self {
+		Self {
+			shape: Default::default(),
+			cache: iced_widget::canvas::Cache::new(),
+		}
+	}
 }
 impl<Renderer: geometry::Renderer> Deref for CachedDessin<Renderer> {
 	type Target = Shape;
