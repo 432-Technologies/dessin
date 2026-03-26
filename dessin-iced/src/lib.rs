@@ -30,6 +30,7 @@ impl<Message, Theme, Renderer: geometry::Renderer> DessinIced<Message, Theme, Re
 	}
 }
 
+#[derive(Default)]
 pub struct CachedDessin<Renderer: geometry::Renderer> {
 	shape: Shape,
 	cache: iced_widget::canvas::Cache<Renderer>,
