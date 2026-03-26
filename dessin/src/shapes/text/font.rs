@@ -34,7 +34,7 @@ pub fn get(idx: &FontRef) -> FontGroup {
 ///
 pub fn get_or_default(idx: Option<&FontRef>) -> FontGroup {
 	idx.map(get)
-		.unwrap_or_else(|| get(DEFAULT_FONT.get().unwrap()))
+		.unwrap_or_else(|| get(DEFAULT_FONT.get_or_init(|| "Hyperlegible".into())))
 }
 
 #[inline]
