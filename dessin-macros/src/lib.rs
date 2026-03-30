@@ -42,7 +42,7 @@ pub fn dessin(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// # #[macro_use] extern crate dessin_macros;
 /// # use std::sync::{Arc, RwLock};
 ///
-/// #[derive(Shape)]
+/// #[derive(Default, Shape)]
 /// struct MyShape {
 /// 	// fn my_parameter(&mut self, v: u32)
 /// 	my_parameter: u32,
@@ -77,7 +77,30 @@ pub fn dessin(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// 	// set maybe_into_string to Some(v.into()) if called
 /// 	#[shape(into, some)]
 /// 	maybe_into_string: Option<String>,
+///
+/// 	#[shape(into, some, option_fn)]
+/// 	and_all: Option<String>,
 /// }
+///
+/// # fn main() {
+/// dessin! (
+/// 	MyShape(
+/// 		my_parameter = 0u32,
+///
+/// 		my_bool,
+///
+/// 		skip_option = 0u32,
+/// 		or_not = Some(0u32),
+/// 		or_both = 0u32,
+/// 		maybe_or_both = Some(0u32),
+///
+/// 		into_string = "str",
+/// 		maybe_into_string = "str",
+/// 		and_all = "str",
+/// 		maybe_and_all = Some("str"),
+/// 	)
+/// );
+/// # }
 /// ```
 #[proc_macro_derive(Shape, attributes(shape, local_transform))]
 pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
