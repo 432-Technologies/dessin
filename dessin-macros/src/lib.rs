@@ -8,8 +8,11 @@ extern crate proc_macro;
 mod dessin_macro;
 
 use proc_macro2::TokenStream;
-use quote::{__private::mk_ident, quote, spanned::Spanned};
-use syn::{parse_macro_input, DataStruct, DeriveInput, Fields, FieldsNamed, Type};
+use quote::{quote, quote_spanned};
+use syn::{
+	parse_macro_input, punctuated::Punctuated, spanned::Spanned as _, DataStruct, DeriveInput,
+	Fields, FieldsNamed, Ident, Token, Type,
+};
 
 /// Entry point to build drawings
 /// ```ignore
@@ -57,8 +60,14 @@ pub fn dessin(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// 	// set skip_option to Some(v) if called
 /// 	#[shape(some)]
 /// 	skip_option: Option<u32>,
+///
 /// 	// fn or_not(&mut self, v: Option<u32>)
 /// 	or_not: Option<u32>,
+///
+/// 	// fn or_both(&mut self, v: u32)
+/// 	// fn maybe_or_both(&mut self, v: Option<u32>)
+/// 	#[shape(some, option_fn)]
+/// 	or_both: Option<u32>,
 ///
 /// 	// fn into_string<V: Into<String>>(&mut self, v: V)
 /// 	#[shape(into)]
@@ -66,7 +75,7 @@ pub fn dessin(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 ///
 /// 	// fn maybe_into_string<V: Into<String>>(&mut self, v: V)
 /// 	// set maybe_into_string to Some(v.into()) if called
-/// 	#[shape(into_some)]
+/// 	#[shape(into, some)]
 /// 	maybe_into_string: Option<String>,
 /// }
 /// ```
@@ -77,199 +86,312 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 	let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 	// let vis = input.vis;
 
-	let mut local_transform = None;
+	let mut local_transform: Option<Ident> = None;
 
 	let fields = match input.data {
 		syn::Data::Struct(DataStruct {
 			fields: Fields::Named(FieldsNamed { named: fields, .. }),
 			..
 		}) => fields
-			.into_iter()
+			.iter()
 			.map(|field| {
-				let ident = field.ident.unwrap();
-				let ty = field.ty;
+				let ident = field.ident.as_ref().unwrap();
+				let ty = &field.ty;
 
-				let mut skip = false;
-				let mut into = false;
-				let mut boolean = false;
-				let mut some = false;
-				let mut into_some = false;
+				let mut skip: Option<_> = None;
+				let mut into: Option<_> = None;
+				let mut boolean: Option<_> = None;
+				let mut some: Option<_> = None;
+				let mut option_fn: Option<_> = None;
+
 				let mut doc = None;
-				for attr in field.attrs {
+
+				for attr in &field.attrs {
 					if attr.path().is_ident("doc") {
 						doc = Some(attr);
 						continue;
 					}
 
 					if attr.path().is_ident("local_transform") {
-						if local_transform.is_some() {
-							panic!("Only one field can be a local_transform");
+						if let Some(local_transform) = &local_transform {
+							return quote_spanned! {
+								local_transform.span() =>
+								compile_error!("Only one field can be a local_transform")
+							}
 						}
 
 						local_transform = Some(ident.clone());
-						skip = true;
+						return quote! {};
 					}
 
 					if attr.path().is_ident("shape") {
-						attr.parse_nested_meta(|meta| {
-							if meta.path.is_ident("skip") {
-								skip = true;
-							}
+						let Ok(nested) = attr
+							.parse_args_with(Punctuated::<Ident, Token![,]>::parse_terminated) else {
+								return quote_spanned! {
+									attr.span() =>
+									compile_error!("shape attribute expect a comma separated list of args from `skip`, `into`, `bool`, `some`, and `option_fn`")
+								};
+							};
 
-							if meta.path.is_ident("into") {
-								into = true;
-							}
+						for value in nested {
+							if value == Ident::new("skip", value.span()) {
+								skip = Some(value.span());
+							} else if value == Ident::new("into", value.span()) {
+								into = Some(value.span());
+							} else if value == Ident::new("bool", value.span()) {
+								boolean = Some(value.span());
+							} else if value == Ident::new("some", value.span()) {
+								some = Some(value.span());
+							} else if value == Ident::new("option_fn", value.span()) {
+								option_fn = Some(value.span());
+							} else {
+								let err = syn::Error::new(value.span(), format!("Unknown attribute `{}`. Exect `skip`, `into`, `bool`, `some` or `option_fn`", value)).to_compile_error();
 
-							if meta.path.is_ident("bool") {
-								boolean = true;
+								return quote_spanned! {
+									value.span() =>
+									#err
+								}
 							}
+						}
 
-							if meta.path.is_ident("some") {
-								some = true;
-							}
-
-							if meta.path.is_ident("into_some") {
-								into_some = true;
-							}
-
-							Ok(())
-						})
-						.unwrap()
 					}
 				}
 
-				if skip {
-					return quote!();
+				if let Some(skip) = skip {
+					if [into, boolean, some, option_fn].into_iter().any(|v| v.is_some()) {
+						return quote_spanned! {
+							skip =>
+							pub fn #ident() {
+								compile_error!("skip is not compatible with any other attributes")
+							}
+						};
+					} else {
+						return quote!();
+					}
 				}
 
-				let with_ident = mk_ident(&format!("with_{ident}"), None);
-				if boolean {
-					quote!(
-						#doc
-						#[inline]
-						pub fn #ident(&mut self) -> &mut Self {
-							self.#ident = true;
-							self
-						}
+				let with_ident = Ident::new(&format!("with_{ident}"), field.span());
 
-						#doc
-						#[inline]
-						pub fn #with_ident(mut self) -> Self {
-							self.#ident();
-							self
-						}
-					)
-				} else if into {
-					quote!(
-						#doc
-						#[inline]
-						pub fn #ident<__INTO__T: Into<#ty>>(&mut self, value: __INTO__T) -> &mut Self {
-							self.#ident = value.into();
-							self
-						}
+				let generated_tokens = match (
+					into,
+					boolean,
+					some,
+				) {
+					(None, None, None) => {
+						quote!(
+							#doc
+							#[inline]
+							pub fn #ident(&mut self, value: #ty) -> &mut Self {
+								self.#ident = value;
+								self
+							}
 
-						#doc
-						#[inline]
-						pub fn #with_ident<__INTO__T: Into<#ty>>(mut self, value: __INTO__T) -> Self {
-							self.#ident(value);
-							self
-						}
-					)
-				} else if some {
-					let err_msg = syn::Error::new(ty.__span(), "Not supported").to_compile_error();
-					let Type::Path(syn::TypePath {
-						path: syn::Path { segments, .. },
-						..
-					}) = ty
-					else {
-						return err_msg;
-					};
+							#doc
+							#[inline]
+							pub fn #with_ident(mut self, value: #ty) -> Self {
+								self.#ident(value);
+								self
+							}
+						)
+					}
 
-					let ty = match segments.iter().next() {
-						Some(syn::PathSegment {
-							arguments:
-								syn::PathArguments::AngleBracketed(
-									syn::AngleBracketedGenericArguments { args, .. },
-								),
+					(None, Some(_), None) => {
+						quote!(
+							#doc
+							#[inline]
+							pub fn #ident(&mut self) -> &mut Self {
+								self.#ident = true;
+								self
+							}
+
+							#doc
+							#[inline]
+							pub fn #with_ident(mut self) -> Self {
+								self.#ident();
+								self
+							}
+						)
+					}
+					(_, Some(span), _) => {
+						return quote_spanned! {
+							span =>
+							compile_error!("bool is not compatible with `into` or `some`")
+						};
+					}
+
+					(Some(_), None, None) => {
+						quote!(
+							#doc
+							#[inline]
+							pub fn #ident<__INTO__T: Into<#ty>>(&mut self, value: __INTO__T) -> &mut Self {
+								self.#ident = value.into();
+								self
+							}
+
+							#doc
+							#[inline]
+							pub fn #with_ident<__INTO__T: Into<#ty>>(mut self, value: __INTO__T) -> Self {
+								self.#ident(value);
+								self
+							}
+						)
+					}
+
+					(None, None, Some(span)) => {
+						let err_msg = syn::Error::new(span, "Not supported").to_compile_error();
+						let Type::Path(syn::TypePath {
+							path: syn::Path { segments, .. },
 							..
-						}) => match args.iter().next() {
-							Some(syn::GenericArgument::Type(t)) => t,
+						}) = ty
+						else {
+							return err_msg;
+						};
+
+						let ty = match segments.iter().next() {
+							Some(syn::PathSegment {
+								arguments:
+									syn::PathArguments::AngleBracketed(
+										syn::AngleBracketedGenericArguments { args, .. },
+									),
+								..
+							}) => match args.iter().next() {
+								Some(syn::GenericArgument::Type(t)) => t,
+								_ => return err_msg,
+							},
 							_ => return err_msg,
-						},
-						_ => return err_msg,
-					};
+						};
 
-					quote!(
-						#doc
-						#[inline]
-						pub fn #ident(&mut self, value: #ty) -> &mut Self {
-							self.#ident = Some(value);
-							self
-						}
 
-						#doc
-						#[inline]
-						pub fn #with_ident(mut self, value: #ty) -> Self {
-							self.#ident(value);
-							self
-						}
-					)
-				} else if into_some {
-					let err_msg = syn::Error::new(ty.__span(), "Not supported").to_compile_error();
-					let Type::Path(syn::TypePath {
-						path: syn::Path { segments, .. },
-						..
-					}) = ty
-					else {
-						return err_msg;
-					};
+						quote!(
+							#doc
+							#[inline]
+							pub fn #ident(&mut self, value: #ty) -> &mut Self {
+								self.#ident = Some(value);
+								self
+							}
 
-					let ty = match segments.iter().next() {
-						Some(syn::PathSegment {
-							arguments:
-								syn::PathArguments::AngleBracketed(
-									syn::AngleBracketedGenericArguments { args, .. },
-								),
+							#doc
+							#[inline]
+							pub fn #with_ident(mut self, value: #ty) -> Self {
+								self.#ident(value);
+								self
+							}
+						)
+					}
+					(Some(_), None, Some(span)) => {
+						let err_msg = syn::Error::new(span, "Not supported").to_compile_error();
+						let Type::Path(syn::TypePath {
+							path: syn::Path { segments, .. },
 							..
-						}) => match args.iter().next() {
-							Some(syn::GenericArgument::Type(t)) => t,
+						}) = ty
+						else {
+							return err_msg;
+						};
+
+						let ty = match segments.iter().next() {
+							Some(syn::PathSegment {
+								arguments:
+									syn::PathArguments::AngleBracketed(
+										syn::AngleBracketedGenericArguments { args, .. },
+									),
+								..
+							}) => match args.iter().next() {
+								Some(syn::GenericArgument::Type(t)) => t,
+								_ => return err_msg,
+							},
 							_ => return err_msg,
-						},
-						_ => return err_msg,
-					};
+						};
 
-					quote!(
-						#doc
-						#[inline]
-						pub fn #ident<__INTO__T: Into<#ty>>(&mut self, value: __INTO__T) -> &mut Self {
-							self.#ident = Some(value.into());
-							self
-						}
+						quote!(
+							#doc
+							#[inline]
+							pub fn #ident<__INTO__T: Into<#ty>>(&mut self, value: __INTO__T) -> &mut Self {
+								self.#ident = Some(value.into());
+								self
+							}
 
-						#doc
-						#[inline]
-						pub fn #with_ident<__INTO__T: Into<#ty>>(mut self, value: __INTO__T) -> Self {
-							self.#ident(value);
-							self
-						}
-					)
-				} else {
-					quote!(
-						#doc
-						#[inline]
-						pub fn #ident(&mut self, value: #ty) -> &mut Self {
-							self.#ident = value;
-							self
-						}
+							#doc
+							#[inline]
+							pub fn #with_ident<__INTO__T: Into<#ty>>(mut self, value: __INTO__T) -> Self {
+								self.#ident(value);
+								self
+							}
+						)
+					}
+				};
 
-						#doc
-						#[inline]
-						pub fn #with_ident(mut self, value: #ty) -> Self {
-							self.#ident(value);
-							self
-						}
-					)
-				}
+				let generated_tokens = match (option_fn, into) {
+					(Some(_), None) => {
+						let option_ident = Ident::new(&format!("maybe_{ident}"), field.span());
+						let with_option_ident = Ident::new(&format!("with_maybe_{ident}"), field.span());
+
+						quote!(
+							#generated_tokens
+
+							#doc
+							#[inline]
+							pub fn #option_ident(&mut self, value: #ty) -> &mut Self {
+								self.#ident = value;
+								self
+							}
+
+							#doc
+							#[inline]
+							pub fn #with_option_ident(mut self, value: #ty) -> Self {
+								self.#option_ident(value);
+								self
+							}
+						)
+					}
+					(Some(span), Some(_)) => {
+						let option_ident = Ident::new(&format!("maybe_{ident}"), field.span());
+						let with_option_ident = Ident::new(&format!("with_maybe_{ident}"), field.span());
+
+						let err_msg = syn::Error::new(span, "Not supported").to_compile_error();
+						let Type::Path(syn::TypePath {
+							path: syn::Path { segments, .. },
+							..
+						}) = ty
+						else {
+							return err_msg;
+						};
+
+						let ty = match segments.iter().next() {
+							Some(syn::PathSegment {
+								arguments:
+									syn::PathArguments::AngleBracketed(
+										syn::AngleBracketedGenericArguments { args, .. },
+									),
+								..
+							}) => match args.iter().next() {
+								Some(syn::GenericArgument::Type(t)) => t,
+								_ => return err_msg,
+							},
+							_ => return err_msg,
+						};
+
+						quote!(
+							#generated_tokens
+
+							#doc
+							#[inline]
+							pub fn #option_ident<__INTO__T: Into<#ty>>(&mut self, value: Option<__INTO__T>) -> &mut Self {
+								self.#ident = value.map(Into::into);
+								self
+							}
+
+							#doc
+							#[inline]
+							pub fn #with_option_ident<__INTO__T: Into<#ty>>(mut self, value: Option<__INTO__T>) -> Self {
+								self.#option_ident(value);
+								self
+							}
+						)
+					}
+					_ => generated_tokens
+				};
+
+				generated_tokens
 			})
 			.collect::<Vec<_>>(),
 		syn::Data::Struct(_) => {

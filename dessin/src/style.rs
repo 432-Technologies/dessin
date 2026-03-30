@@ -127,11 +127,11 @@ pub struct Style<T> {
 	pub shape: T,
 
 	/// Add a fill color
-	#[shape(into_some)]
+	#[shape(into, some, option_fn)]
 	pub fill: Option<Fill>,
 
 	/// Add a `Stroke`
-	#[shape(into_some)]
+	#[shape(into, some, option_fn)]
 	pub stroke: Option<Stroke>,
 }
 impl<T> Style<T> {

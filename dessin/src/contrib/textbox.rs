@@ -36,7 +36,7 @@ pub struct TextBox {
 	pub height: Option<f32>,
 
 	/// Font
-	#[shape(into_some)]
+	#[shape(into, some)]
 	pub font: Option<FontRef>,
 }
 impl Default for TextBox {

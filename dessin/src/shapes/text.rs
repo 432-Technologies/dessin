@@ -101,14 +101,14 @@ pub struct Text {
 	///
 	pub font_weight: FontWeight,
 
-	#[shape(into_some)]
+	#[shape(into, some, option_fn)]
 	///
 	pub on_curve: Option<Curve>,
 
 	///
 	pub font_size: f32,
 
-	#[shape(into_some)]
+	#[shape(into, some, option_fn)]
 	///
 	pub font: Option<FontRef>,
 }
@@ -127,20 +127,6 @@ impl Default for Text {
 	}
 }
 impl Text {
-	#[inline]
-	///
-	pub fn maybe_font<F: Into<FontRef>>(&mut self, font: Option<F>) -> &mut Self {
-		self.font = font.map(Into::into).into();
-		self
-	}
-
-	#[inline]
-	///
-	pub fn with_maybe_font<F: Into<FontRef>>(mut self, font: Option<F>) -> Self {
-		self.maybe_font(font);
-		self
-	}
-
 	///
 	pub fn position<'a>(&'a self, parent_transform: &Transform2<f32>) -> TextPosition<'a> {
 		let transform = self.global_transform(parent_transform);
