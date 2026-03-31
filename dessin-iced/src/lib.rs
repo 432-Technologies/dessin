@@ -76,3 +76,26 @@ impl<'a, Message, Theme, Renderer: geometry::Renderer + 'a> DessinIced<Message, 
 		iced_widget::canvas(IcedShapeCached(self))
 	}
 }
+
+#[derive(Default)]
+pub struct CachedFnDessin<Renderer: geometry::Renderer, V: PartialEq> {
+	value: V,
+	cache: CachedDessin<Renderer>,
+}
+impl<Renderer: geometry::Renderer, V: PartialEq> CachedFnDessin<Renderer, V> {
+	pub fn update(&mut self, value: V, shaper: impl FnOnce(&V) -> Shape) {
+		if value != value {
+			*self.cache = shaper(&value);
+			self.value = value;
+		}
+	}
+}
+impl<'a, Message, Theme, Renderer: geometry::Renderer + 'a, V: PartialEq>
+	DessinIced<Message, Theme, Renderer> for &'a CachedFnDessin<Renderer, V>
+{
+	type Out = IcedShapeCached<'a, Renderer>;
+
+	fn view(self) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer> {
+		iced_widget::canvas(IcedShapeCached(&self.cache))
+	}
+}
