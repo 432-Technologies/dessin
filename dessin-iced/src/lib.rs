@@ -6,10 +6,43 @@ use dessin::prelude::*;
 use iced_widget::renderer::geometry;
 use std::ops::{Deref, DerefMut};
 
+#[derive(Default, Clone, Copy, PartialEq)]
+pub enum ViewPort {
+	/// Create a viewport centered around (0, 0), with size (width, height)
+	ManualCentered { width: f32, height: f32 },
+	/// Create a viewport centered around (x, y), with size (width, height)
+	ManualViewport {
+		x: f32,
+		y: f32,
+		width: f32,
+		height: f32,
+	},
+	/// Create a Viewport centered around (0, 0), with auto size that include all [Shapes][`dessin::prelude::Shape`]
+	AutoCentered,
+	#[default]
+	/// Create a Viewport centered around the centered of the shapes, with auto size that include all [Shapes][`dessin::prelude::Shape`]
+	AutoBoundingBox,
+}
+
+#[derive(Default, Clone)]
+pub struct Options {
+	pub viewport: ViewPort,
+}
+
 pub trait DessinIced<Message, Theme, Renderer: geometry::Renderer> {
 	type Out: iced_widget::canvas::Program<Message, Theme, Renderer>;
 
-	fn view(self) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer>;
+	fn view(self) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer>
+	where
+		Self: Sized,
+	{
+		self.view_with(Options::default())
+	}
+
+	fn view_with(
+		self,
+		options: Options,
+	) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer>;
 }
 
 impl<'a, Message, Theme, Renderer: geometry::Renderer> DessinIced<Message, Theme, Renderer>
@@ -17,16 +50,22 @@ impl<'a, Message, Theme, Renderer: geometry::Renderer> DessinIced<Message, Theme
 {
 	type Out = IcedShapeRef<'a>;
 
-	fn view(self) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer> {
-		iced_widget::canvas(IcedShapeRef(self))
+	fn view_with(
+		self,
+		options: Options,
+	) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer> {
+		iced_widget::canvas(IcedShapeRef(self, options))
 	}
 }
 
 impl<Message, Theme, Renderer: geometry::Renderer> DessinIced<Message, Theme, Renderer> for Shape {
 	type Out = IcedShape;
 
-	fn view(self) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer> {
-		iced_widget::canvas(IcedShape(self))
+	fn view_with(
+		self,
+		options: Options,
+	) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer> {
+		iced_widget::canvas(IcedShape(self, options))
 	}
 }
 
@@ -72,30 +111,10 @@ impl<'a, Message, Theme, Renderer: geometry::Renderer + 'a> DessinIced<Message, 
 {
 	type Out = IcedShapeCached<'a, Renderer>;
 
-	fn view(self) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer> {
+	fn view_with(
+		self,
+		options: Options,
+	) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer> {
 		iced_widget::canvas(IcedShapeCached(self))
-	}
-}
-
-#[derive(Default)]
-pub struct CachedFnDessin<Renderer: geometry::Renderer, V: PartialEq> {
-	value: V,
-	cache: CachedDessin<Renderer>,
-}
-impl<Renderer: geometry::Renderer, V: PartialEq> CachedFnDessin<Renderer, V> {
-	pub fn update(&mut self, value: V, shaper: impl FnOnce(&V) -> Shape) {
-		if value != value {
-			*self.cache = shaper(&value);
-			self.value = value;
-		}
-	}
-}
-impl<'a, Message, Theme, Renderer: geometry::Renderer + 'a, V: PartialEq>
-	DessinIced<Message, Theme, Renderer> for &'a CachedFnDessin<Renderer, V>
-{
-	type Out = IcedShapeCached<'a, Renderer>;
-
-	fn view(self) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer> {
-		iced_widget::canvas(IcedShapeCached(&self.cache))
 	}
 }

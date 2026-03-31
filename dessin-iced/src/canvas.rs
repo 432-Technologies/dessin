@@ -7,7 +7,7 @@ use dessin::{
 use iced_widget::renderer::geometry;
 use std::ops::Deref;
 
-pub struct IcedShapeRef<'a>(pub &'a Shape);
+pub struct IcedShapeRef<'a>(pub &'a Shape, pub crate::Options);
 impl<'a, Message, Theme, Renderer: geometry::Renderer>
 	iced_widget::canvas::Program<Message, Theme, Renderer> for IcedShapeRef<'a>
 {
@@ -25,7 +25,31 @@ impl<'a, Message, Theme, Renderer: geometry::Renderer>
 
 		let mut exporter = IcedExporter { frame: &mut frame };
 
-		let shape_bb = self.0.local_bounding_box().straigthen();
+		let shape_bb = match self.1.viewport {
+			crate::ViewPort::ManualCentered { width, height } => {
+				BoundingBox::centered([width, height])
+			}
+			crate::ViewPort::ManualViewport {
+				x,
+				y,
+				width,
+				height,
+			} => BoundingBox::at([x, y])
+				.transform(&nalgebra::convert(Scale2::new(width, height)))
+				.straigthen(),
+			crate::ViewPort::AutoCentered => {
+				let bb = self.0.local_bounding_box().straigthen();
+
+				let mirror_bb = bb
+					.transform(&nalgebra::convert::<_, Transform2<f32>>(Scale2::new(
+						-1., -1.,
+					)))
+					.into_straight();
+
+				bb.join(mirror_bb)
+			}
+			crate::ViewPort::AutoBoundingBox => self.0.local_bounding_box().straigthen(),
+		};
 
 		let translate =
 			nalgebra::convert::<_, Transform2<f32>>(Translation2::from(-shape_bb.top_left()));
@@ -52,7 +76,7 @@ impl<'a, Message, Theme, Renderer: geometry::Renderer>
 	}
 }
 
-pub struct IcedShape(pub Shape);
+pub struct IcedShape(pub Shape, pub crate::Options);
 impl<Message, Theme, Renderer: geometry::Renderer>
 	iced_widget::canvas::Program<Message, Theme, Renderer> for IcedShape
 {
@@ -67,7 +91,7 @@ impl<Message, Theme, Renderer: geometry::Renderer>
 		cursor: iced_core::mouse::Cursor,
 	) -> Vec<iced_widget::canvas::Geometry<Renderer>> {
 		iced_widget::canvas::Program::<Message, Theme, Renderer>::draw(
-			&IcedShapeRef(&self.0),
+			&IcedShapeRef(&self.0, self.1.clone()),
 			state,
 			renderer,
 			theme,
