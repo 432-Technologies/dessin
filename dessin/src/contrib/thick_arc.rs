@@ -10,26 +10,30 @@ pub struct ThickArc {
 	pub local_transform: Transform2<f32>,
 
 	/// start angle in radian
+	#[shape(into)]
 	pub start_angle: f32,
 
 	/// end angle in radian
+	#[shape(into)]
 	pub end_angle: f32,
 
 	/// Width of the inner radius
+	#[shape(into)]
 	pub inner_radius: f32,
 
 	/// Width of the outer radius
+	#[shape(into)]
 	pub outer_radius: f32,
 }
 impl ThickArc {
 	/// End angle from a span
-	pub fn span_angle(&mut self, span_angle: f32) -> &mut Self {
-		self.end_angle = (self.start_angle + span_angle) % (2. * PI);
+	pub fn span_angle(&mut self, span_angle: impl Into<f32>) -> &mut Self {
+		self.end_angle = (self.start_angle + span_angle.into()) % (2. * PI);
 		self
 	}
 	/// End angle from a span
-	pub fn with_span_angle(mut self, span_angle: f32) -> Self {
-		self.end_angle((self.start_angle + span_angle) % (2. * PI));
+	pub fn with_span_angle(mut self, span_angle: impl Into<f32>) -> Self {
+		self.end_angle((self.start_angle + span_angle.into()) % (2. * PI));
 		self
 	}
 }
