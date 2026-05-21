@@ -165,7 +165,7 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 
 		let mut font_refs = FONT_REFS.write().unwrap();
 		let font = if let Some(v) = font_refs.iter().find(|&v| **v == font_name) {
-			iced_core::Font::new(&*v)
+			iced_core::Font::new(v)
 		} else {
 			let f = &*font_name.to_string().leak();
 			font_refs.push(std::sync::Arc::new(f));

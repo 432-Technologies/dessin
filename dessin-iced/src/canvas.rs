@@ -106,7 +106,7 @@ impl<'a, Renderer: geometry::Renderer> Deref for IcedShapeCached<'a, Renderer> {
 	type Target = CachedDessin<Renderer>;
 
 	fn deref(&self) -> &Self::Target {
-		&self.0
+		self.0
 	}
 }
 impl<'a, Message, Theme, Renderer: geometry::Renderer>

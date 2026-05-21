@@ -113,7 +113,7 @@ impl<'a, Message, Theme, Renderer: geometry::Renderer + 'a> DessinIced<Message, 
 
 	fn view_with(
 		self,
-		options: Options,
+		_options: Options,
 	) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer> {
 		iced_widget::canvas(IcedShapeCached(self))
 	}
