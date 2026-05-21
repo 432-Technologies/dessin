@@ -165,14 +165,16 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 
 		let mut font_refs = FONT_REFS.write().unwrap();
 		let font = if let Some(v) = font_refs.iter().find(|&v| **v == font_name) {
-			iced_core::Font::with_name(&*v)
+			iced_core::Font::new(&*v)
 		} else {
 			let f = &*font_name.to_string().leak();
 			font_refs.push(std::sync::Arc::new(f));
-			iced_core::Font::with_name(f)
+			iced_core::Font::new(f)
 		};
 
 		self.frame.fill_text(iced_widget::canvas::Text {
+			ellipsis: iced_core::text::Ellipsis::None,
+			wrapping: iced_core::text::Wrapping::None,
 			content: text.text.to_owned(),
 			position: Point {
 				x: text.reference_start.x,
