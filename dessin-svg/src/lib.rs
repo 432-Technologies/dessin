@@ -2,6 +2,7 @@ use ::image::ImageFormat;
 use dessin::{
 	export::{Export, Exporter},
 	font::FontRef,
+	palette::Srgba,
 	prelude::*,
 };
 use nalgebra::{Scale2, Transform2};
@@ -61,6 +62,7 @@ pub struct SVGExporter {
 }
 
 impl SVGExporter {
+	#[must_use]
 	pub fn new(embed_fonts: bool) -> Self {
 		let acc = String::new();
 		let used_font: HashSet<(FontRef, FontWeight)> = HashSet::default();
@@ -74,14 +76,9 @@ impl SVGExporter {
 
 	fn write_style(&mut self, style: StylePosition) -> Result<(), SVGError> {
 		match style.fill {
-			Some(Fill::Solid { color }) => write!(
-				self.acc,
-				"fill='rgb({} {} {} / {:.3})' ",
-				(color.red * 255.) as u32,
-				(color.green * 255.) as u32,
-				(color.blue * 255.) as u32,
-				color.alpha
-			)?, // pass [0;1] number to [0;255] for a working CSS code (not needed for alpha)
+			Some(Fill::Solid { color }) => {
+				write!(self.acc, "fill='#{:X}' ", Srgba::<u8>::from_format(color))?;
+			}
 
 			None => write!(self.acc, "fill='none' ")?,
 		}
@@ -94,21 +91,14 @@ impl SVGExporter {
 				off,
 			}) => write!(
 				self.acc,
-				"stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' stroke-dasharray='{on},{off}' ",
-				(color.red * 255.) as u32,
-				(color.green * 255.) as u32,
-				(color.blue * 255.) as u32,
-				color.alpha
+				"stroke='#{:X}' stroke-width='{width}' stroke-dasharray='{on},{off}' ",
+				Srgba::<u8>::from_format(color)
 			)?,
 			Some(Stroke::Solid { color, width }) => write!(
 				self.acc,
-				"stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' ",
-				(color.red * 255.) as u32,
-				(color.green * 255.) as u32,
-				(color.blue * 255.) as u32,
-				color.alpha
+				"stroke='#{:X}' stroke-width='{width}' ",
+				Srgba::<u8>::from_format(color)
 			)?,
-
 			None => {}
 		}
 
@@ -135,13 +125,11 @@ impl SVGExporter {
 						if let Some(v) = b.start {
 							write!(self.acc, "L {} {} ", v.x, v.y)?;
 						}
+					} else if let Some(v) = b.start {
+						write!(self.acc, "M {} {} ", v.x, v.y)?;
+						has_start = true;
 					} else {
-						if let Some(v) = b.start {
-							write!(self.acc, "M {} {} ", v.x, v.y)?;
-							has_start = true;
-						} else {
-							return Err(SVGError::CurveHasNoStartingPoint(curve));
-						}
+						return Err(SVGError::CurveHasNoStartingPoint(curve));
 					}
 
 					write!(
@@ -161,7 +149,7 @@ impl SVGExporter {
 		}
 
 		if curve.closed {
-			write!(self.acc, "Z",)?;
+			write!(self.acc, "Z")?;
 		}
 
 		Ok(())
@@ -172,8 +160,8 @@ impl SVGExporter {
 		svg_start_tag: impl fmt::Display,
 		svg_end_tag: impl fmt::Display,
 	) -> String {
-		let return_fonts = self.embed_fonts.then(||
-		 self
+		let return_fonts = if self.embed_fonts {
+			self
 			.used_font
 			.into_iter()
 			.map(move |(font_ref, font_weight)| {
@@ -192,16 +180,21 @@ impl SVGExporter {
 				};
 
 				// creates a base 64 ending font using previous imports
-				let encoded_font_bytes = data_encoding::BASE64.encode(&bytes);
+				let encoded_font_bytes = data_encoding::BASE64.encode(bytes);
 				format!(
 					r#"@font-face{{font-family:{font_name};src:url("data:{mime};base64,{encoded_font_bytes}");{styles}}}"#
 				)
 			})
-			.collect::<String>()).unwrap_or_default();
+			.collect::<String>()
+		} else {
+			Default::default()
+		};
 
-		let fonts = (!return_fonts.is_empty())
-			.then(|| format!("<defs><style>{return_fonts}</style></defs>"))
-			.unwrap_or_default();
+		let fonts = if return_fonts.is_empty() {
+			Default::default()
+		} else {
+			format!("<defs><style>{return_fonts}</style></defs>")
+		};
 		let content = self.acc;
 		format!("{svg_start_tag}{fonts}{content}{svg_end_tag}")
 	}
@@ -229,7 +222,7 @@ impl Exporter for SVGExporter {
 		if !_metadata.is_empty() {
 			write!(self.acc, "<g ")?;
 			for (key, value) in _metadata {
-				write!(self.acc, r#"{key}={value} "#)?;
+				write!(self.acc, r"{key}={value} ")?;
 			}
 			write!(self.acc, ">")?;
 		}
@@ -278,7 +271,7 @@ impl Exporter for SVGExporter {
 			)?;
 		}
 
-		write!(self.acc, r#"href="data:image/png;base64,{data}"/>"#,)?;
+		write!(self.acc, r#"href="data:image/png;base64,{data}"/>"#)?;
 
 		Ok(())
 	}
@@ -300,13 +293,13 @@ impl Exporter for SVGExporter {
 
 		write!(
 			self.acc,
-			r#"translate({cx} {cy}) "#,
+			r"translate({cx} {cy}) ",
 			cx = center.x,
 			cy = center.y
 		)?;
 
 		if rotation.abs() > 10e-6 {
-			write!(self.acc, r#"rotate({rot}) "#, rot = -rotation.to_degrees())?;
+			write!(self.acc, r"rotate({rot}) ", rot = -rotation.to_degrees())?;
 		}
 
 		write!(self.acc, r#""/>"#)?;
@@ -353,7 +346,7 @@ impl Exporter for SVGExporter {
 			TextAlign::Right => "end",
 		};
 
-		let text = text.replace("<", "&lt;").replace(">", "&gt;");
+		let text = text.replace('<', "&lt;").replace('>', "&gt;");
 		let font = font.clone().unwrap_or(FontRef::default());
 		self.used_font.insert((font.clone(), font_weight));
 
@@ -364,14 +357,14 @@ impl Exporter for SVGExporter {
 
 		write!(
 			self.acc,
-			r#"translate({cx} {cy}) "#,
+			r"translate({cx} {cy}) ",
 			cx = reference_start.x,
 			cy = reference_start.y
 		)?;
 
 		let rotation = direction.y.atan2(direction.x);
 		if rotation.abs() > 10e-6 {
-			write!(self.acc, r#"rotate({rot}) "#, rot = rotation.to_degrees())?;
+			write!(self.acc, r"rotate({rot}) ", rot = rotation.to_degrees())?;
 		}
 
 		write!(self.acc, r#"">"#)?;
@@ -385,7 +378,7 @@ impl Exporter for SVGExporter {
 		} else {
 			write!(self.acc, "{text}")?;
 		}
-		write!(self.acc, r#"</text>"#)?;
+		write!(self.acc, r"</text>")?;
 
 		Ok(())
 	}
@@ -437,7 +430,7 @@ pub fn to_string_with_options(shape: &Shape, options: SVGOptions) -> Result<Stri
 				fill: *fill,
 				stroke: *stroke,
 			},
-		)? //Needed to be complete
+		)?; //Needed to be complete
 	} else {
 		shape.write_into_exporter(
 			&mut exporter,
@@ -446,7 +439,7 @@ pub fn to_string_with_options(shape: &Shape, options: SVGOptions) -> Result<Stri
 				fill: None,
 				stroke: None,
 			},
-		)?
+		)?;
 	}
 
 	let (start, end) = if options.skip_svg_tag {
