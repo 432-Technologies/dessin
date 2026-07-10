@@ -2,6 +2,7 @@ use ::image::ImageFormat;
 use dessin::{
 	export::{Export, Exporter},
 	font::FontRef,
+	palette::Srgba,
 	prelude::*,
 };
 use nalgebra::{Scale2, Transform2};
@@ -74,14 +75,14 @@ impl SVGExporter {
 
 	fn write_style(&mut self, style: StylePosition) -> Result<(), SVGError> {
 		match style.fill {
-			Some(Fill::Solid { color }) => write!(
-				self.acc,
-				"fill='rgb({} {} {} / {:.3})' ",
-				(color.red * 255.) as u32,
-				(color.green * 255.) as u32,
-				(color.blue * 255.) as u32,
-				color.alpha
-			)?, // pass [0;1] number to [0;255] for a working CSS code (not needed for alpha)
+			Some(Fill::Solid { color }) => {
+				let color: Srgba<u8> = color.into_format();
+				write!(
+					self.acc,
+					"fill='#{:02X}{:02X}{:02X}{:02X}' ",
+					color.red, color.green, color.blue, color.alpha
+				)?
+			}
 
 			None => write!(self.acc, "fill='none' ")?,
 		}
@@ -92,22 +93,25 @@ impl SVGExporter {
 				width,
 				on,
 				off,
-			}) => write!(
+			}) => {
+				let color: Srgba<u8> = color.into_format();
+				write!(
 				self.acc,
-				"stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' stroke-dasharray='{on},{off}' ",
-				(color.red * 255.) as u32,
-				(color.green * 255.) as u32,
-				(color.blue * 255.) as u32,
+				"stroke='#{:02X}{:02X}{:02X}{:02X}' stroke-width='{width}' stroke-dasharray='{on},{off}' ",
+				color.red,
+				color.green,
+				color.blue,
 				color.alpha
-			)?,
-			Some(Stroke::Solid { color, width }) => write!(
-				self.acc,
-				"stroke='rgb({} {} {} / {:.3})' stroke-width='{width}' ",
-				(color.red * 255.) as u32,
-				(color.green * 255.) as u32,
-				(color.blue * 255.) as u32,
-				color.alpha
-			)?,
+			)?
+			}
+			Some(Stroke::Solid { color, width }) => {
+				let color: Srgba<u8> = color.into_format();
+				write!(
+					self.acc,
+					"stroke='#{:02X}{:02X}{:02X}{:02X}' stroke-width='{width}' ",
+					color.red, color.green, color.blue, color.alpha
+				)?
+			}
 
 			None => {}
 		}
