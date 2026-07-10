@@ -1,0 +1,15 @@
+[package]
+name = "dessin-iced"
+version.workspace = true
+license.workspace = true
+edition.workspace = true
+repository.workspace = true
+keywords.workspace = true
+authors.workspace = true
+
+[dependencies]
+dessin = { version = "^0.8.23", path = "../dessin" }
+iced_core = { version = "^0.14", default-features = false }
+iced_widget = { version = "^0.14", default-features = false, features = ["canvas", "image"] }
+iced_graphics = { version = "^0.14", default-features = false, features = ["image"] }
+tracing = "0.1"

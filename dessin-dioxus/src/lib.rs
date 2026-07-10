@@ -117,7 +117,7 @@ pub fn SVGString(
 	let svg = use_memo(move || {
 		use dessin::export::Export;
 
-		let mut exporter = dessin_svg::SVGExporter::new();
+		let mut exporter = dessin_svg::SVGExporter::new(true);
 		shape
 			.read()
 			.write_into_exporter(

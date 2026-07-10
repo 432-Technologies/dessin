@@ -118,7 +118,11 @@ fn dynamic() {
 			unimplemented!()
 		}
 
-		fn export_ellipse(&mut self, ellipse: EllipsePosition) -> Result<(), Self::Error> {
+		fn export_ellipse(
+			&mut self,
+			ellipse: EllipsePosition,
+			_style: StylePosition,
+		) -> Result<(), Self::Error> {
 			assert_eq!(ellipse.center, Point2::new(0., 0.));
 			assert_eq!(ellipse.semi_major_axis, self.0);
 			assert_eq!(ellipse.semi_minor_axis, self.0);
@@ -133,7 +137,11 @@ fn dynamic() {
 			unimplemented!()
 		}
 
-		fn export_text(&mut self, _text: TextPosition) -> Result<(), Self::Error> {
+		fn export_text(
+			&mut self,
+			_text: TextPosition,
+			_style: StylePosition,
+		) -> Result<(), Self::Error> {
 			unimplemented!()
 		}
 	}

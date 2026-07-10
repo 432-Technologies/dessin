@@ -9,21 +9,24 @@ pub struct Arc {
 	#[local_transform]
 	pub local_transform: Transform2<f32>,
 	/// start angle in radian
+	#[shape(into)]
 	pub start_angle: f32,
 	/// end angle in radian
+	#[shape(into)]
 	pub end_angle: f32,
 }
 impl Arc {
 	/// Radius
 	#[inline]
-	pub fn radius(&mut self, radius: f32) -> &mut Self {
+	pub fn radius(&mut self, radius: impl Into<f32>) -> &mut Self {
+		let radius = radius.into();
 		self.scale(Scale2::new(radius, radius));
 		self
 	}
 
 	/// Radius
 	#[inline]
-	pub fn with_radius(mut self, radius: f32) -> Self {
+	pub fn with_radius(mut self, radius: impl Into<f32>) -> Self {
 		self.radius(radius);
 		self
 	}

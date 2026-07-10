@@ -2,12 +2,13 @@
 resolver = "2"
 members = [
 	# Export
+	"dessin-macros",
 	"dessin",
 	"dessin-svg",
 	"dessin-pdf",
+	"dessin-iced",
 	"dessin-image",
 	"dessin-dioxus",
-	"dessin-macros",
 	"dessin-editor",
 
 	# Internal

@@ -101,14 +101,14 @@ pub struct Text {
 	///
 	pub font_weight: FontWeight,
 
-	#[shape(into_some)]
+	#[shape(into, some, option_fn)]
 	///
 	pub on_curve: Option<Curve>,
 
 	///
 	pub font_size: f32,
 
-	#[shape(into_some)]
+	#[shape(into, some, option_fn)]
 	///
 	pub font: Option<FontRef>,
 }
@@ -127,20 +127,6 @@ impl Default for Text {
 	}
 }
 impl Text {
-	#[inline]
-	///
-	pub fn maybe_font<F: Into<FontRef>>(&mut self, font: Option<F>) -> &mut Self {
-		self.font = font.map(Into::into).into();
-		self
-	}
-
-	#[inline]
-	///
-	pub fn with_maybe_font<F: Into<FontRef>>(mut self, font: Option<F>) -> Self {
-		self.maybe_font(font);
-		self
-	}
-
 	///
 	pub fn position<'a>(&'a self, parent_transform: &Transform2<f32>) -> TextPosition<'a> {
 		let transform = self.global_transform(parent_transform);
@@ -178,13 +164,12 @@ impl From<Text> for Shape {
 impl ShapeBoundingBox for Text {
 	fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
 		let fonts = crate::font::get_or_default(self.font.as_ref());
-		let raw_font = match fonts.get(FontWeight::Regular) {
-			crate::font::Font::OTF(bytes) => bytes,
-			crate::font::Font::TTF(bytes) => bytes,
-		};
 
-		let font = fontdue::Font::from_bytes(raw_font.as_slice(), fontdue::FontSettings::default())
-			.unwrap();
+		let font = fontdue::Font::from_bytes(
+			fonts.get(self.font_weight),
+			fontdue::FontSettings::default(),
+		)
+		.unwrap();
 
 		let width = size_of(&font, &self.text, self.font_size);
 
@@ -245,7 +230,11 @@ mod tests {
 				Ok(())
 			}
 
-			fn export_ellipse(&mut self, ellipse: EllipsePosition) -> Result<(), Self::Error> {
+			fn export_ellipse(
+				&mut self,
+				ellipse: EllipsePosition,
+				_style: StylePosition,
+			) -> Result<(), Self::Error> {
 				let expected_position = Point2::new(-25. * FRAC_1_SQRT_2, 25. * FRAC_1_SQRT_2);
 				assert!(
 					(ellipse.center - expected_position).magnitude() < 10e-6,
@@ -265,7 +254,11 @@ mod tests {
 				Ok(())
 			}
 
-			fn export_text(&mut self, text: TextPosition) -> Result<(), Self::Error> {
+			fn export_text(
+				&mut self,
+				text: TextPosition,
+				style: StylePosition,
+			) -> Result<(), Self::Error> {
 				match text.text {
 					"1" => {
 						let expected_position =

@@ -194,7 +194,6 @@ impl From<DessinFor> for TokenStream {
 
 enum DessinIfElseArg {
 	Let(ExprLet),
-	Ident(Ident),
 	Expr(Expr),
 }
 impl Parse for DessinIfElseArg {
@@ -210,13 +209,7 @@ impl Parse for DessinIfElseArg {
 			return Ok(DessinIfElseArg::Let(let_exp));
 		}
 
-		let is_ident = input.peek(syn::Ident) && input.peek2(Brace);
-		if is_ident {
-			let ident: Ident = input.parse()?;
-			return Ok(DessinIfElseArg::Ident(ident));
-		}
-
-		let expr: Expr = input.parse()?;
+		let expr: Expr = Expr::parse_without_eager_brace(input)?;
 		Ok(DessinIfElseArg::Expr(expr))
 	}
 }
@@ -224,7 +217,6 @@ impl From<DessinIfElseArg> for TokenStream {
 	fn from(dessin_arg: DessinIfElseArg) -> Self {
 		match dessin_arg {
 			DessinIfElseArg::Let(v) => quote!(#v),
-			DessinIfElseArg::Ident(v) => quote!(#v),
 			DessinIfElseArg::Expr(v) => quote!(#v),
 		}
 	}
@@ -424,32 +416,57 @@ impl From<Dessin> for TokenStream {
 }
 
 #[test]
-fn simple() {
-	syn::parse_str::<Dessin>("Item()").unwrap();
+fn simple_case() {
+	let dessin = syn::parse_str::<Dessin>("Item()").unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#"< Item > :: default ()"#
+	);
 }
 #[test]
 fn simple_with_style() {
-	syn::parse_str::<Dessin>("*Item()").unwrap();
+	let dessin = syn::parse_str::<Dessin>("*Item()").unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#":: dessin :: prelude :: Style :: new (< Item > :: default ())"#
+	);
 }
 #[test]
 fn simple_with_style_and_generic() {
-	syn::parse_str::<Dessin>("*Item<GenA, GenB<GenC>>()").unwrap();
+	let dessin = syn::parse_str::<Dessin>("*Item<GenA, GenB<GenC>>()").unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#":: dessin :: prelude :: Style :: new (< Item < GenA , GenB < GenC > > > :: default ())"#
+	);
 }
 #[test]
 fn complex_with_style() {
-	syn::parse_str::<Dessin>("*Item() > *()").unwrap();
+	let dessin = syn::parse_str::<Dessin>("*Item() > *()").unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#":: dessin :: prelude :: Style :: new (:: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Style :: new (< Item > :: default ())))"#
+	);
 }
 #[test]
 fn simple_and_actions() {
-	syn::parse_str::<Dessin>("Item( my_fn=(1., 1.), {close}, closed )").unwrap();
+	let dessin = syn::parse_str::<Dessin>("Item( my_fn=(1., 1.), {close}, closed )").unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#"{ let mut __current_shape__ = < Item > :: default () ; __current_shape__ . my_fn ((1. , 1.)) ; __current_shape__ . close (close) ; __current_shape__ . closed () ; __current_shape__ }"#
+	);
 }
 #[test]
 fn var_no_args() {
-	syn::parse_str::<Dessin>("{ v }").unwrap();
+	let dessin = syn::parse_str::<Dessin>("{ v }").unwrap();
+	assert_eq!(TokenStream::from(dessin).to_string(), r#"v"#);
 }
 #[test]
 fn var_args() {
-	syn::parse_str::<Dessin>("{ v }( my_fn=(1., 1.), {close}, closed )").unwrap();
+	let dessin = syn::parse_str::<Dessin>("{ v }( my_fn=(1., 1.), {close}, closed )").unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#"{ let mut __current_shape__ = v ; __current_shape__ . my_fn ((1. , 1.)) ; __current_shape__ . close (close) ; __current_shape__ . closed () ; __current_shape__ }"#
+	);
 }
 #[test]
 fn group() {
@@ -457,7 +474,11 @@ fn group() {
 }
 #[test]
 fn as_shape() {
-	syn::parse_str::<Dessin>("Item() > ()").unwrap();
+	let dessin = syn::parse_str::<Dessin>("Item() > ()").unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#":: dessin :: prelude :: Shape :: from (< Item > :: default ())"#
+	);
 }
 #[test]
 fn group_complex() {
@@ -493,16 +514,6 @@ fn for_loop_var() {
 	)
 	.unwrap();
 }
-// #[test]
-// fn for_loop_range_var() {
-//	 syn::parse_str::<Dessin>(
-//		 "for x in 0..n {
-//			 let y = x as f32 * 2.;
-//			 dessin!(Circle: ( radius={y}) )
-//		 }",
-//	 )
-//	 .unwrap();
-// }
 #[test]
 fn simple_for_loop() {
 	syn::parse_str::<Dessin>(
@@ -525,16 +536,20 @@ fn for_loop_range_var_par() {
 }
 #[test]
 fn branch_if() {
-	syn::parse_str::<Dessin>(
+	let dessin = syn::parse_str::<Dessin>(
 		"if test_fn() == 2 {
 			Circle()
 		}",
 	)
 	.unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#"if test_fn () == 2 { :: dessin :: prelude :: Shape :: from (< Circle > :: default ()) } else { :: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Shape :: default ()) }"#
+	);
 }
 #[test]
 fn branch_if_else() {
-	syn::parse_str::<Dessin>(
+	let dessin = syn::parse_str::<Dessin>(
 		"if test_fn() == 2 {
 			Circle()
 		} else {
@@ -542,6 +557,10 @@ fn branch_if_else() {
 		}",
 	)
 	.unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#"if test_fn () == 2 { :: dessin :: prelude :: Shape :: from (< Circle > :: default ()) } else { :: dessin :: prelude :: Shape :: from (< Ellipse > :: default ()) }"#
+	);
 }
 #[test]
 fn combined_group_erased() {
@@ -556,44 +575,86 @@ fn combined_group_erased() {
 }
 #[test]
 fn simple_if() {
-	syn::parse_str::<Dessin>(
+	let dessin = syn::parse_str::<Dessin>(
 		"if my_condition {
 			Circle()
 		}",
 	)
 	.unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#"if my_condition { :: dessin :: prelude :: Shape :: from (< Circle > :: default ()) } else { :: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Shape :: default ()) }"#
+	);
 }
 #[test]
 fn if_let() {
-	syn::parse_str::<Dessin>(
+	let dessin = syn::parse_str::<Dessin>(
 		"if let Some(x) = my_condition {
 			Circle()
 		}",
 	)
 	.unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#"if let Some (x) = my_condition { :: dessin :: prelude :: Shape :: from (< Circle > :: default ()) } else { :: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Shape :: default ()) }"#
+	);
 }
 #[test]
 fn combined_if() {
-	syn::parse_str::<Dessin>(
+	let dessin = syn::parse_str::<Dessin>(
 		"if test_fn() == 2 {
 			Circle() > ()
 		}",
 	)
 	.unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#"if test_fn () == 2 { :: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Shape :: from (< Circle > :: default ())) } else { :: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Shape :: default ()) }"#
+	);
 }
 #[test]
 fn mod_if() {
-	syn::parse_str::<Dessin>(
+	let dessin = syn::parse_str::<Dessin>(
 		"if test_fn() == 2 {
 			my_mod::Circle() > ()
 		}",
 	)
 	.unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#"if test_fn () == 2 { :: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Shape :: from (< my_mod :: Circle > :: default ())) } else { :: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Shape :: default ()) }"#
+	);
 }
 #[test]
 fn var_if() {
-	syn::parse_str::<Dessin>(
+	let dessin = syn::parse_str::<Dessin>(
 		"if test_fn() == 2 {
+			{ circle } > ()
+		}",
+	)
+	.unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#"if test_fn () == 2 { :: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Shape :: from (circle)) } else { :: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Shape :: default ()) }"#
+	);
+}
+#[test]
+fn if_complex() {
+	let dessin = syn::parse_str::<Dessin>(
+		"if test_fn() == var.my_fn() {
+			{ circle } > ()
+		}",
+	)
+	.unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#"if test_fn () == var . my_fn () { :: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Shape :: from (circle)) } else { :: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Shape :: default ()) }"#
+	);
+}
+#[test]
+fn if_chain() {
+	let dessin = syn::parse_str::<Dessin>(
+		"if let Some(v) = v && v == x.0 {
 			{ circle } > ()
 		}",
 	)
@@ -601,7 +662,7 @@ fn var_if() {
 }
 #[test]
 fn if_if_group() {
-	syn::parse_str::<Dessin>(
+	let dessin = syn::parse_str::<Dessin>(
 		"[
 			{ circle }(),
 			if test_fn() == 2 {
@@ -615,6 +676,49 @@ fn if_if_group() {
 	)
 	.unwrap();
 }
+
+#[test]
+fn if_group_if_simple() {
+	let dessin = syn::parse_str::<Dessin>(
+		"if test_fn() >= Enum::One {
+            Circle()
+        }",
+	)
+	.unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#"if test_fn () >= Enum :: One { :: dessin :: prelude :: Shape :: from (< Circle > :: default ()) } else { :: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Shape :: default ()) }"#
+	);
+}
+
+#[test]
+fn if_enum_path_comparison() {
+	let dessin = syn::parse_str::<Dessin>(
+		"if value >= Enum::One {
+            Circle()
+        }",
+	)
+	.unwrap();
+	assert_eq!(
+		TokenStream::from(dessin).to_string(),
+		r#"if value >= Enum :: One { :: dessin :: prelude :: Shape :: from (< Circle > :: default ()) } else { :: dessin :: prelude :: Shape :: from (:: dessin :: prelude :: Shape :: default ()) }"#
+	);
+}
+
+#[test]
+fn if_group_if() {
+	syn::parse_str::<Dessin>(
+		"[
+            Circle(),
+            if test_fn() >= Enum::One {
+                { circle } > ()
+            },
+            Circle(),
+        ]",
+	)
+	.unwrap();
+}
+
 #[test]
 fn group_in_group() {
 	syn::parse_str::<Dessin>(
