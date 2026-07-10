@@ -76,12 +76,7 @@ impl SVGExporter {
 	fn write_style(&mut self, style: StylePosition) -> Result<(), SVGError> {
 		match style.fill {
 			Some(Fill::Solid { color }) => {
-				let color: Srgba<u8> = color.into_format();
-				write!(
-					self.acc,
-					"fill='#{:02X}{:02X}{:02X}{:02X}' ",
-					color.red, color.green, color.blue, color.alpha
-				)?
+				write!(self.acc, "fill='#{:X}' ", Srgba::<u8>::from_format(color))?
 			}
 
 			None => write!(self.acc, "fill='none' ")?,
@@ -93,26 +88,16 @@ impl SVGExporter {
 				width,
 				on,
 				off,
-			}) => {
-				let color: Srgba<u8> = color.into_format();
-				write!(
+			}) => write!(
 				self.acc,
-				"stroke='#{:02X}{:02X}{:02X}{:02X}' stroke-width='{width}' stroke-dasharray='{on},{off}' ",
-				color.red,
-				color.green,
-				color.blue,
-				color.alpha
-			)?
-			}
-			Some(Stroke::Solid { color, width }) => {
-				let color: Srgba<u8> = color.into_format();
-				write!(
-					self.acc,
-					"stroke='#{:02X}{:02X}{:02X}{:02X}' stroke-width='{width}' ",
-					color.red, color.green, color.blue, color.alpha
-				)?
-			}
-
+				"stroke='#{:X}' stroke-width='{width}' stroke-dasharray='{on},{off}' ",
+				Srgba::<u8>::from_format(color)
+			)?,
+			Some(Stroke::Solid { color, width }) => write!(
+				self.acc,
+				"stroke='#{:X}' stroke-width='{width}' ",
+				Srgba::<u8>::from_format(color)
+			)?,
 			None => {}
 		}
 
