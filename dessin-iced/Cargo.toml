@@ -9,7 +9,7 @@ authors.workspace = true
 
 [dependencies]
 dessin = { version = "^0.8.23", path = "../dessin" }
-iced_core = { git = "https://github.com/432-Technologies/iced",rev="16cacc8" , default-features = false }
-iced_widget = { git = "https://github.com/432-Technologies/iced",rev="16cacc8" , default-features = false, features = ["canvas", "image"] }
-iced_graphics = { git = "https://github.com/432-Technologies/iced",rev="16cacc8" , default-features = false, features = ["image"] }
+iced_core = { git = "https://github.com/iced-rs/iced.git", rev="55ae78798d71835617440c63d08d636e1de2661a" , default-features = false }
+iced_widget = { git = "https://github.com/iced-rs/iced.git", rev="55ae78798d71835617440c63d08d636e1de2661a" , default-features = false, features = ["canvas", "image"] }
+iced_graphics = { git = "https://github.com/iced-rs/iced.git", rev="55ae78798d71835617440c63d08d636e1de2661a" , default-features = false, features = ["image"] }
 tracing = "0.1"
