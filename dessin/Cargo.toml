@@ -19,10 +19,11 @@ default-font = []
 [dependencies]
 dessin-macros = { path = "../dessin-macros", version = "^0.8.23" }
 ecow = "^0.2"
-fontdue = "^0.9"
 image = "^0.25"
 nalgebra = "^0.34"
 palette = "^0.7"
+fontdb = "^0.23"
+cosmic-text = "^0.19"
 
 [dev-dependencies]
 assert_float_eq = "^1.1"

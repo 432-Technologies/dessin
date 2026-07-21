@@ -1,5 +1,4 @@
 use crate::{font::FontRef, prelude::*};
-use fontdue::{Font, FontSettings};
 use nalgebra::Transform2;
 
 /// Box of text, with auto wrapping text if width is too large
@@ -26,7 +25,9 @@ pub struct TextBox {
 	pub text: String,
 
 	/// Font weight
-	pub font_weight: FontWeight,
+	pub weight: FontWeight,
+	///
+	pub style: FontStyle,
 
 	/// Dimension on the x-axis
 	pub width: f32,
@@ -48,7 +49,8 @@ impl Default for TextBox {
 			align: Default::default(),
 			vertical_align: TextVerticalAlign::Top,
 			text: Default::default(),
-			font_weight: Default::default(),
+			weight: Default::default(),
+			style: Default::default(),
 			width: f32::MAX,
 			height: Default::default(),
 			font: Default::default(),
@@ -81,16 +83,27 @@ impl From<TextBox> for Shape {
 			height,
 			align,
 			vertical_align,
-			font_weight,
+			weight,
+			style,
 			font,
 		}: TextBox,
 	) -> Self {
-		let font_ref = font.clone();
-		let fonts = crate::font::get_or_default(font.as_ref());
-		let font = Font::from_bytes(fonts.get(font_weight), FontSettings::default()).unwrap();
+		let Some(font_ref) = font
+			.as_ref()
+			.or_else(|| crate::font::default_font())
+			.cloned()
+		else {
+			return Shape::default();
+		};
 
 		let mut lines = vec![];
 		let mut height = height.unwrap_or(f32::MAX);
+
+		let mut text_size = TextSize::new(font_ref.clone())
+			.weight(weight)
+			.style(style)
+			.font_size(font_size)
+			.line_height_scale((font_size + line_spacing) / font_size);
 
 		for line in text.lines() {
 			let mut len = 0.;
@@ -105,7 +118,8 @@ impl From<TextBox> for Shape {
 					continue;
 				}
 
-				let word_size = size_of(&font, word, font_size);
+				text_size.set_text(word);
+				let word_size = text_size.compute_width();
 
 				if len + word_size > width {
 					lines.push(std::mem::take(&mut acc));
@@ -143,9 +157,9 @@ impl From<TextBox> for Shape {
 						{ text },
 						{ align },
 						{ vertical_align },
-						{ font_weight },
+						{ weight },
 						{ font_size },
-						maybe_font = font_ref.clone(),
+						font = font_ref.clone(),
 					))
 					.into()
 				}),
@@ -229,7 +243,8 @@ fn should_break() {
 				text: "it should work,".to_string(),
 				align: TextAlign::Left,
 				vertical_align: Default::default(),
-				font_weight: Default::default(),
+				weight: Default::default(),
+				style: Default::default(),
 				on_curve: None,
 				font_size: 5.,
 				font: None
@@ -251,7 +266,8 @@ fn should_break() {
 				text: "famous last word".to_string(),
 				align: TextAlign::Left,
 				vertical_align: Default::default(),
-				font_weight: Default::default(),
+				weight: Default::default(),
+				style: Default::default(),
 				on_curve: None,
 				font_size: 5.,
 				font: None

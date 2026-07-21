@@ -10,7 +10,7 @@ fn main() {
 		text = "Here we write some text",
 		width = 20.,
 		height = 10.,
-		font_weight = FontWeight::Italic,
+		style = FontStyle::Italic,
 		// chooses centered vertical allign
 		vertical_align = TextVerticalAlign::Center,
 		// selects to align the beginning of the text on the left

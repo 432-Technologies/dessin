@@ -1,7 +1,7 @@
 use ::image::ImageFormat;
 use dessin::{
 	export::{Export, Exporter},
-	font::FontRef,
+	font::fontdb,
 	palette::Srgba,
 	prelude::*,
 };
@@ -17,6 +17,7 @@ use std::{
 pub enum SVGError {
 	WriteError(fmt::Error),
 	CurveHasNoStartingPoint(CurvePosition),
+	NoDefaultFont,
 }
 impl fmt::Display for SVGError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -57,19 +58,16 @@ pub struct SVGOptions {
 
 pub struct SVGExporter {
 	acc: String,
-	used_font: HashSet<(FontRef, FontWeight)>,
+	used_font: HashSet<fontdb::ID>,
 	embed_fonts: bool,
 }
 
 impl SVGExporter {
 	#[must_use]
 	pub fn new(embed_fonts: bool) -> Self {
-		let acc = String::new();
-		let used_font: HashSet<(FontRef, FontWeight)> = HashSet::default();
-
 		SVGExporter {
-			acc,
-			used_font,
+			acc: Default::default(),
+			used_font: Default::default(),
 			embed_fonts,
 		}
 	}
@@ -160,43 +158,44 @@ impl SVGExporter {
 		svg_start_tag: impl fmt::Display,
 		svg_end_tag: impl fmt::Display,
 	) -> String {
-		let return_fonts = if self.embed_fonts {
-			self
-			.used_font
-			.into_iter()
-			.map(move |(font_ref, font_weight)| {
-				let font_group = font::get(&font_ref);
-				let bytes =  font_group.get(font_weight);
+		let SVGExporter {
+			acc,
+			used_font,
+			embed_fonts,
+		} = self;
 
-				let mime = if bytes.starts_with(&[0x4F, 0x54, 0x54, 0x4F]) {"font/otf"} else if bytes.starts_with(&[0x00, 0x01, 0x00, 0x00, 0x00]) {"font/ttf"} else {"font"};
+		let maybe_fonts = if embed_fonts {
+			let fonts = font::font_holder(|holder| {
+				let db = holder.0.db();
+				db
+					.faces()
+					.filter(|v| used_font.contains(&v.id))
+					.filter_map(|v| match &v.source {
+						font::fontdb::Source::Binary(bytes) => Some((
+							v.families[0].0.as_str(),
+							bytes)),
+						_ => None,
+					})
+					.map(|(font_name, bytes)| {
+						let bytes = (**bytes).as_ref();
 
-				let font_name = &*font_ref;
+						let mime = if bytes.starts_with(&[0x4F, 0x54, 0x54, 0x4F]) {"font/otf"} else if bytes.starts_with(&[0x00, 0x01, 0x00, 0x00, 0x00]) {"font/ttf"} else {"font"};
 
-				let styles = match font_weight {
-					FontWeight::Regular => "font-weight:normal;font-style:normal;",
-					FontWeight::Bold => "font-weight:bold;font-style:normal;",
-					FontWeight::Italic => "font-weight:normal;font-style:italic;",
-					FontWeight::BoldItalic => "font-weight:bold;font-style:italic;",
-				};
+						let encoded_font_bytes = data_encoding::BASE64.encode(bytes.as_ref());
+						format!(
+							r#"@font-face{{font-family:{font_name};src:url("data:{mime};base64,{encoded_font_bytes}");}}"#
+						)
+					})
 
-				// creates a base 64 ending font using previous imports
-				let encoded_font_bytes = data_encoding::BASE64.encode(bytes);
-				format!(
-					r#"@font-face{{font-family:{font_name};src:url("data:{mime};base64,{encoded_font_bytes}");{styles}}}"#
-				)
-			})
-			.collect::<String>()
+					.collect::<String>()
+			});
+
+			format!("<defs><style>{fonts}</style></defs>")
 		} else {
-			Default::default()
+			String::new()
 		};
 
-		let fonts = if return_fonts.is_empty() {
-			Default::default()
-		} else {
-			format!("<defs><style>{return_fonts}</style></defs>")
-		};
-		let content = self.acc;
-		format!("{svg_start_tag}{fonts}{content}{svg_end_tag}")
+		format!("{svg_start_tag}{maybe_fonts}{acc}{svg_end_tag}")
 	}
 }
 
@@ -320,7 +319,8 @@ impl Exporter for SVGExporter {
 		TextPosition {
 			text,
 			align,
-			font_weight,
+			weight: font_weight,
+			style: font_style,
 			on_curve,
 			font_size,
 			reference_start,
@@ -332,13 +332,23 @@ impl Exporter for SVGExporter {
 		static ID: LazyLock<AtomicU32> = LazyLock::new(|| AtomicU32::new(0));
 		let id = ID.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
 
-		let weight = match font_weight {
-			FontWeight::Bold | FontWeight::BoldItalic => "bold",
+		let Some(font) = font.as_ref().or_else(|| font::default_font()).cloned() else {
+			return Err(SVGError::NoDefaultFont);
+		};
+
+		self.used_font.insert(font.id);
+		let font_name = &font.family;
+
+		let font_weight = match font_weight {
+			FontWeight::LIGHT => "lighter",
+			FontWeight::BOLD => "bold",
+			FontWeight::BLACK => "bolder",
 			_ => "normal",
 		};
-		let text_style = match font_weight {
-			FontWeight::Italic | FontWeight::BoldItalic => "italic",
-			_ => "normal",
+		let font_style = match font_style {
+			FontStyle::Normal => "normal",
+			FontStyle::Italic => "italic",
+			FontStyle::Oblique => "oblique",
 		};
 		let align = match align {
 			TextAlign::Center => "middle",
@@ -347,12 +357,10 @@ impl Exporter for SVGExporter {
 		};
 
 		let text = text.replace('<', "&lt;").replace('>', "&gt;");
-		let font = font.clone().unwrap_or(FontRef::default());
-		self.used_font.insert((font.clone(), font_weight));
 
 		write!(
 			self.acc,
-			r#"<text font-family="{font}" text-anchor="{align}" font-size="{font_size}px" font-weight="{weight}" text-style="{text_style}" transform=""#,
+			r#"<text font-family="{font_name}" text-anchor="{align}" font-size="{font_size}px" font-weight="{font_weight}" font-style="{font_style}" transform=""#,
 		)?;
 
 		write!(

@@ -1,159 +1,69 @@
-use super::FontWeight;
-use ecow::EcoString;
-use std::{
-	borrow::Cow,
-	collections::HashMap,
-	fmt,
-	ops::Deref,
-	sync::{OnceLock, RwLock},
-};
+pub use fontdb;
+use fontdb::{Query, ID};
+use std::sync::{Arc, OnceLock, RwLock};
 
 static FONT_HOLDER: OnceLock<RwLock<FontHolder>> = OnceLock::new();
-
-fn font_holder<T, F: FnOnce(&FontHolder) -> T>(f: F) -> T {
-	f(&FONT_HOLDER
-		.get_or_init(|| RwLock::new(FontHolder::new()))
-		.read()
-		.unwrap())
+pub fn font_holder<T, F: FnOnce(&FontHolder) -> T>(f: F) -> T {
+	f(&FONT_HOLDER.get_or_init(Default::default).read().unwrap())
 }
-
-fn font_holder_mut<T, F: FnOnce(&mut FontHolder) -> T>(f: F) -> T {
+pub fn font_holder_mut<T, F: FnOnce(&mut FontHolder) -> T>(f: F) -> T {
 	f(&mut FONT_HOLDER
-		.get_or_init(|| RwLock::new(FontHolder::new())) // RwLock is needed to have a mutable case
+		.get_or_init(Default::default) // RwLock is needed to have a mutable case
 		.write()
 		.unwrap())
 }
 
-#[inline]
-///
-pub fn get(idx: &FontRef) -> FontGroup {
-	font_holder(|f| f.fonts[&idx.0].clone())
+static DEFAULT_FONT: OnceLock<FontRef> = OnceLock::new();
+pub fn set_default_font(font: FontRef) {
+	_ = DEFAULT_FONT.set(font);
+}
+pub fn default_font() -> Option<&'static FontRef> {
+	DEFAULT_FONT.get()
 }
 
 #[inline]
-///
-pub fn get_or_default(idx: Option<&FontRef>) -> FontGroup {
-	idx.map(get)
-		.unwrap_or_else(|| get(DEFAULT_FONT.get_or_init(|| "Hyperlegible".into())))
+pub fn add_font<T: AsRef<[u8]> + Sync + Send + 'static>(font_bytes: T) {
+	font_holder_mut(|holder| {
+		holder
+			.0
+			.db_mut()
+			.load_font_source(fontdb::Source::Binary(Arc::new(font_bytes)));
+	});
 }
 
-#[inline]
-///
-pub fn fonts() -> HashMap<EcoString, FontGroup> {
-	font_holder(|f| f.fonts.clone())
+pub enum FontQuery<'a> {
+	Family(&'a str),
+}
+impl<'a> From<&'a str> for FontQuery<'a> {
+	fn from(value: &'a str) -> Self {
+		FontQuery::Family(value)
+	}
 }
 
-#[inline]
-///
-pub fn font_names() -> Vec<EcoString> {
-	font_holder(|f| f.fonts.keys().cloned().collect())
-}
+pub fn get<'a>(query: impl Into<FontQuery<'a>>) -> Option<FontRef> {
+	font_holder(|holder| match query.into() {
+		FontQuery::Family(name) => {
+			let db = holder.0.db();
+			let id = db.query(&Query {
+				families: &[fontdb::Family::Name(name)],
+				..Default::default()
+			})?;
+			let family = name.into();
 
-#[inline]
-///
-pub fn add_font(font_name: impl Into<EcoString>, font: FontGroup) -> FontRef {
-	font_holder_mut(move |f| {
-		let font_name = font_name.into();
-		f.fonts.insert(font_name.clone(), font);
-		FontRef(font_name)
+			Some(FontRef { id, family })
+		}
 	})
 }
 
-///
-pub static DEFAULT_FONT: OnceLock<FontRef> = OnceLock::new();
-
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
-#[repr(transparent)]
-///
-pub struct FontRef(EcoString);
-impl Deref for FontRef {
-	type Target = str;
-
-	fn deref(&self) -> &Self::Target {
-		&self.0
-	}
+pub struct FontRef {
+	pub id: ID,
+	pub family: Arc<str>,
 }
-impl Default for FontRef {
+
+pub struct FontHolder(pub cosmic_text::FontSystem);
+impl Default for FontHolder {
 	fn default() -> Self {
-		DEFAULT_FONT.get_or_init(|| "Hyperlegible".into()).clone()
-	}
-}
-impl fmt::Display for FontRef {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		self.0.fmt(f)
-	}
-}
-
-impl<S: Into<EcoString>> From<S> for FontRef {
-	fn from(value: S) -> Self {
-		FontRef(value.into())
-	}
-}
-
-#[derive(Clone)]
-///
-pub struct FontGroup {
-	///
-	pub regular: Cow<'static, [u8]>,
-	///
-	pub bold: Option<Cow<'static, [u8]>>,
-	///
-	pub italic: Option<Cow<'static, [u8]>>,
-	///
-	pub bold_italic: Option<Cow<'static, [u8]>>,
-}
-impl FontGroup {
-	///
-	pub fn get(&self, font_weight: FontWeight) -> &[u8] {
-		match font_weight {
-			FontWeight::Regular => &self.regular,
-			FontWeight::Bold => self.bold.as_ref().unwrap_or_else(|| &self.regular),
-			FontWeight::BoldItalic => self.bold_italic.as_ref().unwrap_or_else(|| &self.regular),
-			FontWeight::Italic => self.italic.as_ref().unwrap_or_else(|| &self.regular),
-		}
-	}
-
-	#[cfg(feature = "default-font")]
-	///
-	pub fn hyperlegible() -> FontGroup {
-		FontGroup {
-			regular: Cow::Borrowed(include_bytes!(
-				"../../../Atkinson-Hyperlegible-Regular-102.otf"
-			)),
-			bold: Some(Cow::Borrowed(include_bytes!(
-				"../../../Atkinson-Hyperlegible-Bold-102.otf"
-			))),
-			italic: Some(Cow::Borrowed(include_bytes!(
-				"../../../Atkinson-Hyperlegible-Italic-102.otf"
-			))),
-			bold_italic: Some(Cow::Borrowed(include_bytes!(
-				"../../../Atkinson-Hyperlegible-BoldItalic-102.otf"
-			))),
-		}
-	}
-
-	#[cfg(not(feature = "default-font"))]
-	///
-	pub fn hyperlegible() -> FontGroup<Font> {
-		FontGroup {
-			regular: Font::ByName("HyperlegibleRegular".to_string()),
-			bold: Some(Font::ByName("HyperlegibleBold".to_string())),
-			italic: Some(Font::ByName("HyperlegibleItalic".to_string())),
-			bold_italic: Some(Font::ByName("HyperlegibleBoldItalic".to_string())),
-		}
-	}
-}
-
-///
-pub struct FontHolder {
-	fonts: HashMap<EcoString, FontGroup>,
-}
-impl FontHolder {
-	fn new() -> Self {
-		let mut fonts = HashMap::new();
-
-		fonts.insert("Hyperlegible".into(), FontGroup::hyperlegible());
-
-		FontHolder { fonts }
+		Self(cosmic_text::FontSystem::new())
 	}
 }

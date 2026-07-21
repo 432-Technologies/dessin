@@ -19,7 +19,7 @@ fn main() {
 
 	text.height(10.);
 
-	text.font_weight(FontWeight::Italic);
+	text.style(FontStyle::Italic);
 
 	// chooses centered vertical allign
 	text.vertical_align(TextVerticalAlign::Center);

@@ -24,8 +24,8 @@ pub enum PDFError {
 	UnknownBuiltinFont(String),
 	#[error("Orphelin layer")]
 	OrphelinLayer,
-	#[error("Can't parse font `{0} {1:?}`")]
-	CantParseFont(FontRef, FontWeight),
+	// #[error("Can't parse font `{0} {1:?}`")]
+	// CantParseFont(FontRef, FontWeight),
 	#[error("Internal error: No layer started")]
 	NoLayerStarted,
 }
@@ -285,7 +285,8 @@ impl Exporter for PDFExporter<'_> {
 		TextPosition {
 			text,
 			align: _,
-			font_weight,
+			weight,
+			style,
 			on_curve: _,
 			font_size,
 			reference_start,
@@ -294,52 +295,53 @@ impl Exporter for PDFExporter<'_> {
 		}: TextPosition,
 		StylePosition { fill, stroke }: StylePosition,
 	) -> Result<(), Self::Error> {
-		let font = font.clone().unwrap_or(FontRef::default());
+		// TODO: Re-enable text
+		// let font = font.clone().unwrap_or(FontRef::default());
 
-		let key = (font.clone(), font_weight);
-		if !self.used_font.contains_key(&key) {
-			let fg = font::get(&font);
-			let b = fg.get(font_weight);
+		// let key = (font.clone(), weight);
+		// if !self.used_font.contains_key(&key) {
+		// 	let fg = font::get(&font);
+		// 	let b = fg.get(weight);
 
-			let font_id = self.doc.add_font(
-				&ParsedFont::from_bytes(&b, 0, &mut vec![])
-					.ok_or_else(|| PDFError::CantParseFont(font.clone(), font_weight))?,
-			);
+		// 	let font_id = self.doc.add_font(
+		// 		&ParsedFont::from_bytes(&b, 0, &mut vec![])
+		// 			.ok_or_else(|| PDFError::CantParseFont(font.clone(), weight))?,
+		// 	);
 
-			self.used_font.insert(key.clone(), font_id);
-		}
+		// 	self.used_font.insert(key.clone(), font_id);
+		// }
 
-		let font = self.used_font[&key].clone();
+		// let font = self.used_font[&key].clone();
 
-		let rotation = direction.y.atan2(direction.x).to_degrees();
+		// let rotation = direction.y.atan2(direction.x).to_degrees();
 
-		self.content.extend([
-			Op::SetLineHeight {
-				lh: Mm(font_size).into_pt(),
-			},
-			Op::SetWordSpacing {
-				pt: Mm(font_size).into_pt(),
-			},
-			Op::SetTextRenderingMode {
-				mode: match (fill, stroke) {
-					(Some(_), Some(_)) => TextRenderingMode::FillStroke,
-					(Some(_), None) => TextRenderingMode::Fill,
-					(None, Some(_)) => TextRenderingMode::Stroke,
-					(None, None) => TextRenderingMode::Clip,
-				},
-			},
-			Op::SetTextMatrix {
-				matrix: TextMatrix::TranslateRotate(
-					Mm(reference_start.x).into_pt(),
-					Mm(reference_start.y).into_pt(),
-					rotation,
-				),
-			},
-			Op::WriteText {
-				items: vec![TextItem::Text(text.to_string())],
-				font,
-			},
-		]);
+		// self.content.extend([
+		// 	Op::SetLineHeight {
+		// 		lh: Mm(font_size).into_pt(),
+		// 	},
+		// 	Op::SetWordSpacing {
+		// 		pt: Mm(font_size).into_pt(),
+		// 	},
+		// 	Op::SetTextRenderingMode {
+		// 		mode: match (fill, stroke) {
+		// 			(Some(_), Some(_)) => TextRenderingMode::FillStroke,
+		// 			(Some(_), None) => TextRenderingMode::Fill,
+		// 			(None, Some(_)) => TextRenderingMode::Stroke,
+		// 			(None, None) => TextRenderingMode::Clip,
+		// 		},
+		// 	},
+		// 	Op::SetTextMatrix {
+		// 		matrix: TextMatrix::TranslateRotate(
+		// 			Mm(reference_start.x).into_pt(),
+		// 			Mm(reference_start.y).into_pt(),
+		// 			rotation,
+		// 		),
+		// 	},
+		// 	Op::WriteText {
+		// 		items: vec![TextItem::Text(text.to_string())],
+		// 		font,
+		// 	},
+		// ]);
 
 		Ok(())
 	}

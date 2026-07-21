@@ -243,7 +243,8 @@ impl Exporter for ImageExporter {
 		TextPosition {
 			text,
 			align: _,
-			font_weight,
+			weight,
+			style,
 			on_curve: _,
 			font_size,
 			reference_start,
@@ -252,33 +253,34 @@ impl Exporter for ImageExporter {
 		}: TextPosition,
 		_: StylePosition,
 	) -> Result<(), Self::Error> {
-		let fg = dessin::font::get_or_default(font.as_ref());
-		let font = fg.get(font_weight);
+		// TODO: Re-enable text
+		// let fg = dessin::font::get_or_default(font.as_ref());
+		// let font = fg.get(weight);
 
-		//dt.set_transform(&Transform::create_translation(50.0, 0.0));
-		// dt.set_transform(&Transform::rotation(euclid::Angle::degrees(15.0)));
+		// //dt.set_transform(&Transform::create_translation(50.0, 0.0));
+		// // dt.set_transform(&Transform::rotation(euclid::Angle::degrees(15.0)));
 
-		let color = match self.style().fill {
-			Some(Fill::Solid { color }) => color,
-			None => return Ok(()),
-		};
-		let (r, g, b, a) = (
-			color.into_format::<u8, f32>().red, //-----------------------------------------------------------------------------
-			color.into_format::<u8, f32>().green, //before : color.rgba();
-			color.into_format::<u8, f32>().blue, //rgba() modification should be better
-			color.into_format::<u8, u8>().alpha, //-----------------------------------------------------------------------------
-		);
+		// let color = match self.style().fill {
+		// 	Some(Fill::Solid { color }) => color,
+		// 	None => return Ok(()),
+		// };
+		// let (r, g, b, a) = (
+		// 	color.into_format::<u8, f32>().red, //-----------------------------------------------------------------------------
+		// 	color.into_format::<u8, f32>().green, //before : color.rgba();
+		// 	color.into_format::<u8, f32>().blue, //rgba() modification should be better
+		// 	color.into_format::<u8, u8>().alpha, //-----------------------------------------------------------------------------
+		// );
 
-		let font = font_kit::loader::Loader::from_bytes(std::sync::Arc::new(font.to_vec()), 0)
-			.map_err(|e| ImageError::FontLoadingError(e))?;
-		self.buffer.draw_text(
-			&font,
-			font_size,
-			text,
-			Point::new(reference_start.x, reference_start.y),
-			&Source::Solid(SolidSource { r: b, g, b: r, a }),
-			&DrawOptions::new(),
-		);
+		// let font = font_kit::loader::Loader::from_bytes(std::sync::Arc::new(font.to_vec()), 0)
+		// 	.map_err(|e| ImageError::FontLoadingError(e))?;
+		// self.buffer.draw_text(
+		// 	&font,
+		// 	font_size,
+		// 	text,
+		// 	Point::new(reference_start.x, reference_start.y),
+		// 	&Source::Solid(SolidSource { r: b, g, b: r, a }),
+		// 	&DrawOptions::new(),
+		// );
 
 		Ok(())
 	}

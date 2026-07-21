@@ -279,7 +279,7 @@ mod tests {
 				*Text(
 					text = "Notes",
 					fill = Srgb::<f32>::from_format(named::BLACK).into_linear(),
-					font_weight = FontWeight::Bold,
+					weight = FontWeight::BOLD,
 					font_size = 3.6,
 					align = TextAlign::Left,
 				),

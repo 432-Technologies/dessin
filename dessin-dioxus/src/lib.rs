@@ -193,7 +193,7 @@ pub fn SVG(
 	});
 
 	let mut used_font = use_signal(|| HashSet::new());
-	let mut add_font = move |v: (FontRef, FontWeight)| {
+	let mut add_font = move |v: FontRef| {
 		used_font.write().insert(v);
 	};
 
@@ -218,7 +218,7 @@ pub fn SVG(
 fn Shaper(
 	shape: ReadOnlySignal<Shape>,
 	parent_transform: Transform2<f32>,
-	add_font: EventHandler<(FontRef, FontWeight)>,
+	add_font: EventHandler<FontRef>,
 ) -> Element {
 	match shape() {
 		Shape::Group(dessin::shapes::Group {
@@ -338,13 +338,16 @@ fn Shaper(
 
 			let text = text.position(&parent_transform);
 
-			let weight = match text.font_weight {
-				FontWeight::Bold | FontWeight::BoldItalic => "bold",
+			let font_weight = match text.weight {
+				FontWeight::LIGHT => "lighter",
+				FontWeight::BOLD => "bold",
+				FontWeight::BLACK => "bolder",
 				_ => "normal",
 			};
-			let text_style = match text.font_weight {
-				FontWeight::Italic | FontWeight::BoldItalic => "italic",
-				_ => "normal",
+			let font_style = match text.style {
+				FontStyle::Normal => "normal",
+				FontStyle::Italic => "italic",
+				FontStyle::Oblique => "oblique",
 			};
 			let align = match text.align {
 				TextAlign::Center => "middle",
@@ -352,8 +355,12 @@ fn Shaper(
 				TextAlign::Right => "end",
 			};
 
-			let font_ref = text.font.clone().unwrap_or(FontRef::default());
-			let font_ref2 = font_ref.clone();
+			let Some(font) = text.font.as_ref().or_else(|| font::default_font()).cloned() else {
+				return Err(RenderError::default());
+			};
+
+			let font_ref = font.clone();
+			let font_family = font.family;
 
 			let x = text.reference_start.x;
 			let y = text.reference_start.y;
@@ -361,12 +368,12 @@ fn Shaper(
 
 			rsx! {
 				text {
-					onmounted: move |_| add_font((font_ref.clone(), text.font_weight)),
-					font_family: "{font_ref2}",
+					onmounted: move |_| add_font(font_ref.clone()),
+					font_family: "{font_family}",
 					text_anchor: "{align}",
 					font_size: "{text.font_size}px",
-					font_weight: "{weight}",
-					"text-style": "{text_style}",
+					font_weight: "{font_weight}",
+					font_style: "{font_style}",
 					transform: "translate({x} {y}) rotate({r})",
 					if let Some(curve) = text.on_curve {
 						path { id: "{id}", d: write_curve(curve) }

@@ -158,41 +158,42 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 			},
 		};
 
-		static FONT_REFS: RwLock<Vec<std::sync::Arc<&'static str>>> = RwLock::new(Vec::new());
+		// TODO: Re-enable text
+		// static FONT_REFS: RwLock<Vec<std::sync::Arc<&'static str>>> = RwLock::new(Vec::new());
 
-		let font = text.font.clone().unwrap_or_default();
-		let font_name = &*font;
+		// let font = text.font.clone().unwrap_or_default();
+		// let font_name = &*font;
 
-		let mut font_refs = FONT_REFS.write().unwrap();
-		let font = if let Some(v) = font_refs.iter().find(|&v| **v == font_name) {
-			iced_core::Font::new(v)
-		} else {
-			let f = &*font_name.to_string().leak();
-			font_refs.push(std::sync::Arc::new(f));
-			iced_core::Font::new(f)
-		};
+		// let mut font_refs = FONT_REFS.write().unwrap();
+		// let font = if let Some(v) = font_refs.iter().find(|&v| **v == font_name) {
+		// 	iced_core::Font::new(v)
+		// } else {
+		// 	let f = &*font_name.to_string().leak();
+		// 	font_refs.push(std::sync::Arc::new(f));
+		// 	iced_core::Font::new(f)
+		// };
 
-		self.frame.fill_text(iced_widget::canvas::Text {
-			ellipsis: iced_core::text::Ellipsis::None,
-			wrapping: iced_core::text::Wrapping::None,
-			content: text.text.to_owned(),
-			position: Point {
-				x: text.reference_start.x,
-				y: -text.reference_start.y,
-			},
-			max_width: f32::MAX,
-			color,
-			size: iced_core::Pixels(text.font_size),
-			line_height: iced_core::text::LineHeight::Relative(1.),
-			font,
-			align_x: match text.align {
-				TextAlign::Left => iced_core::text::Alignment::Left,
-				TextAlign::Center => iced_core::text::Alignment::Center,
-				TextAlign::Right => iced_core::text::Alignment::Right,
-			},
-			align_y: iced_core::alignment::Vertical::Center,
-			shaping: iced_core::text::Shaping::Basic,
-		});
+		// self.frame.fill_text(iced_widget::canvas::Text {
+		// 	ellipsis: iced_core::text::Ellipsis::None,
+		// 	wrapping: iced_core::text::Wrapping::None,
+		// 	content: text.text.to_owned(),
+		// 	position: Point {
+		// 		x: text.reference_start.x,
+		// 		y: -text.reference_start.y,
+		// 	},
+		// 	max_width: f32::MAX,
+		// 	color,
+		// 	size: iced_core::Pixels(text.font_size),
+		// 	line_height: iced_core::text::LineHeight::Relative(1.),
+		// 	font,
+		// 	align_x: match text.align {
+		// 		TextAlign::Left => iced_core::text::Alignment::Left,
+		// 		TextAlign::Center => iced_core::text::Alignment::Center,
+		// 		TextAlign::Right => iced_core::text::Alignment::Right,
+		// 	},
+		// 	align_y: iced_core::alignment::Vertical::Center,
+		// 	shaping: iced_core::text::Shaping::Basic,
+		// });
 
 		Ok(())
 	}

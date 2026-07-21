@@ -3,38 +3,79 @@ pub mod font;
 
 use crate::prelude::*;
 use font::FontRef;
+pub use fontdb::{Style as FontStyle, Weight as FontWeight};
 use na::{Point2, Unit, Vector2};
 use nalgebra::{self as na, Transform2};
 
-pub(crate) fn size_of(font: &fontdue::Font, s: &str, font_size: f32) -> f32 {
-	s.chars()
-		.scan(None, |last, curr| {
-			let l = last.unwrap_or(' ');
-			let r = if let Some(v) = font.horizontal_kern(l, curr, font_size) {
-				v
-			} else {
-				font.metrics(curr, font_size).advance_width
-			};
-
-			*last = Some(curr);
-
-			Some(r)
-		})
-		.sum()
+pub(crate) struct TextSize<'a> {
+	font_ref: font::FontRef,
+	weight: FontWeight,
+	style: FontStyle,
+	text: &'a str,
+	font_size: f32,
+	line_height_scale: f32,
 }
+impl<'a> TextSize<'a> {
+	pub(crate) fn new(font_ref: font::FontRef) -> Self {
+		Self {
+			font_ref,
+			weight: FontWeight::NORMAL,
+			style: FontStyle::Normal,
+			text: "",
+			font_size: 10.,
+			line_height_scale: 1.,
+		}
+	}
+	pub(crate) fn weight(mut self, weight: FontWeight) -> Self {
+		self.weight = weight;
+		self
+	}
+	pub(crate) fn style(mut self, style: FontStyle) -> Self {
+		self.style = style;
+		self
+	}
+	pub(crate) fn font_size(mut self, font_size: f32) -> Self {
+		self.font_size = font_size;
+		self
+	}
+	pub(crate) fn line_height_scale(mut self, line_height_scale: f32) -> Self {
+		self.line_height_scale = line_height_scale;
+		self
+	}
+	pub(crate) fn text(mut self, text: &'a str) -> Self {
+		self.text = text;
+		self
+	}
+	pub(crate) fn set_text(&mut self, text: &'a str) {
+		self.text = text;
+	}
+	pub(crate) fn compute_width(&self) -> f32 {
+		font::font_holder_mut(|v| {
+			let font_system = &mut v.0;
 
-/// Weight of a font
-#[derive(Default, Debug, Clone, Copy, PartialEq, Hash, Eq)]
-pub enum FontWeight {
-	#[default]
-	/// Regular
-	Regular,
-	/// Bold
-	Bold,
-	/// Italic
-	Italic,
-	/// BoldItalic
-	BoldItalic,
+			let mut buffer = cosmic_text::Buffer::new(
+				font_system,
+				cosmic_text::Metrics::relative(self.font_size, self.line_height_scale),
+			);
+
+			buffer.set_text(
+				self.text,
+				&cosmic_text::Attrs {
+					// family: fontdb::Family::Name(()),
+					..cosmic_text::Attrs::new()
+				},
+				cosmic_text::Shaping::Advanced,
+				None,
+			);
+
+			buffer.shape_until_scroll(font_system, true);
+			buffer
+				.layout_runs()
+				.map(|v| v.line_w)
+				.max_by(f32::total_cmp)
+				.unwrap_or_default()
+		})
+	}
 }
 
 /// TextAlign
@@ -68,7 +109,9 @@ pub struct TextPosition<'a> {
 	///
 	pub align: TextAlign,
 	///
-	pub font_weight: FontWeight,
+	pub weight: FontWeight,
+	///
+	pub style: FontStyle,
 	///
 	pub on_curve: Option<CurvePosition>,
 	///
@@ -99,7 +142,9 @@ pub struct Text {
 	pub vertical_align: TextVerticalAlign,
 
 	///
-	pub font_weight: FontWeight,
+	pub weight: FontWeight,
+	///
+	pub style: FontStyle,
 
 	#[shape(into, some, option_fn)]
 	///
@@ -119,7 +164,8 @@ impl Default for Text {
 			local_transform: Default::default(),
 			align: Default::default(),
 			vertical_align: Default::default(),
-			font_weight: Default::default(),
+			weight: Default::default(),
+			style: Default::default(),
 			on_curve: Default::default(),
 			font_size: 10.,
 			font: Default::default(),
@@ -145,7 +191,8 @@ impl Text {
 		TextPosition {
 			text: &self.text,
 			align: self.align,
-			font_weight: self.font_weight,
+			weight: self.weight,
+			style: self.style,
 			on_curve: self.on_curve.as_ref().map(|v| v.position(&transform)),
 			font_size,
 			reference_start,
@@ -163,15 +210,21 @@ impl From<Text> for Shape {
 
 impl ShapeBoundingBox for Text {
 	fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
-		let fonts = crate::font::get_or_default(self.font.as_ref());
+		let Some(font_ref) = self
+			.font
+			.as_ref()
+			.or_else(|| crate::font::default_font())
+			.cloned()
+		else {
+			return BoundingBox::zero().as_unparticular();
+		};
 
-		let font = fontdue::Font::from_bytes(
-			fonts.get(self.font_weight),
-			fontdue::FontSettings::default(),
-		)
-		.unwrap();
-
-		let width = size_of(&font, &self.text, self.font_size);
+		let width = TextSize::new(font_ref)
+			.font_size(self.font_size)
+			.text(&self.text)
+			.weight(self.weight)
+			.style(self.style)
+			.compute_width();
 
 		BoundingBox::centered([width, self.font_size])
 			.as_unparticular()
@@ -249,7 +302,7 @@ mod tests {
 			fn export_curve(
 				&mut self,
 				_curve: CurvePosition,
-				StylePosition { fill, stroke }: StylePosition,
+				StylePosition { fill: _, stroke: _ }: StylePosition,
 			) -> Result<(), Self::Error> {
 				Ok(())
 			}
@@ -257,7 +310,7 @@ mod tests {
 			fn export_text(
 				&mut self,
 				text: TextPosition,
-				style: StylePosition,
+				_style: StylePosition,
 			) -> Result<(), Self::Error> {
 				match text.text {
 					"1" => {
