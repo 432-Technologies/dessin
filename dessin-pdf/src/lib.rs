@@ -10,27 +10,33 @@ use printpdf::{
 	RawImage, Rgb, TextItem, TextMatrix, TextRenderingMode, WindingOrder, XObjectRotation,
 	XObjectTransform,
 };
-use std::{collections::HashMap, convert::identity, fmt};
+use std::{collections::HashMap, convert::identity, fmt, fs};
 
 #[derive(Debug, thiserror::Error)]
 pub enum PDFError {
 	#[error("PrintPDF Image error: {0}")]
 	PrintPDFImageError(String),
-	#[error("{0}")]
-	WriteError(#[from] fmt::Error),
+	#[error("Write error")]
+	WriteError(#[source] fmt::Error),
 	#[error("Curve has no starting point: {0:?}")]
 	CurveHasNoStartingPoint(Curve),
 	#[error("Unknown builtin font: {0}")]
 	UnknownBuiltinFont(String),
 	#[error("Orphelin layer")]
 	OrphelinLayer,
-	// #[error("Can't parse font `{0} {1:?}`")]
-	// CantParseFont(FontRef, FontWeight),
+	#[error("Can't parse font `{0}`")]
+	CantParseFont(String),
 	#[error("Internal error: No layer started")]
 	NoLayerStarted,
+	#[error("Can't load font")]
+	CantLoadFont(#[source] std::io::Error),
+	#[error("No default font set")]
+	NoDefaultFont,
+	#[error("Unknown font")]
+	UnknownFont(String),
 }
 
-type PDFFontHolder = HashMap<(FontRef, FontWeight), FontId>;
+type PDFFontHolder = HashMap<FontRef, FontId>;
 
 #[derive(Default)]
 pub struct PDFOptions {
@@ -295,53 +301,63 @@ impl Exporter for PDFExporter<'_> {
 		}: TextPosition,
 		StylePosition { fill, stroke }: StylePosition,
 	) -> Result<(), Self::Error> {
-		// TODO: Re-enable text
-		// let font = font.clone().unwrap_or(FontRef::default());
+		let font = font
+			.as_ref()
+			.or_else(|| font::default_font())
+			.cloned()
+			.ok_or(PDFError::NoDefaultFont)?;
 
-		// let key = (font.clone(), weight);
-		// if !self.used_font.contains_key(&key) {
-		// 	let fg = font::get(&font);
-		// 	let b = fg.get(weight);
+		if !self.used_font.contains_key(&font) {
+			let (source, _) = font::font_holder(|v| v.0.db().face_source(font.id))
+				.ok_or_else(|| PDFError::UnknownFont(font.family.to_string()))?;
 
-		// 	let font_id = self.doc.add_font(
-		// 		&ParsedFont::from_bytes(&b, 0, &mut vec![])
-		// 			.ok_or_else(|| PDFError::CantParseFont(font.clone(), weight))?,
-		// 	);
+			let bytes = match &source {
+				font::fontdb::Source::Binary(bytes)
+				| font::fontdb::Source::SharedFile(_, bytes) => (**bytes).as_ref().to_vec(),
+				font::fontdb::Source::File(path) => {
+					fs::read(path).map_err(PDFError::CantLoadFont)?
+				}
+			};
 
-		// 	self.used_font.insert(key.clone(), font_id);
-		// }
+			let font_id = self.doc.add_font(
+				&ParsedFont::from_bytes(&bytes, 0, &mut vec![])
+					.ok_or_else(|| PDFError::CantParseFont(font.family.to_string()))?,
+			);
 
-		// let font = self.used_font[&key].clone();
+			self.used_font.insert(font.clone(), font_id);
+		}
 
-		// let rotation = direction.y.atan2(direction.x).to_degrees();
+		let font = self.used_font[&font].clone();
 
-		// self.content.extend([
-		// 	Op::SetLineHeight {
-		// 		lh: Mm(font_size).into_pt(),
-		// 	},
-		// 	Op::SetWordSpacing {
-		// 		pt: Mm(font_size).into_pt(),
-		// 	},
-		// 	Op::SetTextRenderingMode {
-		// 		mode: match (fill, stroke) {
-		// 			(Some(_), Some(_)) => TextRenderingMode::FillStroke,
-		// 			(Some(_), None) => TextRenderingMode::Fill,
-		// 			(None, Some(_)) => TextRenderingMode::Stroke,
-		// 			(None, None) => TextRenderingMode::Clip,
-		// 		},
-		// 	},
-		// 	Op::SetTextMatrix {
-		// 		matrix: TextMatrix::TranslateRotate(
-		// 			Mm(reference_start.x).into_pt(),
-		// 			Mm(reference_start.y).into_pt(),
-		// 			rotation,
-		// 		),
-		// 	},
-		// 	Op::WriteText {
-		// 		items: vec![TextItem::Text(text.to_string())],
-		// 		font,
-		// 	},
-		// ]);
+		let rotation = direction.y.atan2(direction.x).to_degrees();
+
+		self.content.extend([
+			Op::SetLineHeight {
+				lh: Mm(font_size).into_pt(),
+			},
+			Op::SetWordSpacing {
+				pt: Mm(font_size).into_pt(),
+			},
+			Op::SetTextRenderingMode {
+				mode: match (fill, stroke) {
+					(Some(_), Some(_)) => TextRenderingMode::FillStroke,
+					(Some(_), None) => TextRenderingMode::Fill,
+					(None, Some(_)) => TextRenderingMode::Stroke,
+					(None, None) => TextRenderingMode::Clip,
+				},
+			},
+			Op::SetTextMatrix {
+				matrix: TextMatrix::TranslateRotate(
+					Mm(reference_start.x).into_pt(),
+					Mm(reference_start.y).into_pt(),
+					rotation,
+				),
+			},
+			Op::WriteText {
+				items: vec![TextItem::Text(text.to_string())],
+				font,
+			},
+		]);
 
 		Ok(())
 	}

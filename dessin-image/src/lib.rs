@@ -7,8 +7,7 @@ use dessin::{
 };
 use nalgebra::{Point2, Transform2, Translation2, Vector2};
 use raqote::{
-	DrawOptions, DrawTarget, LineCap, LineJoin, PathBuilder, Point, SolidSource, Source,
-	StrokeStyle,
+	DrawOptions, DrawTarget, LineCap, LineJoin, PathBuilder, SolidSource, Source, StrokeStyle,
 };
 use std::fmt;
 
@@ -253,12 +252,23 @@ impl Exporter for ImageExporter {
 		}: TextPosition,
 		_: StylePosition,
 	) -> Result<(), Self::Error> {
-		// TODO: Re-enable text
-		// let fg = dessin::font::get_or_default(font.as_ref());
-		// let font = fg.get(weight);
+		// let Some(font) = font
+		// 	.as_ref()
+		// 	.or_else(|| font::default_font())
+		// 	.cloned()
+		// 	.and_then(|v| font::font_holder(|f| f.0.db().face(v.id)))
+		// else {
+		// 	return Ok(());
+		// };
 
-		// //dt.set_transform(&Transform::create_translation(50.0, 0.0));
-		// // dt.set_transform(&Transform::rotation(euclid::Angle::degrees(15.0)));
+		// let bytes = match font.source {
+		// 	font::fontdb::Source::Binary(as_ref) => (*as_ref).as_ref().to_vec(),
+		// 	font::fontdb::Source::File(path_buf) => todo!(),
+		// 	font::fontdb::Source::SharedFile(path_buf, as_ref) => todo!(),
+		// };
+
+		//dt.set_transform(&Transform::create_translation(50.0, 0.0));
+		// dt.set_transform(&Transform::rotation(euclid::Angle::degrees(15.0)));
 
 		// let color = match self.style().fill {
 		// 	Some(Fill::Solid { color }) => color,
