@@ -68,7 +68,7 @@ pub struct SVGOptions {
 pub fn SVGString(
 	class: Option<String>,
 	style: Option<String>,
-	shape: ReadOnlySignal<Shape>,
+	shape: ReadSignal<Shape>,
 	options: Option<SVGOptions>,
 ) -> Element {
 	let options = options.unwrap_or_default();
@@ -146,7 +146,7 @@ pub fn SVGString(
 pub fn SVG(
 	class: Option<String>,
 	style: Option<String>,
-	shape: ReadOnlySignal<Shape>,
+	shape: ReadSignal<Shape>,
 	options: Option<SVGOptions>,
 ) -> Element {
 	let options = options.unwrap_or_default();
@@ -216,7 +216,7 @@ pub fn SVG(
 
 #[component]
 fn Shaper(
-	shape: ReadOnlySignal<Shape>,
+	shape: ReadSignal<Shape>,
 	parent_transform: Transform2<f32>,
 	add_font: EventHandler<FontRef>,
 ) -> Element {
