@@ -253,7 +253,9 @@ fn should_break() {
 			unreachable!()
 		};
 
-		let lt = convert::<_, Transform2<f32>>(Translation2::new(0., -5.));
+		// The Y translation is -bb.top() where bb.top() = baseline_y + ascender
+		// With font_size = 5.0: baseline_y = 2.5, ascender ≈ 4.39, so bb.top() ≈ 6.89
+		let lt = convert::<_, Transform2<f32>>(Translation2::new(0., -6.8896484));
 
 		assert_eq!(
 			text,
@@ -276,7 +278,8 @@ fn should_break() {
 			unreachable!()
 		};
 
-		let lt = convert::<_, Transform2<f32>>(Translation2::new(0., -10.));
+		// Second line: -bb.top() - bb.height() ≈ -6.89 - 5.0 ≈ -11.89
+		let lt = convert::<_, Transform2<f32>>(Translation2::new(0., -11.889648));
 
 		assert_eq!(
 			text,

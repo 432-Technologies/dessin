@@ -248,18 +248,35 @@ impl ShapeBoundingBox for Text {
 			line_w: width,
 		} = text_run;
 
+		// Baseline Y offset matches `position()` - the text baseline is NOT at the origin
+		let baseline_y = match self.vertical_align {
+			TextVerticalAlign::Bottom => self.font_size / 2.,
+			TextVerticalAlign::Center => 0.,
+			TextVerticalAlign::Top => -self.font_size / 2.,
+		};
+
 		let (left, right) = match self.align {
 			TextAlign::Left => (0., width),
 			TextAlign::Center => (-width / 2., width / 2.),
 			TextAlign::Right => (width, 0.),
 		};
 
-		let (top, bottom) = match self.vertical_align {
-			TextVerticalAlign::Bottom => (line_top, line_top + line_height),
-			// TextVerticalAlign::Center => (-height / 2., height / 2.),
-			// TextVerticalAlign::Top => (height, 0.),
-			_ => todo!(),
-		};
+		// In cosmic_text (Y down):
+		// - line_top is the Y position of the top of the line (smaller = higher)
+		// - line_y is the Y position of the baseline
+		// - line_height is the distance to the next baseline
+		//
+		// Distances from baseline:
+		// - Ascender height (baseline to top) = line_y - line_top
+		// - Descender height (baseline to bottom) ≈ line_height - (line_y - line_top)
+		//
+		// In dessin (Y up), with baseline at baseline_y:
+		// - Top of text = baseline_y + (line_y - line_top)  // above baseline
+		// - Bottom of text = baseline_y - (line_height - (line_y - line_top))  // below baseline
+		let ascender = line_y - line_top;
+		let descender = line_height - ascender;
+		let top = baseline_y + ascender;
+		let bottom = baseline_y - descender;
 
 		BoundingBox::new(
 			[left, top].into(),
