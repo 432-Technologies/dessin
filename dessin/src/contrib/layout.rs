@@ -127,8 +127,14 @@ mod tests {
 	use assert_float_eq::*;
 	use nalgebra::Point2;
 
+	fn init_font() {
+		crate::font::add_font(include_bytes!("../Helvetica.otf"));
+		crate::font::set_default_font(crate::font::get("Helvetica").unwrap());
+	}
+
 	#[test]
 	fn one_element() {
+		init_font();
 		let layout = dessin!(VerticalLayout(of = Text::default().with_font_size(10.)) > ());
 
 		let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
@@ -138,6 +144,7 @@ mod tests {
 
 	#[test]
 	fn two_distinct_elements() {
+		init_font();
 		let layout = dessin!(
 			VerticalLayout(
 				of = Text::default().with_font_size(10.),
@@ -152,6 +159,7 @@ mod tests {
 
 	#[test]
 	fn two_elements_vec_with_gap() {
+		init_font();
 		let layout = dessin!(
 			VerticalLayout(
 				of = dessin!([Text(font_size = 10.), Text(font_size = 10.)]),
@@ -166,6 +174,7 @@ mod tests {
 
 	#[test]
 	fn two_distinct_elements_with_gap() {
+		init_font();
 		let layout = dessin!(
 			VerticalLayout(
 				of = Text::default().with_font_size(10.),
@@ -259,6 +268,7 @@ mod tests {
 	use palette::{named, Srgb};
 	#[test]
 	fn layout_of_textbox() {
+		init_font();
 		let text = "test\nwhy\nnot";
 		let gap = 2.;
 

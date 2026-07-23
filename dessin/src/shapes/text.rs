@@ -49,7 +49,7 @@ impl<'a> TextSize<'a> {
 	pub(crate) fn set_text(&mut self, text: &'a str) {
 		self.text = text;
 	}
-	pub(crate) fn compute_width(&self) -> f32 {
+	pub(crate) fn compute_width(&self) -> Option<TextRun> {
 		font::font_holder_mut(|v| {
 			let font_system = &mut v.0;
 
@@ -69,13 +69,25 @@ impl<'a> TextSize<'a> {
 			);
 
 			buffer.shape_until_scroll(font_system, true);
-			buffer
-				.layout_runs()
-				.map(|v| v.line_w)
-				.max_by(f32::total_cmp)
-				.unwrap_or_default()
+			buffer.layout_runs().next().map(|v| TextRun {
+				line_y: v.line_y,
+				line_top: v.line_top,
+				line_height: v.line_height,
+				line_w: v.line_w,
+			})
 		})
 	}
+}
+
+pub(crate) struct TextRun {
+	/// Y offset to baseline of line
+	pub line_y: f32,
+	/// Y offset to top of line
+	pub line_top: f32,
+	/// Y offset to next line
+	pub line_height: f32,
+	/// Width of line
+	pub line_w: f32,
 }
 
 /// TextAlign
@@ -219,16 +231,43 @@ impl ShapeBoundingBox for Text {
 			return BoundingBox::zero().as_unparticular();
 		};
 
-		let width = TextSize::new(font_ref)
+		let Some(text_run) = TextSize::new(font_ref)
 			.font_size(self.font_size)
 			.text(&self.text)
 			.weight(self.weight)
 			.style(self.style)
-			.compute_width();
+			.compute_width()
+		else {
+			return BoundingBox::zero().as_unparticular();
+		};
 
-		BoundingBox::centered([width, self.font_size])
-			.as_unparticular()
-			.transform(self.local_transform())
+		let TextRun {
+			line_y,
+			line_top,
+			line_height,
+			line_w: width,
+		} = text_run;
+
+		let (left, right) = match self.align {
+			TextAlign::Left => (0., width),
+			TextAlign::Center => (-width / 2., width / 2.),
+			TextAlign::Right => (width, 0.),
+		};
+
+		let (top, bottom) = match self.vertical_align {
+			TextVerticalAlign::Bottom => (line_top, line_top + line_height),
+			// TextVerticalAlign::Center => (-height / 2., height / 2.),
+			// TextVerticalAlign::Top => (height, 0.),
+			_ => todo!(),
+		};
+
+		BoundingBox::new(
+			[left, top].into(),
+			[right, top].into(),
+			[right, bottom].into(),
+			[left, bottom].into(),
+		)
+		.transform(self.local_transform())
 	}
 }
 

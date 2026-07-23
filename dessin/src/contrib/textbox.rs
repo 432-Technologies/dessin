@@ -119,7 +119,16 @@ impl From<TextBox> for Shape {
 				}
 
 				text_size.set_text(word);
-				let word_size = text_size.compute_width();
+				let Some(text_run) = text_size.compute_width() else {
+					continue;
+				};
+
+				let TextRun {
+					line_y: _,
+					line_top: _,
+					line_height: _,
+					line_w: word_size,
+				} = text_run;
 
 				if len + word_size > width {
 					lines.push(std::mem::take(&mut acc));
@@ -174,6 +183,9 @@ impl From<TextBox> for Shape {
 fn one_line() {
 	use assert_float_eq::*;
 
+	crate::font::add_font(include_bytes!("../Helvetica.otf"));
+	crate::font::set_default_font(crate::font::get("Helvetica").unwrap());
+
 	let text = "it should work, famous last word";
 
 	let shape: Shape = dessin!(
@@ -193,6 +205,9 @@ fn one_line() {
 #[test]
 fn two_lines() {
 	use assert_float_eq::*;
+
+	crate::font::add_font(include_bytes!("../Helvetica.otf"));
+	crate::font::set_default_font(crate::font::get("Helvetica").unwrap());
 
 	let text = "it should work\nfamous last word";
 
@@ -215,6 +230,9 @@ fn should_break() {
 	use assert_float_eq::*;
 	use nalgebra::{convert, Translation2};
 
+	crate::font::add_font(include_bytes!("../Helvetica.otf"));
+	crate::font::set_default_font(crate::font::get("Helvetica").unwrap());
+
 	let text = "it should work, famous last word";
 
 	let mut shape: Shape = dessin!(
@@ -223,6 +241,7 @@ fn should_break() {
 			font_size = 5.,
 			width = 40.,
 			align = TextAlign::Left,
+			line_spacing = 0.
 		) > ()
 	);
 
@@ -234,7 +253,7 @@ fn should_break() {
 			unreachable!()
 		};
 
-		let lt = convert::<_, Transform2<f32>>(Translation2::new(0., (5. / 2.) * -1.));
+		let lt = convert::<_, Transform2<f32>>(Translation2::new(0., -5.));
 
 		assert_eq!(
 			text,
@@ -247,7 +266,7 @@ fn should_break() {
 				style: Default::default(),
 				on_curve: None,
 				font_size: 5.,
-				font: None
+				font: crate::font::default_font().cloned()
 			}
 		);
 	}
@@ -257,7 +276,7 @@ fn should_break() {
 			unreachable!()
 		};
 
-		let lt = convert::<_, Transform2<f32>>(Translation2::new(0., ((5. / 2.) + 5.) * -1.));
+		let lt = convert::<_, Transform2<f32>>(Translation2::new(0., -10.));
 
 		assert_eq!(
 			text,
@@ -270,7 +289,7 @@ fn should_break() {
 				style: Default::default(),
 				on_curve: None,
 				font_size: 5.,
-				font: None
+				font: crate::font::default_font().cloned()
 			}
 		);
 	}

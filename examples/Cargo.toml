@@ -145,3 +145,7 @@ path = "./purple_padding.rs"
 [[example]]
 name = "font"
 path = "./font.rs"
+
+[[example]]
+name = "text-bb"
+path = "./text-bb.rs"
