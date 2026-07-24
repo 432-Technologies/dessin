@@ -355,12 +355,8 @@ fn Shaper(
 				TextAlign::Right => "end",
 			};
 
-			let Some(font) = text.font.as_ref().or_else(|| font::default_font()).cloned() else {
-				return Err(RenderError::default());
-			};
-
-			let font_ref = font.clone();
-			let font_family = font.family;
+			let font_ref = text.font.clone();
+			let font_family = text.font.family;
 
 			let x = text.reference_start.x;
 			let y = text.reference_start.y;

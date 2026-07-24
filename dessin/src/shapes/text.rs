@@ -1,11 +1,13 @@
 /// Font storage
 pub mod font;
 
+use std::ops::Add;
+
 use crate::prelude::*;
 use font::FontRef;
 pub use fontdb::{Style as FontStyle, Weight as FontWeight};
 use na::{Point2, Unit, Vector2};
-use nalgebra::{self as na, Transform2};
+use nalgebra::{self as na, Transform2, Translation2};
 
 pub(crate) struct TextSize<'a> {
 	font_ref: font::FontRef,
@@ -61,7 +63,9 @@ impl<'a> TextSize<'a> {
 			buffer.set_text(
 				self.text,
 				&cosmic_text::Attrs {
-					// family: fontdb::Family::Name(()),
+					family: fontdb::Family::Name(&*self.font_ref.family),
+					weight: self.weight,
+					style: self.style,
 					..cosmic_text::Attrs::new()
 				},
 				cosmic_text::Shaping::Advanced,
@@ -88,6 +92,49 @@ pub(crate) struct TextRun {
 	pub line_height: f32,
 	/// Width of line
 	pub line_w: f32,
+}
+impl TextRun {
+	pub fn bounding_box(self, baseline_y: f32) -> BoundingBox<Straight> {
+		let TextRun {
+			line_y,
+			line_top,
+			line_height,
+			line_w,
+		} = self;
+
+		// In cosmic_text (Y down):
+		// - line_top is the Y position of the top of the line (smaller = higher)
+		// - line_y is the Y position of the baseline
+		// - line_height is the distance to the next baseline
+		//
+		// Distances from baseline:
+		// - Ascender height (baseline to top) = line_y - line_top
+		// - Descender height (baseline to bottom) ≈ line_height - (line_y - line_top)
+		//
+		// In dessin (Y up), with baseline at baseline_y:
+		// - Top of text = baseline_y + (line_y - line_top)  // above baseline
+		// - Bottom of text = baseline_y - (line_height - (line_y - line_top))  // below baseline
+		let ascender = line_y - line_top;
+		let descender = line_height - ascender;
+		let top = baseline_y + ascender;
+		let bottom = baseline_y - descender;
+
+		BoundingBox::mins_maxs(0., bottom, line_w, top)
+	}
+}
+impl Add for TextRun {
+	type Output = Self;
+	fn add(self, rhs: Self) -> Self::Output {
+		assert_eq!(self.line_y, rhs.line_y); // Weird if not true 🤔
+		assert_eq!(self.line_height, rhs.line_height); // Weird if not true 🤔
+
+		TextRun {
+			line_y: self.line_y,
+			line_top: self.line_top.min(rhs.line_top),
+			line_height: self.line_height,
+			line_w: self.line_w + rhs.line_w,
+		}
+	}
 }
 
 /// TextAlign
@@ -133,7 +180,7 @@ pub struct TextPosition<'a> {
 	///
 	pub direction: Unit<Vector2<f32>>,
 	///
-	pub font: &'a Option<FontRef>,
+	pub font: FontRef,
 }
 
 #[derive(Debug, Clone, PartialEq, Shape)]
@@ -194,9 +241,9 @@ impl Text {
 			* Point2::new(
 				0.,
 				match self.vertical_align {
-					TextVerticalAlign::Bottom => font_size / 2.,
-					TextVerticalAlign::Center => 0.,
-					TextVerticalAlign::Top => -font_size / 2.,
+					TextVerticalAlign::Bottom => 0.,
+					TextVerticalAlign::Center => -font_size / 2.,
+					TextVerticalAlign::Top => -font_size,
 				},
 			);
 
@@ -209,7 +256,7 @@ impl Text {
 			font_size,
 			reference_start,
 			direction: Unit::new_normalize(transform * Vector2::new(1., 0.)),
-			font: &self.font,
+			font: FontRef::or_default(self.font.clone()).unwrap(),
 		}
 	}
 }
@@ -245,7 +292,7 @@ impl ShapeBoundingBox for Text {
 			line_y,
 			line_top,
 			line_height,
-			line_w: width,
+			line_w,
 		} = text_run;
 
 		// Baseline Y offset matches `position()` - the text baseline is NOT at the origin
@@ -255,35 +302,18 @@ impl ShapeBoundingBox for Text {
 			TextVerticalAlign::Top => -self.font_size / 2.,
 		};
 
-		let (left, right) = match self.align {
-			TextAlign::Left => (0., width),
-			TextAlign::Center => (-width / 2., width / 2.),
-			TextAlign::Right => (width, 0.),
-		};
+		let base_bb = text_run.bounding_box(baseline_y);
 
-		// In cosmic_text (Y down):
-		// - line_top is the Y position of the top of the line (smaller = higher)
-		// - line_y is the Y position of the baseline
-		// - line_height is the distance to the next baseline
-		//
-		// Distances from baseline:
-		// - Ascender height (baseline to top) = line_y - line_top
-		// - Descender height (baseline to bottom) ≈ line_height - (line_y - line_top)
-		//
-		// In dessin (Y up), with baseline at baseline_y:
-		// - Top of text = baseline_y + (line_y - line_top)  // above baseline
-		// - Bottom of text = baseline_y - (line_height - (line_y - line_top))  // below baseline
-		let ascender = line_y - line_top;
-		let descender = line_height - ascender;
-		let top = baseline_y + ascender;
-		let bottom = baseline_y - descender;
-
-		BoundingBox::new(
-			[left, top].into(),
-			[right, top].into(),
-			[right, bottom].into(),
-			[left, bottom].into(),
-		)
+		match self.align {
+			TextAlign::Left => base_bb.as_unparticular(),
+			TextAlign::Center => base_bb.transform(&nalgebra::convert(Translation2::new(
+				-base_bb.width() / 2.,
+				0.,
+			))),
+			TextAlign::Right => {
+				base_bb.transform(&nalgebra::convert(Translation2::new(-base_bb.width(), 0.)))
+			}
+		}
 		.transform(self.local_transform())
 	}
 }

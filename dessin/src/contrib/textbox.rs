@@ -1,5 +1,5 @@
 use crate::{font::FontRef, prelude::*};
-use nalgebra::Transform2;
+use nalgebra::{Transform2, Translation2};
 
 /// Box of text, with auto wrapping text if width is too large
 #[derive(Debug, Clone, PartialEq, Shape)]
@@ -12,7 +12,7 @@ pub struct TextBox {
 	pub font_size: f32,
 
 	/// Spacing between each line
-	pub line_spacing: f32,
+	pub line_height_scale: f32,
 
 	/// Horizontal align
 	pub align: TextAlign,
@@ -30,7 +30,8 @@ pub struct TextBox {
 	pub style: FontStyle,
 
 	/// Dimension on the x-axis
-	pub width: f32,
+	#[shape(some)]
+	pub width: Option<f32>,
 
 	/// Dimension on the y-axis
 	#[shape(some)]
@@ -45,13 +46,13 @@ impl Default for TextBox {
 		TextBox {
 			local_transform: Default::default(),
 			font_size: Default::default(),
-			line_spacing: Default::default(),
+			line_height_scale: 1.,
 			align: Default::default(),
 			vertical_align: TextVerticalAlign::Top,
 			text: Default::default(),
 			weight: Default::default(),
 			style: Default::default(),
-			width: f32::MAX,
+			width: Default::default(),
 			height: Default::default(),
 			font: Default::default(),
 		}
@@ -77,7 +78,7 @@ impl From<TextBox> for Shape {
 		TextBox {
 			local_transform,
 			font_size,
-			line_spacing,
+			line_height_scale,
 			text,
 			width,
 			height,
@@ -88,94 +89,68 @@ impl From<TextBox> for Shape {
 			font,
 		}: TextBox,
 	) -> Self {
-		let Some(font_ref) = font
-			.as_ref()
-			.or_else(|| crate::font::default_font())
-			.cloned()
-		else {
+		let Some(font_ref) = FontRef::or_default(font) else {
 			return Shape::default();
 		};
 
-		let mut lines = vec![];
-		let mut height = height.unwrap_or(f32::MAX);
+		let mut total_width = 0f32;
+		let mut total_height = 0f32;
 
-		let mut text_size = TextSize::new(font_ref.clone())
-			.weight(weight)
-			.style(style)
-			.font_size(font_size)
-			.line_height_scale((font_size + line_spacing) / font_size);
+		let shapes = font::font_holder_mut(|v| {
+			let font_system = &mut v.0;
 
-		for line in text.lines() {
-			let mut len = 0.;
-			let mut acc = String::new();
+			let mut buffer = cosmic_text::Buffer::new(
+				font_system,
+				cosmic_text::Metrics::relative(font_size, line_height_scale),
+			);
 
-			if height - font_size < 0. {
-				break;
-			}
+			buffer.set_size(width, height);
 
-			for word in line.split_whitespace() {
-				if word.is_empty() {
-					continue;
-				}
+			buffer.set_text(
+				&text,
+				&cosmic_text::Attrs {
+					family: fontdb::Family::Name(&*font_ref.family),
+					weight,
+					style,
+					..cosmic_text::Attrs::new()
+				},
+				cosmic_text::Shaping::Advanced,
+				None,
+			);
 
-				text_size.set_text(word);
-				let Some(text_run) = text_size.compute_width() else {
-					continue;
-				};
+			buffer.shape_until_scroll(font_system, true);
+			buffer
+				.layout_runs()
+				.map(|run| {
+					let offset = run.line_i as f32 * run.line_height;
 
-				let TextRun {
-					line_y: _,
-					line_top: _,
-					line_height: _,
-					line_w: word_size,
-				} = text_run;
+					total_width = total_width.max(run.line_w);
+					total_width = total_height.max(offset);
 
-				if len + word_size > width {
-					lines.push(std::mem::take(&mut acc));
-
-					acc = word.to_owned();
-					len = word_size;
-
-					height -= font_size + line_spacing;
-				} else {
-					len += word_size;
-
-					if !acc.is_empty() {
-						acc.push(' ');
-					}
-
-					acc.push_str(word)
-				}
-			}
-
-			if !acc.is_empty() {
-				lines.push(acc)
-			}
-		}
-
-		let (vertical_align, _) = match vertical_align {
-			TextVerticalAlign::Bottom => (TextVerticalAlign::Top, 1.),
-			TextVerticalAlign::Center => (TextVerticalAlign::Center, -1.),
-			TextVerticalAlign::Top => (TextVerticalAlign::Bottom, -1.),
-		};
-
-		dessin!(
-			VerticalLayout(
-				extend = lines.into_iter().map(|text| {
 					dessin!(Text(
-						{ text },
-						{ align },
-						{ vertical_align },
-						{ weight },
+						text = run.text,
 						{ font_size },
-						font = font_ref.clone(),
+						{ align },
+						translate = [0., -offset]
 					))
 					.into()
-				}),
-				gap = line_spacing,
-				transform = local_transform,
-			) > ()
-		)
+				})
+				.collect::<Vec<Shape>>()
+		});
+
+		dbg!(total_width);
+
+		let translation = match align {
+			TextAlign::Left => Translation2::from([0., 0.]),
+			TextAlign::Center => Translation2::from([-total_width / 2., 0.]),
+			TextAlign::Right => Translation2::from([-total_width, 0.]),
+		};
+
+		Group::default()
+			.with_shapes(shapes)
+			// .with_translate(translation)
+			.with_transform(local_transform)
+			.into()
 	}
 }
 
@@ -194,7 +169,7 @@ fn one_line() {
 			fill = palette::Srgb::<f32>::new(0., 0., 0.).into_linear(),
 			font_size = 5.,
 			align = TextAlign::Left,
-			line_spacing = 2.,
+			line_height_scale = 2.,
 		) > ()
 	);
 
@@ -216,7 +191,7 @@ fn two_lines() {
 		fill = palette::Srgb::<f32>::new(0., 0., 0.).into_linear(),
 		font_size = 5.,
 		align = TextAlign::Left,
-		line_spacing = 2.,
+		line_height_scale = 1.,
 	))
 	.into();
 
@@ -241,7 +216,7 @@ fn should_break() {
 			font_size = 5.,
 			width = 40.,
 			align = TextAlign::Left,
-			line_spacing = 0.
+			line_height_scale = 1.
 		) > ()
 	);
 

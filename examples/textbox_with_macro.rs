@@ -6,7 +6,7 @@ use std::fs;
 fn main() {
 	let text: Shape = dessin!([*TextBox(
 		font_size = 5.,
-		line_spacing = 1.,
+		line_height_scale = 1.,
 		text = "Here we write some text",
 		width = 20.,
 		height = 10.,

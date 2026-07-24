@@ -156,8 +156,6 @@
 #![warn(missing_docs)]
 #![allow(clippy::tabs_in_doc_comments)]
 
-pub mod macros;
-
 // We need this in order for the proc_macro to work in this library.
 // See https://github.com/rust-lang/rust/issues/56409 for more details
 extern crate self as dessin;
@@ -185,6 +183,15 @@ pub mod prelude {
 /// Everything related to fonts.
 pub mod font {
 	pub use crate::shapes::text::font::*;
+}
+
+///
+pub mod reexport {
+	pub use cosmic_text;
+	pub use fontdb;
+	pub use image;
+	pub use nalgebra;
+	pub use palette;
 }
 
 #[cfg(test)]

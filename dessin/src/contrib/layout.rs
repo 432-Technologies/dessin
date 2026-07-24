@@ -278,7 +278,7 @@ mod tests {
 			font_size = 3.6,
 			align = TextAlign::Left,
 			width = 115.,
-			line_spacing = 2.,
+			line_height_rel = 2.,
 		));
 
 		let layout = dessin!(VerticalLayout(

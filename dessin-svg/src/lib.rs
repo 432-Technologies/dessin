@@ -332,10 +332,6 @@ impl Exporter for SVGExporter {
 		static ID: LazyLock<AtomicU32> = LazyLock::new(|| AtomicU32::new(0));
 		let id = ID.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
 
-		let Some(font) = font.as_ref().or_else(|| font::default_font()).cloned() else {
-			return Err(SVGError::NoDefaultFont);
-		};
-
 		self.used_font.insert(font.id);
 		let font_name = &font.family;
 

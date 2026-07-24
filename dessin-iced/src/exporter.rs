@@ -158,10 +158,6 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 			},
 		};
 
-		let Some(font) = text.font.as_ref().or_else(|| font::default_font()).cloned() else {
-			return Ok(());
-		};
-
 		self.frame.fill_text(iced_widget::canvas::Text {
 			ellipsis: iced_core::text::Ellipsis::None,
 			wrapping: iced_core::text::Wrapping::None,
@@ -175,7 +171,7 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 			size: iced_core::Pixels(text.font_size),
 			line_height: iced_core::text::LineHeight::Relative(1.),
 			font: iced_core::Font {
-				family: iced_core::font::Family::name(&*font.family),
+				family: iced_core::font::Family::name(&*text.font.family),
 				weight: match text.weight {
 					FontWeight::THIN => iced_core::font::Weight::Thin,
 					FontWeight::EXTRA_LIGHT => iced_core::font::Weight::ExtraLight,

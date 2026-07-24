@@ -132,7 +132,7 @@ fn dynamic() {
 		fn export_curve(
 			&mut self,
 			_curve: CurvePosition,
-			StylePosition { fill, stroke }: StylePosition,
+			StylePosition { fill: _, stroke: _ }: StylePosition,
 		) -> Result<(), Self::Error> {
 			unimplemented!()
 		}

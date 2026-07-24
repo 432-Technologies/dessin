@@ -301,12 +301,6 @@ impl Exporter for PDFExporter<'_> {
 		}: TextPosition,
 		StylePosition { fill, stroke }: StylePosition,
 	) -> Result<(), Self::Error> {
-		let font = font
-			.as_ref()
-			.or_else(|| font::default_font())
-			.cloned()
-			.ok_or(PDFError::NoDefaultFont)?;
-
 		if !self.used_font.contains_key(&font) {
 			let (source, _) = font::font_holder(|v| v.0.db().face_source(font.id))
 				.ok_or_else(|| PDFError::UnknownFont(font.family.to_string()))?;

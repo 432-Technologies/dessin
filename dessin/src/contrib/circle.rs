@@ -78,6 +78,7 @@ impl From<Circle> for Ellipse {
 	}
 }
 
+///
 #[test]
 pub fn bounding_box() {
 	use crate::prelude::*;
@@ -112,6 +113,7 @@ pub fn bounding_box() {
 	assert_float_absolute_eq!(bb.height(), 35., 10.); // Good enought for now
 }
 
+///
 #[test]
 pub fn bounding_box_7() {
 	use crate::prelude::*;

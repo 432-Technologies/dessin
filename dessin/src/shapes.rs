@@ -497,14 +497,20 @@ pub trait ShapeBoundingBox {
 }
 
 /// A group of [`Shape`], locally positionned by a transform
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Default, Debug, Clone, PartialEq, dessin_macros::Shape)]
 pub struct Group {
 	/// Transform of the whole group
+	#[local_transform]
 	pub local_transform: Transform2<f32>,
 	/// List of shapes
 	pub shapes: Vec<Shape>,
 	/// Metadata
 	pub metadata: Vec<(String, String)>,
+}
+impl From<Group> for Shape {
+	fn from(value: Group) -> Self {
+		Shape::Group(value)
+	}
 }
 
 /// Building block of a dessin

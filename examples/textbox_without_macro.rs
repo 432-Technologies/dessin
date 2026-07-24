@@ -11,7 +11,7 @@ fn main() {
 
 	text.font_size(5.);
 
-	text.line_spacing(1.);
+	text.line_height_scale(1.);
 
 	text.text("Here we write some text");
 
