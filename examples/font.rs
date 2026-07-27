@@ -19,7 +19,14 @@ fn main() {
 		font_size = 10.
 	));
 
-	let layout = dessin!(*VerticalLayout(of = normal_text, of = bold_text, of = italic_text,) > ());
+	let layout = dessin!(
+		*VerticalLayout(
+			of = normal_text,
+			of = bold_text,
+			of = italic_text,
+			fill = Srgb::new(0., 0., 0.)
+		) > ()
+	);
 
 	let bb = layout.local_bounding_box();
 
@@ -37,16 +44,14 @@ fn main() {
 	]);
 
 	fs::write(
+		get_project_root().unwrap().join("examples/out/font.pdf"),
+		dessin_pdf::to_pdf_bytes(&dessin).unwrap(),
+	)
+	.unwrap();
+
+	fs::write(
 		get_project_root().unwrap().join("examples/out/font.svg"),
-		dessin_svg::to_string_with_options(
-			&dessin,
-			dessin_svg::SVGOptions {
-				viewport: dessin_svg::ViewPort::AutoBoundingBox,
-				skip_svg_tag: false,
-				embed_fonts: true,
-			},
-		)
-		.unwrap(),
+		dessin_svg::to_string(&dessin).unwrap(),
 	)
 	.unwrap();
 }

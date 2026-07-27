@@ -14,8 +14,6 @@ version = "0.8.23"
 
 [dependencies]
 dessin = { version = "^0.8.23", path = "../dessin" }
-fontdue = "^0.9"
-image = "^0.25"
+krilla = { version = "0.8", features = ["raster-images"] }
 nalgebra = "^0.34"
-printpdf = { version = "^0.8", features = ["webp"] }
 thiserror = "2.0.16"
