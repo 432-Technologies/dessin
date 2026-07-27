@@ -19,10 +19,9 @@ use krilla::{
 use nalgebra::{Transform2, Translation2};
 use std::{collections::HashMap, fmt, fs};
 
+/// PDF export errors.
 #[derive(Debug, thiserror::Error)]
 pub enum PDFError {
-	#[error("Krilla Image error: {0}")]
-	KrillaImageError(String),
 	#[error("Krilla Font error")]
 	KrillaFontError,
 	#[error("Krilla Serialize error: {0}")]
@@ -115,29 +114,6 @@ fn to_krilla_stroke(stroke: &Stroke) -> Option<KrillaStroke> {
 			})
 		}
 	}
-}
-
-/// Detect image format from bytes and create a krilla Image.
-fn image_from_bytes(data: &[u8]) -> Result<Image, PDFError> {
-	// Try PNG
-	if let Ok(img) = Image::from_png(data.to_vec().into(), true) {
-		return Ok(img);
-	}
-	// Try JPEG
-	if let Ok(img) = Image::from_jpeg(data.to_vec().into(), true) {
-		return Ok(img);
-	}
-	// Try WebP
-	if let Ok(img) = Image::from_webp(data.to_vec().into(), true) {
-		return Ok(img);
-	}
-	// Try GIF
-	if let Ok(img) = Image::from_gif(data.to_vec().into(), true) {
-		return Ok(img);
-	}
-	Err(PDFError::KrillaImageError(
-		"Could not decode image (tried PNG, JPEG, WebP, GIF)".to_string(),
-	))
 }
 
 /// Collects shape data for later replay onto a krilla surface.
@@ -261,19 +237,7 @@ impl Exporter for SurfaceExporter<'_, '_> {
 			..
 		}: ImagePosition,
 	) -> Result<(), Self::Error> {
-		let img = image_from_bytes(image.as_bytes())?;
-
-		// Calculate image dimensions in PDF units (points).
-		let (img_width_px, img_height_px) = img.size();
-		let dpi = 300.0;
-		let raw_width = img_width_px as f32 * 25.4 / dpi;
-		let raw_height = img_height_px as f32 * 25.4 / dpi;
-
-		let scale_width = width / raw_width;
-		let scale_height = height / raw_height;
-
-		let draw_width = raw_width * scale_width;
-		let draw_height = raw_height * scale_height;
+		let img = Image::from_rgba8(image.to_rgba8().into_raw(), image.width(), image.height());
 
 		// Build combined transform: rotate first, then translate.
 		// Negate rotation because flipping Y axis reverses rotation direction.
@@ -294,9 +258,9 @@ impl Exporter for SurfaceExporter<'_, '_> {
 		self.push_depth += 1;
 
 		// Draw the image centered at the origin.
-		let _ = self.surface().draw_image(
+		self.surface().draw_image(
 			img,
-			Size::from_wh(draw_width, draw_height).expect("Invalid image size"),
+			Size::from_wh(width, height).expect("Invalid image size"),
 		);
 
 		self.surface().pop();
