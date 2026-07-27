@@ -245,6 +245,7 @@ impl Exporter for SurfaceExporter<'_, '_> {
 		let rad = angle_deg.to_radians();
 		let c = rad.cos();
 		let s = rad.sin();
+
 		let transform = Transform::from_row(
 			c,
 			-s,
@@ -448,10 +449,8 @@ fn export_shape_to_surface<'a>(
 
 /// Build a krilla Document and render the shape onto a page.
 pub fn write_to_pdf_with_options(shape: &Shape, options: PDFOptions) -> Result<Vec<u8>, PDFError> {
-	let (width, height) = options.size.unwrap_or_else(|| {
-		let bb = shape.local_bounding_box();
-		(bb.width(), bb.height())
-	});
+	let bb = shape.local_bounding_box();
+	let (width, height) = options.size.unwrap_or_else(|| (bb.width(), bb.height()));
 
 	let mut document = Document::new();
 	let mut page =
@@ -459,13 +458,10 @@ pub fn write_to_pdf_with_options(shape: &Shape, options: PDFOptions) -> Result<V
 
 	let mut surface = page.surface();
 
-	// Center the shape on the page.
-	let translation = Translation2::new(0., height);
-	let parent_transform = nalgebra::convert(translation);
+	let p = bb.bottom_left();
 
-	// Collect shape data then replay onto the surface.
-	// The surface reference is scoped inside export_shape_to_surface,
-	// so it's released here and we can safely call finish().
+	let parent_transform = nalgebra::convert(Translation2::new(-p.x, -p.y));
+
 	export_shape_to_surface(
 		&mut surface,
 		shape,
