@@ -10,8 +10,8 @@ mod dessin_macro;
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
 use syn::{
-	parse_macro_input, punctuated::Punctuated, spanned::Spanned as _, DataStruct, DeriveInput,
-	Fields, FieldsNamed, Ident, Token, Type,
+	parse::Parse, parse_macro_input, punctuated::Punctuated, spanned::Spanned as _, DataStruct,
+	DeriveInput, Fields, FieldsNamed, Ident, Token, Type,
 };
 
 /// Entry point to build drawings
@@ -34,6 +34,70 @@ pub fn dessin(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 	let dessin = parse_macro_input!(tokens as dessin_macro::Dessin);
 
 	TokenStream::from(dessin).into()
+}
+
+struct Do {
+	_do_ident: Token![do],
+	_eq: Token![=],
+	call: syn::Expr,
+}
+impl Parse for Do {
+	fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+		Ok(Do {
+			_do_ident: input.parse()?,
+			_eq: input.parse()?,
+			call: input.parse()?,
+		})
+	}
+}
+
+mod kw {
+	syn::custom_keyword!(skip);
+	syn::custom_keyword!(into);
+	syn::custom_keyword!(bool);
+	syn::custom_keyword!(some);
+	syn::custom_keyword!(option_fn);
+}
+
+enum ShapeArg {
+	Skip(proc_macro2::Span),
+	Into(proc_macro2::Span),
+	Bool(proc_macro2::Span),
+	Some(proc_macro2::Span),
+	OptionFn(proc_macro2::Span),
+	Do(Do),
+}
+impl Parse for ShapeArg {
+	fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+		if let Ok(do_call) = input.parse::<Do>() {
+			return Ok(ShapeArg::Do(do_call));
+		}
+
+		if let Ok(value) = input.parse::<kw::skip>() {
+			return Ok(ShapeArg::Skip(value.span()));
+		}
+
+		if let Ok(value) = input.parse::<kw::into>() {
+			return Ok(ShapeArg::Into(value.span()));
+		}
+
+		if let Ok(value) = input.parse::<kw::bool>() {
+			return Ok(ShapeArg::Bool(value.span()));
+		}
+
+		if let Ok(value) = input.parse::<kw::some>() {
+			return Ok(ShapeArg::Some(value.span()));
+		}
+
+		if let Ok(value) = input.parse::<kw::option_fn>() {
+			return Ok(ShapeArg::OptionFn(value.span()));
+		}
+
+		Err(syn::Error::new(
+			input.span(),
+			"Unknown attribute `{}`. Exect `skip`, `into`, `bool`, `some` or `option_fn`",
+		))
+	}
 }
 
 /// Auto implements setter for each members
@@ -126,6 +190,7 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 				let mut boolean: Option<_> = None;
 				let mut some: Option<_> = None;
 				let mut option_fn: Option<_> = None;
+				let mut do_call: Option<_> = None;
 
 				let mut doc = None;
 
@@ -147,9 +212,11 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 						return quote! {};
 					}
 
+
+
 					if attr.path().is_ident("shape") {
 						let Ok(nested) = attr
-							.parse_args_with(Punctuated::<Ident, Token![,]>::parse_terminated) else {
+							.parse_args_with(Punctuated::<ShapeArg, Token![,]>::parse_terminated) else {
 								return quote_spanned! {
 									attr.span() =>
 									compile_error!("shape attribute expect a comma separated list of args from `skip`, `into`, `bool`, `some`, and `option_fn`")
@@ -157,26 +224,15 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 							};
 
 						for value in nested {
-							if value == Ident::new("skip", value.span()) {
-								skip = Some(value.span());
-							} else if value == Ident::new("into", value.span()) {
-								into = Some(value.span());
-							} else if value == Ident::new("bool", value.span()) {
-								boolean = Some(value.span());
-							} else if value == Ident::new("some", value.span()) {
-								some = Some(value.span());
-							} else if value == Ident::new("option_fn", value.span()) {
-								option_fn = Some(value.span());
-							} else {
-								let err = syn::Error::new(value.span(), format!("Unknown attribute `{}`. Exect `skip`, `into`, `bool`, `some` or `option_fn`", value)).to_compile_error();
-
-								return quote_spanned! {
-									value.span() =>
-									#err
-								}
+							match value {
+								ShapeArg::Skip(span) => skip = Some(span),
+								ShapeArg::Into(span) => into = Some(span),
+								ShapeArg::Bool(span) => boolean = Some(span),
+								ShapeArg::Some(span) => some = Some(span),
+								ShapeArg::OptionFn(span) => option_fn = Some(span),
+								ShapeArg::Do (Do {call, ..}) => do_call = Some(call),
 							}
 						}
-
 					}
 				}
 
@@ -195,6 +251,17 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
 				let with_ident = Ident::new(&format!("with_{ident}"), field.span());
 
+				let do_call = if let Some(do_call) = do_call {
+					// let do_call = do_call.to_string();
+
+					quote! {
+						#do_call;
+					}
+				} else {
+					quote! {}
+				};
+
+
 				let generated_tokens = match (
 					into,
 					boolean,
@@ -206,6 +273,7 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 							#[inline]
 							pub fn #ident(&mut self, value: #ty) -> &mut Self {
 								self.#ident = value;
+								#do_call
 								self
 							}
 
@@ -213,6 +281,7 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 							#[inline]
 							pub fn #with_ident(mut self, value: #ty) -> Self {
 								self.#ident(value);
+								#do_call
 								self
 							}
 						)
@@ -224,6 +293,7 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 							#[inline]
 							pub fn #ident(&mut self) -> &mut Self {
 								self.#ident = true;
+								#do_call
 								self
 							}
 
@@ -231,6 +301,7 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 							#[inline]
 							pub fn #with_ident(mut self) -> Self {
 								self.#ident();
+								#do_call
 								self
 							}
 						)
@@ -248,6 +319,7 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 							#[inline]
 							pub fn #ident<__INTO__T: Into<#ty>>(&mut self, value: __INTO__T) -> &mut Self {
 								self.#ident = value.into();
+								#do_call
 								self
 							}
 
@@ -255,6 +327,7 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 							#[inline]
 							pub fn #with_ident<__INTO__T: Into<#ty>>(mut self, value: __INTO__T) -> Self {
 								self.#ident(value);
+								#do_call
 								self
 							}
 						)
@@ -290,6 +363,7 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 							#[inline]
 							pub fn #ident(&mut self, value: #ty) -> &mut Self {
 								self.#ident = Some(value);
+								#do_call
 								self
 							}
 
@@ -297,6 +371,7 @@ pub fn shape(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 							#[inline]
 							pub fn #with_ident(mut self, value: #ty) -> Self {
 								self.#ident(value);
+								#do_call
 								self
 							}
 						)

@@ -6,9 +6,9 @@ use std::{f32::consts::PI, fs};
 fn main() {
 	let thick_arc: Shape = dessin!([*ThickArc(
 		// chooses a radius of 10 for the outer curve
-		outer_radius = 10.,
+		outer_radius = 10f32,
 		// chooses a radius of 5 for the inner curve
-		inner_radius = 5.,
+		inner_radius = 5f32,
 		// chooses an angle of PI to show the area of the thick arc (which depends of the 2 curve and this angle)
 		span_angle = PI,
 		// paints the inside of the thick arc in yellow

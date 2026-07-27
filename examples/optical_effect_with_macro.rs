@@ -8,8 +8,8 @@ fn main() {
 	let optical_effect: Shape = dessin!([
 		for n in 0..11 {
 			dessin!([*ThickArc(
-				outer_radius = 10.,
-				inner_radius = 0.,
+				outer_radius = 10f32,
+				inner_radius = 0f32,
 				span_angle = PI / 10_f32,
 				fill = Srgba::new(0.0, 0.0, 0.0, 1.0),
 				// chooses a rotation of (n*PI)/5 radians in the trigonometric direction

@@ -5,7 +5,7 @@ use std::{f32::consts::PI, fs};
 
 fn main() {
 	let arc: Shape = dessin!([*Arc(
-		start_angle = 0.,
+		start_angle = 0f32,
 		end_angle = PI / 4.,
 		// creates a margin with a width of 0.1
 		stroke = Stroke::new_solid(Srgb::new(0.0, 0.196, 0.291), 0.1),

@@ -22,9 +22,9 @@ fn main() {
 
 		large_half_circle.start_angle(PI / 2_f32);
 
-		large_half_circle.outer_radius(20.);
+		large_half_circle.outer_radius(20f32);
 
-		large_half_circle.inner_radius(0.);
+		large_half_circle.inner_radius(0f32);
 
 		large_half_circle.span_angle(PI);
 
@@ -51,9 +51,9 @@ fn main() {
 
 		little_half_circle.start_angle(PI / 2_f32);
 
-		little_half_circle.outer_radius(10.);
+		little_half_circle.outer_radius(10f32);
 
-		little_half_circle.inner_radius(0.);
+		little_half_circle.inner_radius(0f32);
 
 		little_half_circle.span_angle(PI);
 

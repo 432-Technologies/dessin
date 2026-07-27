@@ -13,8 +13,8 @@ fn main() {
 				*ThickArc(
 					// it starts at an angle of 90°
 					start_angle = PI / 2_f32,
-					outer_radius = 20.,
-					inner_radius = 0.,
+					outer_radius = 20f32,
+					inner_radius = 0f32,
 					span_angle = PI,
 					//here, alpha is not needed (= 1.0), so we can replace Srgba by Srgb (without alpha)
 					fill = Srgba::new(1.0, 0.0, 0.0, 1.0),
@@ -34,8 +34,8 @@ fn main() {
 				*ThickArc(
 					// it starts at an angle of 90°
 					start_angle = PI / 2_f32,
-					outer_radius = 10.,
-					inner_radius = 0.,
+					outer_radius = 10f32,
+					inner_radius = 0f32,
 					span_angle = PI,
 					fill = Srgba::new(1.0, 1.0, 1.0, 1.0),
 					translate = [0., 10.],

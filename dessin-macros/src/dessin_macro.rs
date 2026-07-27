@@ -653,7 +653,7 @@ fn if_complex() {
 }
 #[test]
 fn if_chain() {
-	let dessin = syn::parse_str::<Dessin>(
+	let _dessin = syn::parse_str::<Dessin>(
 		"if let Some(v) = v && v == x.0 {
 			{ circle } > ()
 		}",
@@ -662,7 +662,7 @@ fn if_chain() {
 }
 #[test]
 fn if_if_group() {
-	let dessin = syn::parse_str::<Dessin>(
+	let _dessin = syn::parse_str::<Dessin>(
 		"[
 			{ circle }(),
 			if test_fn() == 2 {

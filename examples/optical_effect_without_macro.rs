@@ -32,9 +32,9 @@ fn main() {
 	for n in 0..11 {
 		let mut optical_effect = Style::new(optical_effect.clone());
 
-		optical_effect.inner_radius(0.);
+		optical_effect.inner_radius(0f32);
 
-		optical_effect.outer_radius(10.);
+		optical_effect.outer_radius(10f32);
 
 		optical_effect.span_angle(PI / 10_f32);
 

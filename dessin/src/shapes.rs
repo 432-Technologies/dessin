@@ -534,7 +534,7 @@ pub enum Shape {
 	/// Image
 	Image(Image),
 	/// Text
-	Text(Text),
+	Text(TextShape),
 	/// Curve
 	Curve(Curve),
 	/// Shape whose body is generated only during export.

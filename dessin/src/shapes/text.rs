@@ -1,141 +1,11 @@
 /// Font storage
 pub mod font;
 
-use std::ops::Add;
-
 use crate::prelude::*;
 use font::FontRef;
 pub use fontdb::{Style as FontStyle, Weight as FontWeight};
 use na::{Point2, Unit, Vector2};
-use nalgebra::{self as na, Transform2, Translation2};
-
-pub(crate) struct TextSize<'a> {
-	font_ref: font::FontRef,
-	weight: FontWeight,
-	style: FontStyle,
-	text: &'a str,
-	font_size: f32,
-	line_height_scale: f32,
-}
-impl<'a> TextSize<'a> {
-	pub(crate) fn new(font_ref: font::FontRef) -> Self {
-		Self {
-			font_ref,
-			weight: FontWeight::NORMAL,
-			style: FontStyle::Normal,
-			text: "",
-			font_size: 10.,
-			line_height_scale: 1.,
-		}
-	}
-	pub(crate) fn weight(mut self, weight: FontWeight) -> Self {
-		self.weight = weight;
-		self
-	}
-	pub(crate) fn style(mut self, style: FontStyle) -> Self {
-		self.style = style;
-		self
-	}
-	pub(crate) fn font_size(mut self, font_size: f32) -> Self {
-		self.font_size = font_size;
-		self
-	}
-	pub(crate) fn line_height_scale(mut self, line_height_scale: f32) -> Self {
-		self.line_height_scale = line_height_scale;
-		self
-	}
-	pub(crate) fn text(mut self, text: &'a str) -> Self {
-		self.text = text;
-		self
-	}
-	pub(crate) fn set_text(&mut self, text: &'a str) {
-		self.text = text;
-	}
-	pub(crate) fn compute_width(&self) -> Option<TextRun> {
-		font::font_holder_mut(|v| {
-			let font_system = &mut v.0;
-
-			let mut buffer = cosmic_text::Buffer::new(
-				font_system,
-				cosmic_text::Metrics::relative(self.font_size, self.line_height_scale),
-			);
-
-			buffer.set_text(
-				self.text,
-				&cosmic_text::Attrs {
-					family: fontdb::Family::Name(&*self.font_ref.family),
-					weight: self.weight,
-					style: self.style,
-					..cosmic_text::Attrs::new()
-				},
-				cosmic_text::Shaping::Advanced,
-				None,
-			);
-
-			buffer.shape_until_scroll(font_system, true);
-			buffer.layout_runs().next().map(|v| TextRun {
-				line_y: v.line_y,
-				line_top: v.line_top,
-				line_height: v.line_height,
-				line_w: v.line_w,
-			})
-		})
-	}
-}
-
-pub(crate) struct TextRun {
-	/// Y offset to baseline of line
-	pub line_y: f32,
-	/// Y offset to top of line
-	pub line_top: f32,
-	/// Y offset to next line
-	pub line_height: f32,
-	/// Width of line
-	pub line_w: f32,
-}
-impl TextRun {
-	pub fn bounding_box(self, baseline_y: f32) -> BoundingBox<Straight> {
-		let TextRun {
-			line_y,
-			line_top,
-			line_height,
-			line_w,
-		} = self;
-
-		// In cosmic_text (Y down):
-		// - line_top is the Y position of the top of the line (smaller = higher)
-		// - line_y is the Y position of the baseline
-		// - line_height is the distance to the next baseline
-		//
-		// Distances from baseline:
-		// - Ascender height (baseline to top) = line_y - line_top
-		// - Descender height (baseline to bottom) ≈ line_height - (line_y - line_top)
-		//
-		// In dessin (Y up), with baseline at baseline_y:
-		// - Top of text = baseline_y + (line_y - line_top)  // above baseline
-		// - Bottom of text = baseline_y - (line_height - (line_y - line_top))  // below baseline
-		let ascender = line_y - line_top;
-		let descender = line_height - ascender;
-		let top = baseline_y + ascender;
-		let bottom = baseline_y - descender;
-
-		BoundingBox::mins_maxs(0., bottom, line_w, top)
-	}
-}
-impl Add for TextRun {
-	type Output = Self;
-	fn add(self, rhs: Self) -> Self::Output {
-		assert_eq!(self.line_y, rhs.line_y); // Weird if not true 🤔
-		assert_eq!(self.line_height, rhs.line_height); // Weird if not true 🤔
-
-		TextRun {
-			line_y: self.line_y,
-			line_top: self.line_top.min(rhs.line_top),
-			line_height: self.line_height,
-			line_w: self.line_w + rhs.line_w,
-		}
-	}
-}
+use nalgebra::{self as na, Transform2};
 
 /// TextAlign
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
@@ -159,28 +29,6 @@ pub enum TextVerticalAlign {
 	Center,
 	/// Top
 	Top,
-}
-
-///
-pub struct TextPosition<'a> {
-	///
-	pub text: &'a str,
-	///
-	pub align: TextAlign,
-	///
-	pub weight: FontWeight,
-	///
-	pub style: FontStyle,
-	///
-	pub on_curve: Option<CurvePosition>,
-	///
-	pub font_size: f32,
-	///
-	pub reference_start: Point2<f32>,
-	///
-	pub direction: Unit<Vector2<f32>>,
-	///
-	pub font: FontRef,
 }
 
 #[derive(Debug, Clone, PartialEq, Shape)]
@@ -231,91 +79,194 @@ impl Default for Text {
 		}
 	}
 }
-impl Text {
-	///
-	pub fn position<'a>(&'a self, parent_transform: &Transform2<f32>) -> TextPosition<'a> {
-		let transform = self.global_transform(parent_transform);
 
-		let font_size = self.font_size * (transform * Vector2::new(0., 1.)).magnitude();
-		let reference_start = transform
-			* Point2::new(
-				0.,
-				match self.vertical_align {
-					TextVerticalAlign::Bottom => 0.,
-					TextVerticalAlign::Center => -font_size / 2.,
-					TextVerticalAlign::Top => -font_size,
-				},
+impl From<Text> for Shape {
+	fn from(
+		Text {
+			local_transform,
+			text,
+			align,
+			vertical_align,
+			weight,
+			style,
+			on_curve,
+			font_size,
+			font,
+		}: Text,
+	) -> Self {
+		let Some(font_ref) = FontRef::or_default(font.clone()) else {
+			return Default::default();
+		};
+
+		let size = font::font_holder_mut(|v| {
+			let font_system = &mut v.0;
+
+			let mut buffer = cosmic_text::Buffer::new(
+				font_system,
+				cosmic_text::Metrics::relative(font_size, 1.),
 			);
 
-		TextPosition {
+			buffer.set_text(
+				&text,
+				&cosmic_text::Attrs {
+					family: fontdb::Family::Name(&*font_ref.family),
+					weight,
+					style,
+					..cosmic_text::Attrs::new()
+				},
+				cosmic_text::Shaping::Advanced,
+				None,
+			);
+
+			buffer.shape_until_scroll(font_system, true);
+			let cosmic_text::LayoutRun {
+				line_y,
+				line_top,
+				line_height,
+				line_w,
+				..
+			} = buffer.layout_runs().next()?;
+
+			// In cosmic_text (Y down):
+			// - line_top is the Y position of the top of the line (smaller = higher)
+			// - line_y is the Y position of the baseline
+			// - line_height is the distance to the next baseline
+			//
+			// Distances from baseline:
+			// - Ascender height (baseline to top) = line_y - line_top
+			// - Descender height (baseline to bottom) ≈ line_height - (line_y - line_top)
+			//
+			// In dessin (Y up), with baseline at baseline_y:
+			// - Top of text = baseline_y + (line_y - line_top)  // above baseline
+			// - Bottom of text = baseline_y - (line_height - (line_y - line_top))  // below baseline
+			let ascender = line_y - line_top;
+			let descender = line_height - ascender;
+
+			Some((line_w, ascender - descender))
+		});
+
+		let Some((width, height)) = size else {
+			return Default::default();
+		};
+
+		Shape::Text(TextShape {
+			local_transform,
+			text,
+			align,
+			vertical_align,
+			weight,
+			style,
+			on_curve,
+			font_size,
+			font,
+			width,
+			height,
+		})
+	}
+}
+
+///
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextShape {
+	///
+	pub local_transform: Transform2<f32>,
+
+	///
+	pub text: String,
+
+	///
+	pub align: TextAlign,
+
+	///
+	pub vertical_align: TextVerticalAlign,
+
+	///
+	pub weight: FontWeight,
+	///
+	pub style: FontStyle,
+
+	///
+	pub on_curve: Option<Curve>,
+
+	///
+	pub font_size: f32,
+
+	///
+	pub font: Option<FontRef>,
+
+	pub width: f32,
+	pub height: f32,
+}
+impl TextShape {
+	pub fn position<'a>(&'a self, parent_transform: &Transform2<f32>) -> Option<TextPosition<'a>> {
+		let font = FontRef::or_default(self.font.clone())?;
+		let bb = self.global_bounding_box(parent_transform);
+
+		let transform = parent_transform * self.local_transform;
+
+		let font_size = self.font_size * (transform * Vector2::new(0., 1.)).magnitude();
+
+		Some(TextPosition {
 			text: &self.text,
 			align: self.align,
 			weight: self.weight,
 			style: self.style,
 			on_curve: self.on_curve.as_ref().map(|v| v.position(&transform)),
 			font_size,
-			reference_start,
+			reference_start: bb.bottom_left,
 			direction: Unit::new_normalize(transform * Vector2::new(1., 0.)),
-			font: FontRef::or_default(self.font.clone()).unwrap(),
-		}
+			font,
+		})
 	}
 }
+impl ShapeOp for TextShape {
+	fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
+		self.local_transform = transform_matrix * self.local_transform;
+		self
+	}
 
-impl From<Text> for Shape {
-	fn from(v: Text) -> Self {
-		Shape::Text(v)
+	fn local_transform(&self) -> &Transform2<f32> {
+		&self.local_transform
 	}
 }
-
-impl ShapeBoundingBox for Text {
+impl ShapeBoundingBox for TextShape {
 	fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
-		let Some(font_ref) = self
-			.font
-			.as_ref()
-			.or_else(|| crate::font::default_font())
-			.cloned()
-		else {
-			return BoundingBox::zero().as_unparticular();
+		let (min_x, max_x) = match self.align {
+			TextAlign::Left => (0., self.width),
+			TextAlign::Center => (-self.width / 2., self.width / 2.),
+			TextAlign::Right => (-self.width, 0.),
 		};
 
-		let Some(text_run) = TextSize::new(font_ref)
-			.font_size(self.font_size)
-			.text(&self.text)
-			.weight(self.weight)
-			.style(self.style)
-			.compute_width()
-		else {
-			return BoundingBox::zero().as_unparticular();
+		let (min_y, max_y) = match self.vertical_align {
+			TextVerticalAlign::Bottom => (0., self.height),
+			TextVerticalAlign::Center => (-self.height / 2., self.height / 2.),
+			TextVerticalAlign::Top => (-self.height, 0.),
 		};
 
-		let TextRun {
-			line_y,
-			line_top,
-			line_height,
-			line_w,
-		} = text_run;
-
-		// Baseline Y offset matches `position()` - the text baseline is NOT at the origin
-		let baseline_y = match self.vertical_align {
-			TextVerticalAlign::Bottom => self.font_size / 2.,
-			TextVerticalAlign::Center => 0.,
-			TextVerticalAlign::Top => -self.font_size / 2.,
-		};
-
-		let base_bb = text_run.bounding_box(baseline_y);
-
-		match self.align {
-			TextAlign::Left => base_bb.as_unparticular(),
-			TextAlign::Center => base_bb.transform(&nalgebra::convert(Translation2::new(
-				-base_bb.width() / 2.,
-				0.,
-			))),
-			TextAlign::Right => {
-				base_bb.transform(&nalgebra::convert(Translation2::new(-base_bb.width(), 0.)))
-			}
-		}
-		.transform(self.local_transform())
+		BoundingBox::mins_maxs(min_x, min_y, max_x, max_y).transform(&self.local_transform)
 	}
+}
+
+///
+pub struct TextPosition<'a> {
+	///
+	pub text: &'a str,
+	///
+	pub align: TextAlign,
+	///
+	pub weight: FontWeight,
+	///
+	pub style: FontStyle,
+	///
+	pub on_curve: Option<CurvePosition>,
+	///
+	pub font_size: f32,
+	///
+	pub reference_start: Point2<f32>,
+	///
+	pub direction: Unit<Vector2<f32>>,
+	///
+	pub font: FontRef,
 }
 
 #[cfg(test)]

@@ -1,5 +1,5 @@
 use dessin::prelude::*;
-use palette::{Srgb, Srgba};
+use palette::Srgba;
 use project_root::get_project_root;
 use std::fs;
 

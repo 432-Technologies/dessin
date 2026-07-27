@@ -153,7 +153,6 @@
 //! ## Implement own export format.
 //! Documentation can be found in the [`export`] module.
 
-#![warn(missing_docs)]
 #![allow(clippy::tabs_in_doc_comments)]
 
 // We need this in order for the proc_macro to work in this library.

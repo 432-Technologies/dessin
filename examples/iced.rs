@@ -7,6 +7,10 @@ use iced::{
 use palette::rgb::Rgba;
 
 fn main() {
+	if std::env::var("NO_ICED") == Ok("1".to_string()) {
+		return;
+	}
+
 	iced::application(boot, update, view).run().unwrap();
 }
 

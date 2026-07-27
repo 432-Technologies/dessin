@@ -12,13 +12,15 @@ struct RotatedText {
 }
 impl From<RotatedText> for Shape {
 	fn from(RotatedText { text, rotation }: RotatedText) -> Self {
-		let text = dessin!(*Text(
-			fill = Srgb::<f32>::from_format(named::BLACK).into_linear(),
-			font_size = 1.,
-			align = TextAlign::Center,
-			vertical_align = TextVerticalAlign::Top,
-			{ text },
-		));
+		let text = dessin!(
+			*Text(
+				fill = Srgb::<f32>::from_format(named::BLACK).into_linear(),
+				font_size = 1.,
+				align = TextAlign::Center,
+				vertical_align = TextVerticalAlign::Top,
+				{ text },
+			) > ()
+		);
 
 		let bb = text.local_bounding_box();
 		let width = bb.width();

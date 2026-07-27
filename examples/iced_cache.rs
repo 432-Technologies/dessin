@@ -5,11 +5,14 @@ use iced::{
 	Background, Color, Element, Renderer,
 };
 use palette::rgb::Rgba;
-use std::fs;
 
 type App = (CachedDessin<Renderer>, CachedDessin<Renderer>);
 
 fn main() {
+	if std::env::var("NO_ICED") == Ok("1".to_string()) {
+		return;
+	}
+
 	iced::application(boot, update, view).run().unwrap();
 }
 
