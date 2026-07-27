@@ -215,18 +215,28 @@ impl Exporter for SurfaceExporter<'_, '_> {
 		self.surface().push_isolated();
 		self.push_depth += 1;
 
-		// Set fill.
+		// Set fill. Explicitly reset to None if not provided,
+		// because krilla's set_fill/set_stroke persist globally
+		// and aren't reset when an isolated group is popped.
 		if let Some(ref f) = fill {
 			if let Some(krilla_fill) = to_krilla_fill(f) {
 				self.surface().set_fill(Some(krilla_fill));
+			} else {
+				self.surface().set_fill(None);
 			}
+		} else {
+			self.surface().set_fill(None);
 		}
 
 		// Set stroke.
 		if let Some(ref s) = stroke {
 			if let Some(krilla_stroke) = to_krilla_stroke(s) {
 				self.surface().set_stroke(Some(krilla_stroke));
+			} else {
+				self.surface().set_stroke(None);
 			}
+		} else {
+			self.surface().set_stroke(None);
 		}
 
 		Ok(())
