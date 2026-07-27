@@ -30,18 +30,20 @@ fn main() {
 
 	let bb = layout.local_bounding_box();
 
-	let dessin = dessin!([
-		*Curve(
-			then = bb.top_left(),
-			then = bb.top_right(),
-			then = bb.bottom_right(),
-			then = bb.bottom_left(),
-			closed,
-			stroke = (Srgb::new(1., 0., 0.), 0.1),
-		),
-		{ layout },
-		*Circle(radius = 0.5, fill = Srgb::new(0., 0., 1.),),
-	]);
+	let dessin = dessin!(
+		[
+			*Curve(
+				then = bb.top_left(),
+				then = bb.top_right(),
+				then = bb.bottom_right(),
+				then = bb.bottom_left(),
+				closed,
+				stroke = (Srgb::new(1., 0., 0.), 0.1),
+			),
+			{ layout },
+			*Circle(radius = 0.5, fill = Srgb::new(0., 0., 1.),),
+		] > (scale = [10., 10.])
+	);
 
 	fs::write(
 		get_project_root().unwrap().join("examples/out/font.pdf"),

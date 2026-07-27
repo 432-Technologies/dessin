@@ -13,7 +13,7 @@ use krilla::{
 	paint::{
 		Fill as KrillaFill, FillRule, LineCap, LineJoin, Paint, Stroke as KrillaStroke, StrokeDash,
 	},
-	text::{Font, TextDirection},
+	text::{Font, Tag, TextDirection},
 	Document,
 };
 use nalgebra::{Transform2, Translation2};
@@ -45,8 +45,8 @@ pub enum PDFError {
 	WriteError(#[source] fmt::Error),
 }
 
-/// Mapping from FontRef to krilla Font.
-type PDFFontHolder = HashMap<FontRef, Font>;
+/// Mapping from (FontRef, weight, style) to krilla Font.
+type PDFFontHolder = HashMap<(FontRef, font::fontdb::Weight, font::fontdb::Style), Font>;
 
 #[derive(Default)]
 pub struct PDFOptions {
@@ -368,12 +368,16 @@ impl Exporter for SurfaceExporter<'_, '_> {
 			reference_start,
 			direction,
 			font,
+			weight,
+			style,
 			..
 		}: TextPosition,
 		StylePosition { .. }: StylePosition,
 	) -> Result<(), Self::Error> {
-		// Load or reuse font.
-		let krilla_font = if let Some(existing) = self.used_font.get(&font) {
+		// Load or reuse font, keyed by (font, weight, style) so that
+		// different variations of the same variable font are cached separately.
+		let cache_key = (font.clone(), weight, style);
+		let krilla_font = if let Some(existing) = self.used_font.get(&cache_key) {
 			existing.clone()
 		} else {
 			let (source, _) = font::font_holder(|v| v.0.db().face_source(font.id))
@@ -387,9 +391,19 @@ impl Exporter for SurfaceExporter<'_, '_> {
 				}
 			};
 
-			let k_font = Font::new(bytes.into(), 0)
+			// Set up variation axes for variable fonts.
+			let italic_value = if style == font::fontdb::Style::Italic {
+				1.0
+			} else {
+				0.0
+			};
+			let var_coords = [
+				(Tag::new(b"wght"), weight.0 as f32),
+				(Tag::new(b"ital"), italic_value),
+			];
+			let k_font = Font::new_variable(bytes.into(), 0, &var_coords)
 				.ok_or_else(|| PDFError::CantParseFont(font.family.to_string()))?;
-			self.used_font.insert(font.clone(), k_font.clone());
+			self.used_font.insert(cache_key, k_font.clone());
 			k_font
 		};
 
