@@ -45,13 +45,21 @@ fn main() {
 
 	fs::write(
 		get_project_root().unwrap().join("examples/out/font.pdf"),
-		dessin_pdf::to_pdf_bytes(&dessin).unwrap(),
+		dessin_pdf::to_pdf(&dessin).unwrap(),
 	)
 	.unwrap();
 
 	fs::write(
 		get_project_root().unwrap().join("examples/out/font.svg"),
-		dessin_svg::to_string(&dessin).unwrap(),
+		dessin_svg::to_string_with_options(
+			&dessin,
+			dessin_svg::SVGOptions {
+				viewport: dessin_svg::ViewPort::AutoBoundingBox,
+				skip_svg_tag: false,
+				embed_fonts: true,
+			},
+		)
+		.unwrap(),
 	)
 	.unwrap();
 }

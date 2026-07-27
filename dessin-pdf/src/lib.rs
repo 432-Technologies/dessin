@@ -140,41 +140,69 @@ fn image_from_bytes(data: &[u8]) -> Result<Image, PDFError> {
 	))
 }
 
-pub struct PDFExporter<'a> {
-	/// Stored as a raw pointer to avoid borrow-checker conflicts with
-	/// `Surface::Drop`. Safe because the surface always outlives the exporter.
-	surface: *mut krilla::surface::Surface<'a>,
+/// Collects shape data for later replay onto a krilla surface.
+/// Avoids storing `&mut Surface` so the surface reference can be released
+/// before calling `surface.finish()`.
+pub struct PDFExporter {
+	shape: Shape,
+	parent_transform: Transform2<f32>,
+	style: StylePosition,
 	used_font: PDFFontHolder,
-	/// Stack depth tracking for push/pop balance.
-	push_depth: usize,
 }
 
-impl<'a> PDFExporter<'a> {
+/// Runtime exporter that draws onto a krilla surface.
+/// The surface is provided as `&mut` and borrowed only during export.
+struct SurfaceExporter<'a, 's> {
+	surface: &'s mut krilla::surface::Surface<'a>,
+	used_font: PDFFontHolder,
+	push_depth: usize,
+	page_height_pt: f32,
+}
+
+impl PDFExporter {
+	/// Collect shape data for later replay onto a krilla surface.
 	pub fn new_with_font(
-		surface: &'a mut krilla::surface::Surface<'a>,
+		shape: Shape,
+		parent_transform: Transform2<f32>,
+		style: StylePosition,
 		used_font: PDFFontHolder,
 	) -> Self {
 		PDFExporter {
-			surface: surface as *mut _,
+			shape,
+			parent_transform,
+			style,
 			used_font,
-			push_depth: 0,
 		}
 	}
 
-	pub fn new(surface: &'a mut krilla::surface::Surface<'a>) -> Self {
-		PDFExporter::new_with_font(surface, HashMap::default())
-	}
+	/// Replay the collected shape onto a krilla surface.
+	pub fn apply(
+		self,
+		surface: &mut krilla::surface::Surface<'_>,
+		page_height_pt: f32,
+	) -> Result<(), PDFError> {
+		let mut exporter = SurfaceExporter {
+			surface,
+			used_font: self.used_font,
+			push_depth: 0,
+			page_height_pt,
+		};
 
-	/// Get a mutable reference to the underlying surface.
-	/// # Safety
-	/// The surface is guaranteed to be valid for the lifetime `'a` because
-	/// it's created before the exporter and dropped after.
-	fn surface(&mut self) -> &mut krilla::surface::Surface<'a> {
-		unsafe { &mut *self.surface }
+		self.shape
+			.write_into_exporter(&mut exporter, &self.parent_transform, self.style)?;
+
+		Ok(())
 	}
 }
 
-impl Exporter for PDFExporter<'_> {
+impl<'a, 's> SurfaceExporter<'a, 's> {
+	/// Get a mutable reference to the underlying surface.
+	fn surface(&mut self) -> &mut krilla::surface::Surface<'a> {
+		&mut self.surface
+	}
+}
+
+impl Exporter for SurfaceExporter<'_, '_> {
 	type Error = PDFError;
 
 	const CAN_EXPORT_ELLIPSE: bool = false;
@@ -237,16 +265,20 @@ impl Exporter for PDFExporter<'_> {
 		let draw_width = raw_width * scale_width;
 		let draw_height = raw_height * scale_height;
 
-		// Flip Y for krilla's top-left origin.
-		let target_y = -bottom_left.y;
-
 		// Build combined transform: rotate first, then translate.
-		// Matrix = [cos(-θ), -sin(-θ), sin(-θ), cos(-θ), tx, ty]
+		// Negate rotation because flipping Y axis reverses rotation direction.
 		let angle_deg = -rotation.to_degrees();
 		let rad = angle_deg.to_radians();
 		let c = rad.cos();
 		let s = rad.sin();
-		let transform = Transform::from_row(c, -s, s, c, bottom_left.x, target_y);
+		let transform = Transform::from_row(
+			c,
+			-s,
+			s,
+			c,
+			bottom_left.x,
+			self.page_height_pt - bottom_left.y,
+		);
 
 		self.surface().push_transform(&transform);
 		self.push_depth += 1;
@@ -275,7 +307,7 @@ impl Exporter for PDFExporter<'_> {
 		for keypoint in curve.keypoints {
 			match keypoint {
 				KeypointPosition::Point(p) => {
-					let pt = Point::from_xy(p.x, -p.y); // Flip Y.
+					let pt = Point::from_xy(p.x, self.page_height_pt - p.y);
 					if prev_point.is_none() {
 						path_builder.move_to(pt.x, pt.y);
 					} else {
@@ -289,10 +321,12 @@ impl Exporter for PDFExporter<'_> {
 					end_control,
 					end,
 				}) => {
-					let start_opt = start.map(|v| Point::from_xy(v.x, -v.y));
-					let start_control = Point::from_xy(start_control.x, -start_control.y);
-					let end_control = Point::from_xy(end_control.x, -end_control.y);
-					let end = Point::from_xy(end.x, -end.y);
+					let start_opt = start.map(|v| Point::from_xy(v.x, self.page_height_pt - v.y));
+					let start_control =
+						Point::from_xy(start_control.x, self.page_height_pt - start_control.y);
+					let end_control =
+						Point::from_xy(end_control.x, self.page_height_pt - end_control.y);
+					let end = Point::from_xy(end.x, self.page_height_pt - end.y);
 
 					if let Some(s) = start_opt {
 						if prev_point.is_none() {
@@ -361,13 +395,13 @@ impl Exporter for PDFExporter<'_> {
 
 		let rotation = direction.y.atan2(direction.x).to_degrees();
 
-		// krilla uses top-left origin; flip Y.
+		// Convert mm → pt and compute screen Y for krilla's top-left origin.
 		let target_x = reference_start.x;
-		let target_y = -reference_start.y;
+		let target_y = self.page_height_pt - reference_start.y;
 
-		// Build combined transform: rotate first, then translate.
-		// Matrix = [cos(-θ), -sin(-θ), sin(-θ), cos(-θ), tx, ty]
-		let angle_rad = -rotation.to_radians();
+		// Build combined transform: rotate + translate.
+		// krilla's draw_text handles its own Y-flip for glyph rendering.
+		let angle_rad = rotation.to_radians();
 		let c = angle_rad.cos();
 		let s = angle_rad.sin();
 		let transform = Transform::from_row(c, -s, s, c, target_x, target_y);
@@ -375,14 +409,10 @@ impl Exporter for PDFExporter<'_> {
 		self.surface().push_transform(&transform);
 		self.push_depth += 1;
 
-		// krilla's draw_text uses font size in PDF units (points).
-		// The dessin font_size is in mm, so convert: 1 mm ≈ 2.835 points.
-		let font_size_pt = font_size * 2.835;
-
 		self.surface().draw_text(
 			Point::from_xy(0.0, 0.0),
 			krilla_font,
-			font_size_pt,
+			font_size,
 			&text,
 			false,
 			TextDirection::Auto,
@@ -395,98 +425,73 @@ impl Exporter for PDFExporter<'_> {
 	}
 }
 
-/// Convert mm to PDF points (1 mm ≈ 2.835 points).
-fn mm_to_pt(mm: f32) -> f32 {
-	mm * 2.835
-}
-
-/// Export a shape onto a krilla surface. The Y-axis flip transform must
-/// already be pushed before calling this.
-///
-/// Takes a raw pointer to avoid borrow-checker conflicts with `Surface::Drop`.
-/// # Safety
-/// The surface must be valid for the duration of this call.
+/// Collect shape data then replay onto the surface.
+/// The surface reference is scoped so it's released before `surface.finish()`.
 fn export_shape_to_surface<'a>(
-	surface_ptr: *mut krilla::surface::Surface<'a>,
+	surface: &mut krilla::surface::Surface<'a>,
 	shape: &Shape,
 	parent_transform: &Transform2<f32>,
 	used_font: PDFFontHolder,
+	page_height: f32,
 ) -> Result<(), PDFError> {
-	let surface = unsafe { &mut *surface_ptr };
-	let mut exporter = PDFExporter::new_with_font(surface, used_font);
-
-	if let Shape::Style { fill, stroke, .. } = shape {
-		shape.write_into_exporter(
-			&mut exporter,
-			parent_transform,
+	let collector = {
+		// Clone shape and collect style from the top-level wrapper.
+		let cloned = shape.clone();
+		let style = if let Shape::Style { fill, stroke, .. } = &cloned {
 			StylePosition {
 				fill: fill.clone(),
 				stroke: stroke.clone(),
-			},
-		)?
-	} else {
-		shape.write_into_exporter(
-			&mut exporter,
-			parent_transform,
+			}
+		} else {
 			StylePosition {
 				fill: None,
 				stroke: None,
-			},
-		)?
-	}
+			}
+		};
+		PDFExporter::new_with_font(cloned, (*parent_transform).into(), style, used_font)
+	};
+
+	// Replay onto the surface. The surface reference is borrowed only within this scope.
+	// After this scope ends, the surface reference is released and we can call finish().
+	collector.apply(surface, page_height)?;
 
 	Ok(())
 }
 
 /// Build a krilla Document and render the shape onto a page.
 pub fn write_to_pdf_with_options(shape: &Shape, options: PDFOptions) -> Result<Vec<u8>, PDFError> {
-	let (width_mm, height_mm) = options.size.unwrap_or_else(|| {
+	let (width, height) = options.size.unwrap_or_else(|| {
 		let bb = shape.local_bounding_box();
 		(bb.width(), bb.height())
 	});
 
-	// Convert to PDF points.
-	let width_pt = mm_to_pt(width_mm);
-	let height_pt = mm_to_pt(height_mm);
-
 	let mut document = Document::new();
-	let mut page = document
-		.start_page_with(PageSettings::from_wh(width_pt, height_pt).expect("Invalid page size"));
+	let mut page =
+		document.start_page_with(PageSettings::from_wh(width, height).expect("Invalid page size"));
 
 	let mut surface = page.surface();
 
-	// Flip the Y-axis so that the coordinate system matches the dessin convention
-	// (origin at bottom-left). We do this by translating up by height_pt and
-	// scaling Y by -1.
-	let flip_y = Transform::from_row(1.0, 0.0, 0.0, -1.0, 0.0, height_pt);
-	surface.push_transform(&flip_y);
-
 	// Center the shape on the page.
-	let translation = Translation2::new(width_mm / 2.0, height_mm / 2.0);
+	let translation = Translation2::new(0., height);
 	let parent_transform = nalgebra::convert(translation);
 
-	// Export the shape into the surface. We pass a raw pointer to avoid
-	// borrow-checker conflicts with Surface::Drop.
+	// Collect shape data then replay onto the surface.
+	// The surface reference is scoped inside export_shape_to_surface,
+	// so it's released here and we can safely call finish().
 	export_shape_to_surface(
-		&mut surface as *mut _,
+		&mut surface,
 		shape,
 		&parent_transform,
 		options.used_font,
+		height,
 	)?;
 
-	// Pop the flip_y transform that we pushed at the beginning.
-	surface.pop();
 	surface.finish();
 	page.finish();
 
 	document
 		.finish()
 		.map_err(|e| PDFError::KrillaSerializeError(e.to_string()))
-}
-
-/// Render a shape to a PDF, returning the raw bytes.
-pub fn to_pdf_bytes(shape: &Shape) -> Result<Vec<u8>, PDFError> {
-	write_to_pdf_with_options(shape, PDFOptions::default())
 }
 
 /// Render a shape to a PDF with custom options, returning the raw bytes.
@@ -496,22 +501,5 @@ pub fn to_pdf_with_options(shape: &Shape, options: PDFOptions) -> Result<Vec<u8>
 
 /// Render a shape to a PDF, returning the raw bytes. Alias for `to_pdf_bytes`.
 pub fn to_pdf(shape: &Shape) -> Result<Vec<u8>, PDFError> {
-	to_pdf_bytes(shape)
-}
-
-/// Write a shape into an existing krilla document.
-///
-/// This creates a new page on the document and renders the shape onto it.
-/// Returns the raw PDF bytes after finishing the document.
-///
-/// **Deprecated:** Use [`write_to_pdf_with_options`] instead. This function
-/// kept for API compatibility but krilla doesn't support incrementally
-/// building a document like printpdf did. Instead, each call produces
-/// a complete PDF.
-#[deprecated(
-	since = "0.9.0",
-	note = "krilla doesn't support incremental document building. Use `write_to_pdf_with_options` instead."
-)]
-pub fn write_to_pdf(shape: &Shape, _doc: &mut Document) -> Result<Vec<u8>, PDFError> {
-	write_to_pdf_with_options(shape, PDFOptions::default())
+	to_pdf_with_options(shape, PDFOptions::default())
 }

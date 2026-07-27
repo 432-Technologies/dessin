@@ -131,8 +131,11 @@ impl From<TextBox> for Shape {
 
 					dessin!(Text(
 						text = run.text,
+						font = font_ref.clone(),
 						{ font_size },
 						{ align },
+						{ style },
+						{ weight },
 						translate = [0., -offset]
 					))
 				})
