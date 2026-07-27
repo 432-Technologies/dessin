@@ -117,13 +117,10 @@ where
 				curve.position(parent_transform),
 				StylePosition { fill, stroke },
 			),
-			Shape::Text(text) => {
-				if let Some(position) = text.position(parent_transform) {
-					exporter.export_text(position, StylePosition { fill, stroke })
-				} else {
-					Ok(())
-				}
-			}
+			Shape::Text(text) => exporter.export_text(
+				text.position(parent_transform),
+				StylePosition { fill, stroke },
+			),
 			Shape::Dynamic {
 				local_transform,
 				shaper,

@@ -3,13 +3,6 @@ use palette::Srgb;
 use project_root::get_project_root;
 use std::fs;
 
-fn dot(shape: impl Into<Shape>) -> Shape {
-	dessin!([
-		{ shape.into() },
-		*Circle(radius = 0.1, fill = Srgb::new(0., 0., 1.),),
-	])
-}
-
 fn main() {
 	dessin::font::add_font(include_bytes!("./AtkinsonHyperlegibleNextVF-Variable.ttf"));
 	dessin::font::set_default_font(dessin::font::get("Atkinson Hyperlegible Next VF").unwrap());
@@ -26,14 +19,7 @@ fn main() {
 		font_size = 10.
 	));
 
-	let layout = dessin!(
-		*VerticalLayout(
-			of = dot(normal_text),
-			of = dot(bold_text),
-			of = dot(italic_text),
-			// 	fill = Srgb::new(0., 0., 0.)
-		) > () // { dot(normal_text) } > ()
-	);
+	let layout = dessin!(*VerticalLayout(of = normal_text, of = bold_text, of = italic_text,) > ());
 
 	let bb = layout.local_bounding_box();
 
@@ -46,8 +32,8 @@ fn main() {
 			closed,
 			stroke = (Srgb::new(1., 0., 0.), 0.1),
 		),
-		// *Circle(radius = 0.5, fill = Srgb::new(0., 0., 1.),),
 		{ layout },
+		*Circle(radius = 0.5, fill = Srgb::new(0., 0., 1.),),
 	]);
 
 	fs::write(

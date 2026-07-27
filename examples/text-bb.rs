@@ -19,7 +19,7 @@ fn main() {
 		])
 	}
 
-	let dessin = make_dessin(TextAlign::Left, TextVerticalAlign::Bottom);
+	let dessin = make_dessin(TextAlign::Center, TextVerticalAlign::Bottom);
 
 	fs::write(
 		get_project_root().unwrap().join("examples/out/text-bb.svg"),

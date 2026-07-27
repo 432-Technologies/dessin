@@ -336,9 +336,7 @@ fn Shaper(
 			static ID: LazyLock<AtomicU32> = LazyLock::new(|| AtomicU32::new(0));
 			let id = ID.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
 
-			let Some(text) = text.position(&parent_transform) else {
-				return rsx! {};
-			};
+			let text = text.position(&parent_transform);
 
 			let font_weight = match text.weight {
 				FontWeight::LIGHT => "lighter",
@@ -358,7 +356,7 @@ fn Shaper(
 			};
 
 			let font_ref = text.font.clone();
-			let font_family = text.font.family;
+			let font_family = &text.font.family;
 
 			let x = text.reference_start.x;
 			let y = text.reference_start.y;

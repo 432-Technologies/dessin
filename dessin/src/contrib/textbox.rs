@@ -114,14 +114,18 @@ impl From<TextBox> for Shape {
 					..cosmic_text::Attrs::new()
 				},
 				cosmic_text::Shaping::Advanced,
-				None,
+				Some(match align {
+					TextAlign::Left => cosmic_text::Align::Left,
+					TextAlign::Center => cosmic_text::Align::Center,
+					TextAlign::Right => cosmic_text::Align::Right,
+				}),
 			);
 
 			buffer.shape_until_scroll(font_system, true);
 			buffer
 				.layout_runs()
 				.map(|run| {
-					let offset = run.line_i as f32 * run.line_height;
+					let offset = (run.line_i as f32 + 1.) * run.line_height;
 
 					total_height += run.line_height;
 
@@ -129,7 +133,6 @@ impl From<TextBox> for Shape {
 						text = run.text,
 						{ font_size },
 						{ align },
-						vertical_align = TextVerticalAlign::Top,
 						translate = [0., -offset]
 					))
 				})

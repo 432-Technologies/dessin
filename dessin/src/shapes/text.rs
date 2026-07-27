@@ -94,7 +94,7 @@ impl From<Text> for Shape {
 			font,
 		}: Text,
 	) -> Self {
-		let Some(font_ref) = FontRef::or_default(font.clone()) else {
+		let Some(font) = FontRef::or_default(font.clone()) else {
 			return Default::default();
 		};
 
@@ -109,7 +109,7 @@ impl From<Text> for Shape {
 			buffer.set_text(
 				&text,
 				&cosmic_text::Attrs {
-					family: fontdb::Family::Name(&*font_ref.family),
+					family: fontdb::Family::Name(&*font.family),
 					weight,
 					style,
 					..cosmic_text::Attrs::new()
@@ -192,31 +192,34 @@ pub struct TextShape {
 	pub font_size: f32,
 
 	///
-	pub font: Option<FontRef>,
+	pub font: FontRef,
 
 	pub width: f32,
 	pub height: f32,
 }
 impl TextShape {
-	pub fn position<'a>(&'a self, parent_transform: &Transform2<f32>) -> Option<TextPosition<'a>> {
-		let font = FontRef::or_default(self.font.clone())?;
+	pub fn position<'a>(&'a self, parent_transform: &Transform2<f32>) -> TextPosition<'a> {
 		let bb = self.global_bounding_box(parent_transform);
 
 		let transform = parent_transform * self.local_transform;
 
 		let font_size = self.font_size * (transform * Vector2::new(0., 1.)).magnitude();
 
-		Some(TextPosition {
+		TextPosition {
 			text: &self.text,
 			align: self.align,
 			weight: self.weight,
 			style: self.style,
 			on_curve: self.on_curve.as_ref().map(|v| v.position(&transform)),
 			font_size,
-			reference_start: bb.bottom_left,
+			reference_start: match self.align {
+				TextAlign::Left => bb.bottom_left,
+				TextAlign::Center => [bb.center().x, bb.bottom()].into(),
+				TextAlign::Right => bb.bottom_right,
+			},
 			direction: Unit::new_normalize(transform * Vector2::new(1., 0.)),
-			font,
-		})
+			font: &self.font,
+		}
 	}
 }
 impl ShapeOp for TextShape {
@@ -266,7 +269,7 @@ pub struct TextPosition<'a> {
 	///
 	pub direction: Unit<Vector2<f32>>,
 	///
-	pub font: FontRef,
+	pub font: &'a FontRef,
 }
 
 #[cfg(test)]
