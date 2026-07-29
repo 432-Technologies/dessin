@@ -104,6 +104,7 @@ impl From<TextBox> for Shape {
 			);
 
 			buffer.set_size(width, height);
+			buffer.set_wrap(cosmic_text::Wrap::Word);
 
 			buffer.set_text(
 				&text,
@@ -121,23 +122,29 @@ impl From<TextBox> for Shape {
 				}),
 			);
 
+			let mut current_line = 0usize;
+
 			buffer.shape_until_scroll(font_system, true);
 			buffer
 				.layout_runs()
-				.map(|run| {
-					let offset = (run.line_i as f32 + 1.) * run.line_height;
+				.flat_map(|run| {
+					current_line += 1;
+					let offset = current_line as f32 * run.line_height;
 
 					total_height += run.line_height;
 
-					dessin!(Text(
-						text = run.text,
+					let start = run.glyphs.first().map(|v| v.start)?;
+					let end = run.glyphs.last().map(|v| v.end)?;
+
+					Some(dessin!(Text(
+						text = &run.text[start..end],
 						font = font_ref.clone(),
 						{ font_size },
 						{ align },
 						{ style },
 						{ weight },
 						translate = [0., -offset]
-					))
+					)))
 				})
 				.collect::<Vec<Text>>()
 		});
