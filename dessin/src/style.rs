@@ -144,6 +144,14 @@ impl<T> Style<T> {
 			stroke: None,
 		}
 	}
+
+	pub fn map<G>(self, f: impl Fn(T) -> G) -> Style<G> {
+		Style {
+			shape: f(self.shape),
+			fill: self.fill,
+			stroke: self.stroke,
+		}
+	}
 }
 
 impl<T> Deref for Style<T> {

@@ -19,6 +19,10 @@ use krilla::{
 use nalgebra::{Transform2, Translation2};
 use std::{collections::HashMap, fmt, fs};
 
+pub mod reexport {
+	pub use krilla;
+}
+
 /// PDF export errors.
 #[derive(Debug, thiserror::Error)]
 pub enum PDFError {
@@ -447,7 +451,7 @@ fn export_shape_to_surface<'a>(
 	Ok(())
 }
 
-/// Build a krilla Document and render the shape onto a page.
+/// Build a krilla Document and render the shape onto a page, returning the raw PDF bytes.
 pub fn write_to_pdf_with_options(shape: &Shape, options: PDFOptions) -> Result<Vec<u8>, PDFError> {
 	let bb = shape.local_bounding_box();
 	let (width, height) = options.size.unwrap_or_else(|| (bb.width(), bb.height()));
@@ -486,4 +490,40 @@ pub fn to_pdf_with_options(shape: &Shape, options: PDFOptions) -> Result<Vec<u8>
 /// Render a shape to a PDF, returning the raw bytes. Alias for `to_pdf_bytes`.
 pub fn to_pdf(shape: &Shape) -> Result<Vec<u8>, PDFError> {
 	to_pdf_with_options(shape, PDFOptions::default())
+}
+
+/// Render a shape onto an existing krilla surface.
+/// The caller is responsible for finishing the surface and serializing the document.
+pub fn write_to_surface(
+	surface: &mut krilla::surface::Surface<'_>,
+	shape: &Shape,
+	options: PDFOptions,
+	page_height: f32,
+) -> Result<(), PDFError> {
+	export_shape_to_surface(
+		surface,
+		shape,
+		&Transform2::identity(),
+		options.used_font,
+		page_height,
+	)
+}
+
+/// Render a shape onto an existing krilla surface with default options.
+pub fn write_to_surface_simple(
+	surface: &mut krilla::surface::Surface<'_>,
+	shape: &Shape,
+	page_height: f32,
+) -> Result<(), PDFError> {
+	let bb = shape.local_bounding_box();
+	let p = bb.bottom_left();
+	let parent_transform = nalgebra::convert(Translation2::new(-p.x, -p.y));
+
+	export_shape_to_surface(
+		surface,
+		shape,
+		&parent_transform,
+		PDFFontHolder::default(),
+		page_height,
+	)
 }
