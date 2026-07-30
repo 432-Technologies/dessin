@@ -1,4 +1,5 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
+use dessin_svg::SvgExporter;
 use palette::Srgba;
 use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
@@ -32,7 +33,7 @@ fn main() {
 		get_project_root()
 			.unwrap()
 			.join("examples/out/yellow_thick_arc.svg"),
-		dessin_svg::to_string(&thick_arc.into()).unwrap(),
+		SvgExporter::default().export(&thick_arc.into()).unwrap(),
 	)
 	.unwrap();
 }

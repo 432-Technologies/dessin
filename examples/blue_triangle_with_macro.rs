@@ -2,6 +2,7 @@ use dessin::{
 	nalgebra::{Rotation2, Scale2},
 	prelude::{polygons::Triangle, *},
 };
+use dessin_svg::SvgExporter;
 use palette::Srgb;
 use project_root::get_project_root;
 use std::fs;
@@ -23,7 +24,7 @@ fn main() {
 		get_project_root()
 			.unwrap()
 			.join("examples/out/blue_triangle.svg"),
-		dessin_svg::to_string(&triangle).unwrap(),
+		SvgExporter::default().export(&triangle).unwrap(),
 	)
 	.unwrap();
 }

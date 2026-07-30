@@ -8,6 +8,50 @@
 use crate::prelude::*;
 use nalgebra::Transform2;
 
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+pub enum ViewPort {
+	/// Create a viewport centered around (x, y), with size (width, height)
+	Manual(BoundingBox<Straight>),
+	/// Create a Viewport centered around (0, 0), with auto size that include all [Shapes][`dessin::prelude::Shape`]
+	AutoCentered,
+	#[default]
+	/// Create a Viewport centered around the centered of the shapes, with auto size that include all [Shapes][`dessin::prelude::Shape`]
+	Auto,
+}
+impl ViewPort {
+	pub fn auto() -> Self {
+		ViewPort::Auto
+	}
+
+	pub fn auto_centered() -> Self {
+		ViewPort::AutoCentered
+	}
+
+	pub fn manual(bb: BoundingBox<Straight>) -> Self {
+		ViewPort::Manual(bb)
+	}
+
+	pub fn manual_centered(width: f32, height: f32) -> Self {
+		ViewPort::Manual(BoundingBox::mins_maxs(
+			-width / 2.,
+			-height / 2.,
+			width / 2.,
+			height / 2.,
+		))
+	}
+
+	pub fn bounding_box(&self, shape: &Shape) -> BoundingBox<Straight> {
+		match self {
+			ViewPort::Manual(v) => *v,
+			ViewPort::AutoCentered => {
+				let bb = shape.local_bounding_box().straigthen();
+				bb.join(-bb)
+			}
+			ViewPort::Auto => shape.local_bounding_box().straigthen(),
+		}
+	}
+}
+
 /// Orchestrator of the export
 ///
 /// The Export walks the dessin graph and orchestrate an [`Exporter`] of a given format.

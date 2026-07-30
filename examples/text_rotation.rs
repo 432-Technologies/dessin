@@ -1,5 +1,6 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
 use dessin_image::ToImage;
+use dessin_svg::SvgExporter;
 use palette::{named, Srgb};
 use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
@@ -55,7 +56,7 @@ fn main() {
 	// SVG
 	fs::write(
 		path.join("text_rotation.svg"),
-		dessin_svg::to_string(&dessin.clone()).unwrap(),
+		SvgExporter::default().export(&dessin.clone()).unwrap(),
 	)
 	.unwrap();
 

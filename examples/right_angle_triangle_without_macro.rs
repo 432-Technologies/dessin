@@ -1,4 +1,5 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
+use dessin_svg::SvgExporter;
 use palette::{Srgb, Srgba};
 use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
@@ -36,7 +37,7 @@ fn main() {
 		get_project_root()
 			.unwrap()
 			.join("examples/out/right_angle_triangle.svg"),
-		dessin_svg::to_string(&triangle.into()).unwrap(),
+		SvgExporter::default().export(&triangle.into()).unwrap(),
 	)
 	.unwrap();
 }

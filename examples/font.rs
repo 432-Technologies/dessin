@@ -1,4 +1,5 @@
 use dessin::prelude::*;
+use dessin_svg::SvgExporter;
 use palette::Srgb;
 use project_root::get_project_root;
 use std::fs;
@@ -53,15 +54,7 @@ fn main() {
 
 	fs::write(
 		get_project_root().unwrap().join("examples/out/font.svg"),
-		dessin_svg::to_string_with_options(
-			&dessin,
-			dessin_svg::SVGOptions {
-				viewport: dessin_svg::ViewPort::AutoBoundingBox,
-				skip_svg_tag: false,
-				embed_fonts: true,
-			},
-		)
-		.unwrap(),
+		SvgExporter::default().export(&dessin).unwrap(),
 	)
 	.unwrap();
 }

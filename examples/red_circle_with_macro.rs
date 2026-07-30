@@ -1,4 +1,5 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
+use dessin_svg::SvgExporter;
 use palette::{Srgb, Srgba};
 use project_root::get_project_root;
 use std::fs;
@@ -19,7 +20,7 @@ fn main() {
 		get_project_root()
 			.unwrap()
 			.join("examples/out/red_circle.svg"),
-		dessin_svg::to_string(&circle).unwrap(),
+		SvgExporter::default().export(&circle).unwrap(),
 	)
 	.unwrap();
 }

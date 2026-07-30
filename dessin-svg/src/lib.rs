@@ -1,11 +1,11 @@
 use ::image::ImageFormat;
 use dessin::{
-	export::{Export, Exporter},
+	export::{Export, Exporter, ViewPort},
 	font::fontdb,
 	palette::Srgba,
 	prelude::*,
 };
-use nalgebra::{Scale2, Transform2};
+use nalgebra::Scale2;
 use std::{
 	collections::HashSet,
 	fmt::{self, Write},
@@ -14,65 +14,25 @@ use std::{
 };
 
 #[derive(Debug)]
-pub enum SVGError {
+pub enum SvgError {
 	WriteError(fmt::Error),
 	CurveHasNoStartingPoint(CurvePosition),
 	NoDefaultFont,
 }
-impl fmt::Display for SVGError {
+impl fmt::Display for SvgError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		write!(f, "{self:?}")
 	}
 }
-impl From<fmt::Error> for SVGError {
+impl From<fmt::Error> for SvgError {
 	fn from(value: fmt::Error) -> Self {
-		SVGError::WriteError(value)
+		SvgError::WriteError(value)
 	}
 }
-impl std::error::Error for SVGError {}
+impl std::error::Error for SvgError {}
 
-#[derive(Default, Clone, Copy, PartialEq)]
-pub enum ViewPort {
-	/// Create a viewport centered around (0, 0), with size (width, height)
-	ManualCentered { width: f32, height: f32 },
-	/// Create a viewport centered around (x, y), with size (width, height)
-	ManualViewport {
-		x: f32,
-		y: f32,
-		width: f32,
-		height: f32,
-	},
-	/// Create a Viewport centered around (0, 0), with auto size that include all [Shapes][`dessin::prelude::Shape`]
-	AutoCentered,
-	#[default]
-	/// Create a Viewport centered around the centered of the shapes, with auto size that include all [Shapes][`dessin::prelude::Shape`]
-	AutoBoundingBox,
-}
-
-#[derive(Default, Clone)]
-pub struct SVGOptions {
-	pub viewport: ViewPort,
-	pub skip_svg_tag: bool,
-	pub embed_fonts: bool,
-}
-
-pub struct SVGExporter {
-	acc: String,
-	used_font: HashSet<fontdb::ID>,
-	embed_fonts: bool,
-}
-
-impl SVGExporter {
-	#[must_use]
-	pub fn new(embed_fonts: bool) -> Self {
-		SVGExporter {
-			acc: Default::default(),
-			used_font: Default::default(),
-			embed_fonts,
-		}
-	}
-
-	fn write_style(&mut self, style: StylePosition) -> Result<(), SVGError> {
+impl SvgExporter {
+	fn write_style(&mut self, style: StylePosition) -> Result<(), SvgError> {
 		match style.fill {
 			Some(Fill::Solid { color }) => {
 				write!(self.acc, "fill='#{:X}' ", Srgba::<u8>::from_format(color))?;
@@ -104,7 +64,7 @@ impl SVGExporter {
 	}
 
 	#[allow(unused)]
-	fn write_curve(&mut self, curve: CurvePosition) -> Result<(), SVGError> {
+	fn write_curve(&mut self, curve: CurvePosition) -> Result<(), SvgError> {
 		let mut has_start = false;
 
 		for keypoint in &curve.keypoints {
@@ -127,7 +87,7 @@ impl SVGExporter {
 						write!(self.acc, "M {} {} ", v.x, v.y)?;
 						has_start = true;
 					} else {
-						return Err(SVGError::CurveHasNoStartingPoint(curve));
+						return Err(SvgError::CurveHasNoStartingPoint(curve));
 					}
 
 					write!(
@@ -152,55 +112,10 @@ impl SVGExporter {
 
 		Ok(())
 	}
-
-	pub fn finish(
-		self,
-		svg_start_tag: impl fmt::Display,
-		svg_end_tag: impl fmt::Display,
-	) -> String {
-		let SVGExporter {
-			acc,
-			used_font,
-			embed_fonts,
-		} = self;
-
-		let maybe_fonts = if embed_fonts {
-			let fonts = font::font_holder(|holder| {
-				let db = holder.0.db();
-				db
-					.faces()
-					.filter(|v| used_font.contains(&v.id))
-					.filter_map(|v| match &v.source {
-						font::fontdb::Source::Binary(bytes) => Some((
-							v.families[0].0.as_str(),
-							bytes)),
-						_ => None,
-					})
-					.map(|(font_name, bytes)| {
-						let bytes = (**bytes).as_ref();
-
-						let mime = if bytes.starts_with(&[0x4F, 0x54, 0x54, 0x4F]) {"font/otf"} else if bytes.starts_with(&[0x00, 0x01, 0x00, 0x00, 0x00]) {"font/ttf"} else {"font"};
-
-						let encoded_font_bytes = data_encoding::BASE64.encode(bytes.as_ref());
-						format!(
-							r#"@font-face{{font-family:{font_name};src:url("data:{mime};base64,{encoded_font_bytes}");}}"#
-						)
-					})
-
-					.collect::<String>()
-			});
-
-			format!("<defs><style>{fonts}</style></defs>")
-		} else {
-			String::new()
-		};
-
-		format!("{svg_start_tag}{maybe_fonts}{acc}{svg_end_tag}")
-	}
 }
 
-impl Exporter for SVGExporter {
-	type Error = SVGError;
+impl Exporter for SvgExporter {
+	type Error = SvgError;
 
 	const CAN_EXPORT_ELLIPSE: bool = true;
 
@@ -388,79 +303,95 @@ impl Exporter for SVGExporter {
 	}
 }
 
-pub fn to_string_with_options(shape: &Shape, options: SVGOptions) -> Result<String, SVGError> {
-	let (min_x, min_y, span_x, span_y) = match options.viewport {
-		ViewPort::ManualCentered { width, height } => (-width / 2., -height / 2., width, height),
-		ViewPort::ManualViewport {
-			x,
-			y,
-			width,
-			height,
-		} => (x - width / 2., y - height / 2., width, height),
-		ViewPort::AutoCentered => {
-			let bb = shape.local_bounding_box().straigthen();
+#[derive(Debug)]
+pub struct SvgExporter {
+	acc: String,
+	used_font: HashSet<fontdb::ID>,
+	pub embed_fonts: bool,
+	pub skip_svg_tag: bool,
+	pub viewport: ViewPort,
+}
+impl Default for SvgExporter {
+	fn default() -> Self {
+		Self {
+			acc: Default::default(),
+			used_font: Default::default(),
 
-			let mirror_bb = bb
-				.transform(&nalgebra::convert::<_, Transform2<f32>>(Scale2::new(
-					-1., -1.,
-				)))
-				.into_straight();
-
-			let overall_bb = bb.join(mirror_bb);
-
-			(
-				-overall_bb.width() / 2.,
-				-overall_bb.height() / 2.,
-				overall_bb.width(),
-				overall_bb.height(),
-			)
+			viewport: Default::default(),
+			embed_fonts: true,
+			skip_svg_tag: false,
 		}
-		ViewPort::AutoBoundingBox => {
-			let bb = shape.local_bounding_box().straigthen();
-
-			(bb.top_left().x, -bb.top_left().y, bb.width(), bb.height())
-		}
-	};
-
-	let mut exporter = SVGExporter::new(options.embed_fonts);
-
-	let parent_transform = nalgebra::convert(Scale2::new(1., -1.));
-
-	if let Shape::Style { fill, stroke, .. } = shape {
-		shape.write_into_exporter(
-			&mut exporter,
-			&parent_transform,
-			StylePosition {
-				fill: *fill,
-				stroke: *stroke,
-			},
-		)?; //Needed to be complete
-	} else {
-		shape.write_into_exporter(
-			&mut exporter,
-			&parent_transform,
-			StylePosition {
-				fill: None,
-				stroke: None,
-			},
-		)?;
+	}
+}
+impl SvgExporter {
+	pub fn embed_fonts(&mut self, embed_fonts: bool) -> &mut Self {
+		self.embed_fonts = embed_fonts;
+		self
 	}
 
-	let (start, end) = if options.skip_svg_tag {
-		(String::new(), "")
-	} else {
-		const SCHEME: &str =
-			r#"xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink""#;
+	pub fn skip_svg_tag(&mut self, skip_svg_tag: bool) -> &mut Self {
+		self.skip_svg_tag = skip_svg_tag;
+		self
+	}
 
-		(
-			format!(r#"<svg viewBox="{min_x} {min_y} {span_x} {span_y}" {SCHEME}>"#),
-			"</svg>",
-		)
-	};
+	pub fn viewport(&mut self, viewport: ViewPort) -> &mut Self {
+		self.viewport = viewport;
+		self
+	}
 
-	Ok(exporter.finish(start, end))
-}
+	pub fn export(&mut self, shape: &Shape) -> Result<String, SvgError> {
+		let bb = self.viewport.bounding_box(shape);
+		let parent_transform = nalgebra::convert(Scale2::new(1., -1.));
 
-pub fn to_string(shape: &Shape) -> Result<String, SVGError> {
-	to_string_with_options(shape, SVGOptions::default()) // Needed to add StylePosition { fill, stroke } using shape
+		shape.write_into_exporter(self, &parent_transform, Default::default())?;
+
+		let acc = std::mem::take(&mut self.acc);
+		let used_font = std::mem::take(&mut self.used_font);
+
+		let content = self.embed_fonts.then(|| {
+			let fonts = font::font_holder(|holder| {
+				let db = holder.0.db();
+				db
+					.faces()
+					.filter(|v| used_font.contains(&v.id))
+					.filter_map(|v| match &v.source {
+						font::fontdb::Source::Binary(bytes) => Some((
+							v.families[0].0.as_str(),
+							bytes)),
+						_ => None,
+					})
+					.map(|(font_name, bytes)| {
+						let bytes = (**bytes).as_ref();
+
+						let mime = if bytes.starts_with(&[0x4F, 0x54, 0x54, 0x4F]) {"font/otf"} else if bytes.starts_with(&[0x00, 0x01, 0x00, 0x00, 0x00]) {"font/ttf"} else {"font"};
+
+						let encoded_font_bytes = data_encoding::BASE64.encode(bytes.as_ref());
+						format!(
+							r#"@font-face{{font-family:{font_name};src:url("data:{mime};base64,{encoded_font_bytes}");}}"#
+						)
+					})
+
+					.collect::<String>()
+			});
+
+			format!("<defs><style>{fonts}</style></defs>{acc}")
+		}).unwrap_or(acc);
+
+		let svg = if self.skip_svg_tag {
+			content
+		} else {
+			const SCHEME: &str =
+				r#"xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink""#;
+
+			format!(
+				r#"<svg viewBox="{min_x} {min_y} {span_x} {span_y}" {SCHEME}>{content}</svg>"#,
+				min_x = bb.left(),
+				min_y = bb.top(),
+				span_x = bb.width(),
+				span_y = bb.height(),
+			)
+		};
+
+		Ok(svg)
+	}
 }

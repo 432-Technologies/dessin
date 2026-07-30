@@ -80,7 +80,7 @@ pub use dynamic::*;
 pub use ellipse::*;
 use na::{Point2, Rotation2, Scale2, Vector2};
 use nalgebra::{self as na, Transform2, Translation2};
-use std::{fmt, marker::PhantomData, sync::Arc};
+use std::{fmt, marker::PhantomData, ops::Neg, sync::Arc};
 pub use text::*;
 
 /// Transforming operation on shapes such as:
@@ -483,6 +483,20 @@ impl BoundingBox<Straight> {
 		let y = (self.bottom_left.y + self.top_right.y) / 2.;
 
 		Point2::new(x, y)
+	}
+}
+
+impl<T> Neg for BoundingBox<T> {
+	type Output = Self;
+
+	fn neg(self) -> Self::Output {
+		BoundingBox {
+			_ty: PhantomData,
+			top_left: -self.top_left,
+			top_right: -self.top_right,
+			bottom_right: -self.bottom_right,
+			bottom_left: -self.bottom_left,
+		}
 	}
 }
 

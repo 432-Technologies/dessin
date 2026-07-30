@@ -1,4 +1,5 @@
 use dessin::prelude::*;
+use dessin_svg::SvgExporter;
 use palette::Srgba;
 use project_root::get_project_root;
 use std::fs;
@@ -24,7 +25,7 @@ fn main() {
 		get_project_root()
 			.unwrap()
 			.join("examples/out/red_circle.svg"),
-		dessin_svg::to_string(&circle.into()).unwrap(),
+		SvgExporter::default().export(&circle.into()).unwrap(),
 	)
 	.unwrap();
 }

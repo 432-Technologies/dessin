@@ -17,7 +17,7 @@ pub enum SVGError {
 	WriteError(fmt::Error),
 	CurveHasNoStartingPoint(CurvePosition),
 	RenderError(RenderError),
-	SvgError(dessin_svg::SVGError),
+	SvgError(dessin_svg::SvgError),
 }
 impl fmt::Display for SVGError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -34,8 +34,8 @@ impl From<RenderError> for SVGError {
 		SVGError::RenderError(value)
 	}
 }
-impl From<dessin_svg::SVGError> for SVGError {
-	fn from(value: dessin_svg::SVGError) -> Self {
+impl From<dessin_svg::SvgError> for SVGError {
+	fn from(value: dessin_svg::SvgError) -> Self {
 		SVGError::SvgError(value)
 	}
 }
@@ -115,21 +115,10 @@ pub fn SVGString(
 	});
 
 	let svg = use_memo(move || {
-		use dessin::export::Export;
-
-		let mut exporter = dessin_svg::SVGExporter::new(true);
-		shape
-			.read()
-			.write_into_exporter(
-				&mut exporter,
-				&nalgebra::convert(Scale2::new(1., -1.)),
-				StylePosition {
-					fill: None,
-					stroke: None,
-				},
-			)
-			.unwrap_or_default();
-		exporter.finish("", "")
+		dessin_svg::SvgExporter::default()
+			.embed_fonts(true)
+			.export(&*shape.read())
+			.unwrap_or_default()
 	});
 
 	rsx! {

@@ -7,7 +7,7 @@ use std::{
 };
 
 /// Calculated result style
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct StylePosition {
 	///
 	pub stroke: Option<Stroke>,

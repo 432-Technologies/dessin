@@ -1,4 +1,5 @@
 use dessin::{nalgebra::Point2, prelude::*};
+use dessin_svg::SvgExporter;
 use palette::Srgba;
 use project_root::get_project_root;
 use std::fs;
@@ -23,7 +24,7 @@ fn main() {
 	// prints in svg version
 	fs::write(
 		get_project_root().unwrap().join("examples/out/line.svg"),
-		dessin_svg::to_string(&line).unwrap(),
+		SvgExporter::default().export(&line).unwrap(),
 	)
 	.unwrap();
 }

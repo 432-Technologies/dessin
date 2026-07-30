@@ -1,4 +1,5 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
+use dessin_svg::SvgExporter;
 use palette::{Srgb, Srgba};
 use project_root::get_project_root;
 use std::fs;
@@ -38,7 +39,7 @@ fn main() {
 	// prints in svg version
 	fs::write(
 		get_project_root().unwrap().join("examples/out/text.svg"),
-		dessin_svg::to_string(&text.into()).unwrap(),
+		SvgExporter::default().export(&text.into()).unwrap(),
 	)
 	.unwrap();
 }

@@ -1,4 +1,5 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
+use dessin_svg::SvgExporter;
 use palette::Srgb;
 use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
@@ -16,7 +17,7 @@ fn main() {
 	// prints in svg version
 	fs::write(
 		get_project_root().unwrap().join("examples/out/arc.svg"),
-		dessin_svg::to_string(&arc).unwrap(),
+		SvgExporter::default().export(&arc).unwrap(),
 	)
 	.unwrap();
 }

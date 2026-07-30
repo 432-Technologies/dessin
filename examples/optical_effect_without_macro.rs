@@ -1,5 +1,5 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
-use dessin_svg::SVGOptions;
+use dessin_svg::SvgExporter;
 use palette::Srgba;
 use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
@@ -78,17 +78,12 @@ fn main() {
 		get_project_root()
 			.unwrap()
 			.join("examples/out/optical_effect.svg"),
-		dessin_svg::to_string_with_options(
-			&Shape::Group(group),
-			SVGOptions {
-				viewport: dessin_svg::ViewPort::ManualCentered {
-					width: 14.,
-					height: 14.,
-				},
-				..Default::default()
-			},
-		)
-		.unwrap(),
+		SvgExporter::default()
+			.viewport(dessin::export::ViewPort::Manual(
+				dessin::shapes::BoundingBox::centered([14., 14.]),
+			))
+			.export(&Shape::Group(group))
+			.unwrap(),
 	)
 	.unwrap();
 }

@@ -43,12 +43,8 @@ name = "red_circle_without_macro"
 path = "./red_circle_without_macro.rs"
 
 [[example]]
-name = "green_rectangle_with_macro"
-path = "./green_rectangle_with_macro.rs"
-
-[[example]]
-name = "green_rectangle_without_macro"
-path = "./green_rectangle_without_macro.rs"
+name = "green_rectangle"
+path = "./green_rectangle.rs"
 
 [[example]]
 name = "blue_triangle_with_macro"

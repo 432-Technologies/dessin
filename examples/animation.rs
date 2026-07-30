@@ -1,6 +1,6 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
 use dessin_image::*;
-use dessin_svg::*;
+use dessin_svg::SvgExporter;
 use palette::{named, Srgb};
 use project_root::get_project_root;
 use std::{fs, time::Duration};
@@ -32,7 +32,7 @@ fn main() {
 	);
 
 	loop {
-		let final_image = to_string(&frame.clone()).unwrap();
+		let final_image = SvgExporter::default().export(&frame.clone()).unwrap();
 		fs::write(&path, final_image).unwrap();
 
 		if skip_animation {

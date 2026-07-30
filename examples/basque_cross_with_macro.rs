@@ -1,4 +1,5 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
+use dessin_svg::SvgExporter;
 use palette::Srgba;
 use project_root::get_project_root;
 use std::{f32::consts::PI, fs};
@@ -51,7 +52,7 @@ fn main() {
 		get_project_root()
 			.unwrap()
 			.join("examples/out/basque_cross.svg"),
-		dessin_svg::to_string(&basque_cross).unwrap(),
+		SvgExporter::default().export(&basque_cross).unwrap(),
 	)
 	.unwrap();
 }
