@@ -15,133 +15,33 @@ palette = "0.7.6"
 iced = { git = "https://github.com/OlivierLemoine/iced.git", rev = "3c81aac" }
 
 [[example]]
-name = "432technologies"
-path = "./432technologies.rs"
+name = "any-triangle"
+path = "./any-triangle.rs"
 
 [[example]]
-name = "iced"
-path = "./iced.rs"
+name = "croix-basque"
+path = "./croix-basque.rs"
 
 [[example]]
-name = "iced_cache"
-path = "./iced_cache.rs"
-
-[[example]]
-name = "text_rotation"
-path = "./text_rotation.rs"
-
-[[example]]
-name = "animation"
-path = "./animation.rs"
-
-[[example]]
-name = "red_circle_with_macro"
-path = "./red_circle_with_macro.rs"
-
-[[example]]
-name = "red_circle_without_macro"
-path = "./red_circle_without_macro.rs"
-
-[[example]]
-name = "green_rectangle"
-path = "./green_rectangle.rs"
-
-[[example]]
-name = "blue_triangle_with_macro"
-path = "./blue_triangle_with_macro.rs"
-
-[[example]]
-name = "blue_triangle_without_macro"
-path = "./blue_triangle_without_macro.rs"
-
-[[example]]
-name = "yellow_thick_arc_with_macro"
-path = "./yellow_thick_arc_with_macro.rs"
-
-[[example]]
-name = "yellow_thick_arc_without_macro"
-path = "./yellow_thick_arc_without_macro.rs"
-
-[[example]]
-name = "right_angle_triangle_with_macro"
-path = "./right_angle_triangle_with_macro.rs"
-
-[[example]]
-name = "right_angle_triangle_without_macro"
-path = "./right_angle_triangle_without_macro.rs"
-
-[[example]]
-name = "any_triangle_with_macro"
-path = "./any_triangle_with_macro.rs"
-
-[[example]]
-name = "any_triangle_without_macro"
-path = "./any_triangle_without_macro.rs"
-
-[[example]]
-name = "arc_with_macro"
-path = "./arc_with_macro.rs"
-
-[[example]]
-name = "arc_without_macro"
-path = "./arc_without_macro.rs"
-
-[[example]]
-name = "orange_octogon_with_macro"
-path = "./orange_octogon_with_macro.rs"
-
-[[example]]
-name = "orange_octogon_without_macro"
-path = "./orange_octogon_without_macro.rs"
-
-[[example]]
-name = "textbox_with_macro"
-path = "./textbox_with_macro.rs"
-
-[[example]]
-name = "textbox_without_macro"
-path = "./textbox_without_macro.rs"
-
-[[example]]
-name = "diamond_with_macro"
-path = "./diamond_with_macro.rs"
-
-[[example]]
-name = "diamond_without_macro"
-path = "./diamond_without_macro.rs"
-
-[[example]]
-name = "optical_effect_with_macro"
-path = "./optical_effect_with_macro.rs"
-
-[[example]]
-name = "optical_effect_without_macro"
-path = "./optical_effect_without_macro.rs"
-
-[[example]]
-name = "basque_cross_with_macro"
-path = "./basque_cross_with_macro.rs"
-
-[[example]]
-name = "basque_cross_without_macro"
-path = "./basque_cross_without_macro.rs"
-
-[[example]]
-name = "line_with_macro"
-path = "./line_with_macro.rs"
-
-[[example]]
-name = "line_without_macro"
-path = "./line_without_macro.rs"
-
-[[example]]
-name = "purple_padding"
-path = "./purple_padding.rs"
+name = "logo-432technologies"
+path = "./logo-432technologies.rs"
 
 [[example]]
 name = "font"
 path = "./font.rs"
 
 [[example]]
+name = "optical-effect"
+path = "./optical-effect.rs"
+
+[[example]]
 name = "text-bb"
 path = "./text-bb.rs"
+
+[[example]]
+name = "text-rotation"
+path = "./text-rotation.rs"
+
+[[example]]
+name = "textbox"
+path = "./textbox.rs"

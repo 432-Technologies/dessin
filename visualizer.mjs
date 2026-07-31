@@ -16,23 +16,24 @@ function listExamples() {
 		.sort();
 }
 
-function clearOutDir() {
-	if (!fs.existsSync(OUT_DIR)) return;
-	for (const f of fs.readdirSync(OUT_DIR)) {
-		fs.rmSync(path.join(OUT_DIR, f), { force: true });
-	}
+function snapshotDir(dir) {
+	if (!fs.existsSync(dir)) return new Set();
+	const entries = fs.readdirSync(dir);
+	return new Set(
+		entries.filter((f) => {
+			const stat = fs.statSync(path.join(dir, f));
+			return stat.isFile();
+		}),
+	);
 }
 
-function listOutFiles() {
-	if (!fs.existsSync(OUT_DIR)) return [];
-	return fs.readdirSync(OUT_DIR).filter((f) => {
-		const stat = fs.statSync(path.join(OUT_DIR, f));
-		return stat.isFile();
-	});
+function findNewFiles(dir, before) {
+	const after = snapshotDir(dir);
+	return [...after].filter((f) => !before.has(f));
 }
 
 function runExample(name, cb) {
-	clearOutDir();
+	const before = snapshotDir(OUT_DIR);
 	const proc = spawn("cargo", ["run", "--example", name], {
 		cwd: ROOT,
 		env: { ...process.env, NO_ANIMATION: "1", NO_ICED: "1" },
@@ -45,7 +46,7 @@ function runExample(name, cb) {
 
 	proc.on("close", (code) => {
 		const output = chunks.join("");
-		const files = listOutFiles();
+		const files = findNewFiles(OUT_DIR, before);
 		cb({ code, output, files });
 	});
 

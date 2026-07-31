@@ -1,3 +1,4 @@
+use dessin::export::ViewPort;
 use dessin::palette::Srgba;
 use dessin::{
 	export::{Export, Exporter},
@@ -16,7 +17,7 @@ use krilla::{
 	text::{Font, Tag, TextDirection},
 	Document,
 };
-use nalgebra::{Transform2, Translation2};
+use nalgebra::Transform2;
 use std::{collections::HashMap, fmt, fs};
 
 pub mod reexport {
@@ -25,7 +26,7 @@ pub mod reexport {
 
 /// PDF export errors.
 #[derive(Debug, thiserror::Error)]
-pub enum PDFError {
+pub enum PdfError {
 	#[error("Krilla Font error")]
 	KrillaFontError,
 	#[error("Krilla Serialize error: {0}")]
@@ -46,16 +47,6 @@ pub enum PDFError {
 	UnknownFont(String),
 	#[error("Write error")]
 	WriteError(#[source] fmt::Error),
-}
-
-/// Mapping from (FontRef, weight, style) to krilla Font.
-type PDFFontHolder = HashMap<(FontRef, font::fontdb::Weight, font::fontdb::Style), Font>;
-
-#[derive(Default)]
-pub struct PDFOptions {
-	pub size: Option<(f32, f32)>,
-	/// Pre-loaded fonts to reuse across pages.
-	pub used_font: PDFFontHolder,
 }
 
 /// Helper to convert an f32 color component (0.0–1.0) to u8 (0–255).
@@ -120,70 +111,13 @@ fn to_krilla_stroke(stroke: &Stroke) -> Option<KrillaStroke> {
 	}
 }
 
-/// Collects shape data for later replay onto a krilla surface.
-/// Avoids storing `&mut Surface` so the surface reference can be released
-/// before calling `surface.finish()`.
-pub struct PDFExporter {
-	shape: Shape,
-	parent_transform: Transform2<f32>,
-	style: StylePosition,
-	used_font: PDFFontHolder,
+struct SurfaceExporter<'a> {
+	surface: krilla::surface::Surface<'a>,
+	used_font: &'a mut HashMap<(FontRef, font::fontdb::Weight, font::fontdb::Style), Font>,
+	bb: BoundingBox<Straight>,
 }
-
-/// Runtime exporter that draws onto a krilla surface.
-/// The surface is provided as `&mut` and borrowed only during export.
-struct SurfaceExporter<'a, 's> {
-	surface: &'s mut krilla::surface::Surface<'a>,
-	used_font: PDFFontHolder,
-	push_depth: usize,
-	page_height_pt: f32,
-}
-
-impl PDFExporter {
-	/// Collect shape data for later replay onto a krilla surface.
-	pub fn new_with_font(
-		shape: Shape,
-		parent_transform: Transform2<f32>,
-		style: StylePosition,
-		used_font: PDFFontHolder,
-	) -> Self {
-		PDFExporter {
-			shape,
-			parent_transform,
-			style,
-			used_font,
-		}
-	}
-
-	/// Replay the collected shape onto a krilla surface.
-	pub fn apply(
-		self,
-		surface: &mut krilla::surface::Surface<'_>,
-		page_height_pt: f32,
-	) -> Result<(), PDFError> {
-		let mut exporter = SurfaceExporter {
-			surface,
-			used_font: self.used_font,
-			push_depth: 0,
-			page_height_pt,
-		};
-
-		self.shape
-			.write_into_exporter(&mut exporter, &self.parent_transform, self.style)?;
-
-		Ok(())
-	}
-}
-
-impl<'a, 's> SurfaceExporter<'a, 's> {
-	/// Get a mutable reference to the underlying surface.
-	fn surface(&mut self) -> &mut krilla::surface::Surface<'a> {
-		&mut self.surface
-	}
-}
-
-impl Exporter for SurfaceExporter<'_, '_> {
-	type Error = PDFError;
+impl Exporter for SurfaceExporter<'_> {
+	type Error = PdfError;
 
 	const CAN_EXPORT_ELLIPSE: bool = false;
 
@@ -191,42 +125,34 @@ impl Exporter for SurfaceExporter<'_, '_> {
 		&mut self,
 		StylePosition { fill, stroke }: StylePosition,
 	) -> Result<(), Self::Error> {
-		// Push an isolated layer for this style group.
-		self.surface().push_isolated();
-		self.push_depth += 1;
+		self.surface.push_isolated();
 
-		// Set fill. Explicitly reset to None if not provided,
-		// because krilla's set_fill/set_stroke persist globally
-		// and aren't reset when an isolated group is popped.
 		if let Some(ref f) = fill {
 			if let Some(krilla_fill) = to_krilla_fill(f) {
-				self.surface().set_fill(Some(krilla_fill));
+				self.surface.set_fill(Some(krilla_fill));
 			} else {
-				self.surface().set_fill(None);
+				self.surface.set_fill(None);
 			}
 		} else {
-			self.surface().set_fill(None);
+			self.surface.set_fill(None);
 		}
 
-		// Set stroke.
 		if let Some(ref s) = stroke {
 			if let Some(krilla_stroke) = to_krilla_stroke(s) {
-				self.surface().set_stroke(Some(krilla_stroke));
+				self.surface.set_stroke(Some(krilla_stroke));
 			} else {
-				self.surface().set_stroke(None);
+				self.surface.set_stroke(None);
 			}
 		} else {
-			self.surface().set_stroke(None);
+			self.surface.set_stroke(None);
 		}
 
 		Ok(())
 	}
 
 	fn end_style(&mut self) -> Result<(), Self::Error> {
-		if self.push_depth > 0 {
-			self.surface().pop();
-			self.push_depth -= 1;
-		}
+		self.surface.pop();
+
 		Ok(())
 	}
 
@@ -243,33 +169,22 @@ impl Exporter for SurfaceExporter<'_, '_> {
 	) -> Result<(), Self::Error> {
 		let img = Image::from_rgba8(image.to_rgba8().into_raw(), image.width(), image.height());
 
-		// Build combined transform: rotate first, then translate.
-		// Negate rotation because flipping Y axis reverses rotation direction.
 		let angle_deg = -rotation.to_degrees();
 		let rad = angle_deg.to_radians();
 		let c = rad.cos();
 		let s = rad.sin();
 
-		let transform = Transform::from_row(
-			c,
-			-s,
-			s,
-			c,
-			bottom_left.x,
-			self.page_height_pt - bottom_left.y,
-		);
+		let transform =
+			Transform::from_row(c, -s, s, c, bottom_left.x, self.bb.height() - bottom_left.y);
 
-		self.surface().push_transform(&transform);
-		self.push_depth += 1;
+		self.surface.push_transform(&transform);
 
-		// Draw the image centered at the origin.
-		self.surface().draw_image(
+		self.surface.draw_image(
 			img,
 			Size::from_wh(width, height).expect("Invalid image size"),
 		);
 
-		self.surface().pop();
-		self.push_depth -= 1;
+		self.surface.pop();
 
 		Ok(())
 	}
@@ -286,7 +201,7 @@ impl Exporter for SurfaceExporter<'_, '_> {
 		for keypoint in curve.keypoints {
 			match keypoint {
 				KeypointPosition::Point(p) => {
-					let pt = Point::from_xy(p.x, self.page_height_pt - p.y);
+					let pt = Point::from_xy(p.x, self.bb.height() - p.y);
 					if prev_point.is_none() {
 						path_builder.move_to(pt.x, pt.y);
 					} else {
@@ -300,12 +215,12 @@ impl Exporter for SurfaceExporter<'_, '_> {
 					end_control,
 					end,
 				}) => {
-					let start_opt = start.map(|v| Point::from_xy(v.x, self.page_height_pt - v.y));
+					let start_opt = start.map(|v| Point::from_xy(v.x, self.bb.height() - v.y));
 					let start_control =
-						Point::from_xy(start_control.x, self.page_height_pt - start_control.y);
+						Point::from_xy(start_control.x, self.bb.height() - start_control.y);
 					let end_control =
-						Point::from_xy(end_control.x, self.page_height_pt - end_control.y);
-					let end = Point::from_xy(end.x, self.page_height_pt - end.y);
+						Point::from_xy(end_control.x, self.bb.height() - end_control.y);
+					let end = Point::from_xy(end.x, self.bb.height() - end.y);
 
 					if let Some(s) = start_opt {
 						if prev_point.is_none() {
@@ -334,7 +249,7 @@ impl Exporter for SurfaceExporter<'_, '_> {
 		}
 
 		let path: Path = path_builder.finish().unwrap();
-		self.surface().draw_path(&path);
+		self.surface.draw_path(&path);
 
 		Ok(())
 	}
@@ -356,17 +271,18 @@ impl Exporter for SurfaceExporter<'_, '_> {
 		// Load or reuse font, keyed by (font, weight, style) so that
 		// different variations of the same variable font are cached separately.
 		let cache_key = (font.clone(), weight, style);
+
 		let krilla_font = if let Some(existing) = self.used_font.get(&cache_key) {
 			existing.clone()
 		} else {
 			let (source, _) = font::font_holder(|v| v.0.db().face_source(font.id))
-				.ok_or_else(|| PDFError::UnknownFont(font.family.to_string()))?;
+				.ok_or_else(|| PdfError::UnknownFont(font.family.to_string()))?;
 
 			let bytes = match &source {
 				font::fontdb::Source::Binary(bytes)
 				| font::fontdb::Source::SharedFile(_, bytes) => (**bytes).as_ref().to_vec(),
 				font::fontdb::Source::File(path) => {
-					fs::read(path).map_err(PDFError::CantLoadFont)?
+					fs::read(path).map_err(PdfError::CantLoadFont)?
 				}
 			};
 
@@ -381,7 +297,7 @@ impl Exporter for SurfaceExporter<'_, '_> {
 				(Tag::new(b"ital"), italic_value),
 			];
 			let k_font = Font::new_variable(bytes.into(), 0, &var_coords)
-				.ok_or_else(|| PDFError::CantParseFont(font.family.to_string()))?;
+				.ok_or_else(|| PdfError::CantParseFont(font.family.to_string()))?;
 			self.used_font.insert(cache_key, k_font.clone());
 			k_font
 		};
@@ -390,7 +306,7 @@ impl Exporter for SurfaceExporter<'_, '_> {
 
 		// Convert mm → pt and compute screen Y for krilla's top-left origin.
 		let target_x = reference_start.x;
-		let target_y = self.page_height_pt - reference_start.y;
+		let target_y = self.bb.height() - reference_start.y;
 
 		// Build combined transform: rotate + translate.
 		// krilla's draw_text handles its own Y-flip for glyph rendering.
@@ -399,10 +315,9 @@ impl Exporter for SurfaceExporter<'_, '_> {
 		let s = angle_rad.sin();
 		let transform = Transform::from_row(c, -s, s, c, target_x, target_y);
 
-		self.surface().push_transform(&transform);
-		self.push_depth += 1;
+		self.surface.push_transform(&transform);
 
-		self.surface().draw_text(
+		self.surface.draw_text(
 			Point::from_xy(0.0, 0.0),
 			krilla_font,
 			font_size,
@@ -411,119 +326,68 @@ impl Exporter for SurfaceExporter<'_, '_> {
 			TextDirection::Auto,
 		);
 
-		self.surface().pop();
-		self.push_depth -= 1;
+		self.surface.pop();
 
 		Ok(())
 	}
 }
 
-/// Collect shape data then replay onto the surface.
-/// The surface reference is scoped so it's released before `surface.finish()`.
-fn export_shape_to_surface<'a>(
-	surface: &mut krilla::surface::Surface<'a>,
-	shape: &Shape,
-	parent_transform: &Transform2<f32>,
-	used_font: PDFFontHolder,
-	page_height: f32,
-) -> Result<(), PDFError> {
-	let collector = {
-		// Clone shape and collect style from the top-level wrapper.
-		let cloned = shape.clone();
-		let style = if let Shape::Style { fill, stroke, .. } = &cloned {
-			StylePosition {
-				fill: fill.clone(),
-				stroke: stroke.clone(),
-			}
-		} else {
-			StylePosition {
-				fill: None,
-				stroke: None,
-			}
-		};
-		PDFExporter::new_with_font(cloned, (*parent_transform).into(), style, used_font)
-	};
-
-	// Replay onto the surface. The surface reference is borrowed only within this scope.
-	// After this scope ends, the surface reference is released and we can call finish().
-	collector.apply(surface, page_height)?;
-
-	Ok(())
+pub struct PdfExporter {
+	pdf_document: Document,
+	used_font: HashMap<(FontRef, font::fontdb::Weight, font::fontdb::Style), Font>,
+	pub viewport: ViewPort,
 }
-
-/// Build a krilla Document and render the shape onto a page, returning the raw PDF bytes.
-pub fn write_to_pdf_with_options(shape: &Shape, options: PDFOptions) -> Result<Vec<u8>, PDFError> {
-	let bb = shape.local_bounding_box();
-	let (width, height) = options.size.unwrap_or_else(|| (bb.width(), bb.height()));
-
-	let mut document = Document::new();
-	let mut page =
-		document.start_page_with(PageSettings::from_wh(width, height).expect("Invalid page size"));
-
-	let mut surface = page.surface();
-
-	let p = bb.bottom_left();
-
-	let parent_transform = nalgebra::convert(Translation2::new(-p.x, -p.y));
-
-	export_shape_to_surface(
-		&mut surface,
-		shape,
-		&parent_transform,
-		options.used_font,
-		height,
-	)?;
-
-	surface.finish();
-	page.finish();
-
-	document
-		.finish()
-		.map_err(|e| PDFError::KrillaSerializeError(e.to_string()))
+impl Default for PdfExporter {
+	fn default() -> Self {
+		Self {
+			pdf_document: Default::default(),
+			used_font: Default::default(),
+			viewport: Default::default(),
+		}
+	}
 }
+impl PdfExporter {
+	pub fn viewport(&mut self, viewport: ViewPort) -> &mut Self {
+		self.viewport = viewport;
+		self
+	}
 
-/// Render a shape to a PDF with custom options, returning the raw bytes.
-pub fn to_pdf_with_options(shape: &Shape, options: PDFOptions) -> Result<Vec<u8>, PDFError> {
-	write_to_pdf_with_options(shape, options)
-}
+	pub fn export(&mut self, shape: &Shape) -> Result<Document, PdfError> {
+		Ok(self.write_page(shape)?.finish())
+	}
 
-/// Render a shape to a PDF, returning the raw bytes. Alias for `to_pdf_bytes`.
-pub fn to_pdf(shape: &Shape) -> Result<Vec<u8>, PDFError> {
-	to_pdf_with_options(shape, PDFOptions::default())
-}
+	pub fn write_page(&mut self, shape: &Shape) -> Result<&mut Self, PdfError> {
+		// A4 in krilla's doc:
+		// - width: 21 -> 595.0
+		// - height: 29.7 -> 842.0
 
-/// Render a shape onto an existing krilla surface.
-/// The caller is responsible for finishing the surface and serializing the document.
-pub fn write_to_surface(
-	surface: &mut krilla::surface::Surface<'_>,
-	shape: &Shape,
-	options: PDFOptions,
-	page_height: f32,
-) -> Result<(), PDFError> {
-	export_shape_to_surface(
-		surface,
-		shape,
-		&Transform2::identity(),
-		options.used_font,
-		page_height,
-	)
-}
+		const FACTOR: f32 = 595.0 / 21.;
 
-/// Render a shape onto an existing krilla surface with default options.
-pub fn write_to_surface_simple(
-	surface: &mut krilla::surface::Surface<'_>,
-	shape: &Shape,
-	page_height: f32,
-) -> Result<(), PDFError> {
-	let bb = shape.local_bounding_box();
-	let p = bb.bottom_left();
-	let parent_transform = nalgebra::convert(Translation2::new(-p.x, -p.y));
+		let bb = self.viewport.bounding_box(shape);
 
-	export_shape_to_surface(
-		surface,
-		shape,
-		&parent_transform,
-		PDFFontHolder::default(),
-		page_height,
-	)
+		let mut page = self.pdf_document.start_page_with(PageSettings::new(
+			Size::from_wh(bb.width() * FACTOR, bb.height() * FACTOR).unwrap(),
+		));
+
+		let parent_transform = Transform2::identity();
+
+		shape.write_into_exporter(
+			&mut SurfaceExporter {
+				surface: page.surface(),
+				used_font: &mut self.used_font,
+				bb,
+			},
+			&parent_transform,
+			Default::default(),
+		)?;
+
+		page.finish();
+
+		Ok(self)
+	}
+
+	pub fn finish(&mut self) -> Document {
+		self.used_font = Default::default();
+		std::mem::take(&mut self.pdf_document)
+	}
 }

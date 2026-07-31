@@ -12,15 +12,10 @@ fn main() {
 				inner_radius = 0f32,
 				span_angle = PI / 10_f32,
 				fill = Srgba::new(0.0, 0.0, 0.0, 1.0),
-				// chooses a rotation of (n*PI)/5 radians in the trigonometric direction
 				rotate = Rotation2::new(PI * (n as f32) / 5_f32)
 			)])
 		},
-		*Circle(
-			// creates a white circle in the middle
-			radius = 1.,
-			fill = Srgba::new(1.0, 1.0, 1.0, 1.0),
-		),
+		*Circle(radius = 1., fill = Srgba::new(1.0, 1.0, 1.0, 1.0),),
 		*Rectangle(
 			width = 15.,
 			height = 15.,
@@ -30,24 +25,19 @@ fn main() {
 
 	let fond = optical_effect.local_bounding_box();
 
-	// dbg!(fond.width()); // if we want to know the fond.width size
-
-	//Here we want to create a grey font behind all
 	let truc = dessin!([
 		*Rectangle(
 			width = fond.width(),
 			height = fond.height(),
 			fill = Srgba::new(0.588, 0.588, 0.588, 0.2),
 		),
-		// Add optical_effect before the new Rectangle
 		{ optical_effect }
 	]);
 
-	// prints in svg version
 	fs::write(
 		get_project_root()
 			.unwrap()
-			.join("examples/out/optical_effect.svg"),
+			.join("examples/out/optical-effect.svg"),
 		SvgExporter::default()
 			.viewport(dessin::export::ViewPort::Manual(
 				dessin::shapes::BoundingBox::centered([14., 14.]),
@@ -57,5 +47,3 @@ fn main() {
 	)
 	.unwrap();
 }
-
-// there is a slight difference between the optical effect with and without the macro, but it's not certain that you'll see it

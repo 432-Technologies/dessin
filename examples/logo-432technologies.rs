@@ -247,15 +247,15 @@ impl From<Logo432> for Shape {
 }
 
 fn main() {
-	let dessin = Shape::from(Logo432);
+	// let dessin = Shape::from(Logo432);
 
-	let path = get_project_root().unwrap().join("examples/out/");
+	// let path = get_project_root().unwrap().join("examples/out/");
 
-	// Image
-	dessin!({ dessin }(scale = [5., 5.]))
-		.rasterize()
-		.unwrap()
-		.into_rgba8()
-		.save(path.join("432technologies.png"))
-		.unwrap();
+	// // Image
+	// dessin!({ dessin }(scale = [5., 5.]))
+	// 	.rasterize()
+	// 	.unwrap()
+	// 	.into_rgba8()
+	// 	.save(path.join("432technologies.png"))
+	// 	.unwrap();
 }

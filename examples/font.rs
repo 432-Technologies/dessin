@@ -1,4 +1,5 @@
 use dessin::prelude::*;
+use dessin_pdf::PdfExporter;
 use dessin_svg::SvgExporter;
 use palette::Srgb;
 use project_root::get_project_root;
@@ -48,7 +49,11 @@ fn main() {
 
 	fs::write(
 		get_project_root().unwrap().join("examples/out/font.pdf"),
-		dessin_pdf::to_pdf(&dessin).unwrap(),
+		PdfExporter::default()
+			.export(&dessin)
+			.unwrap()
+			.finish()
+			.unwrap(),
 	)
 	.unwrap();
 

@@ -55,7 +55,7 @@ fn main() {
 
 	// SVG
 	fs::write(
-		path.join("text_rotation.svg"),
+		path.join("text-rotation.svg"),
 		SvgExporter::default().export(&dessin.clone()).unwrap(),
 	)
 	.unwrap();
@@ -65,6 +65,6 @@ fn main() {
 		.rasterize()
 		.unwrap()
 		.into_rgba8()
-		.save(path.join("text_rotation.png"))
+		.save(path.join("text-rotation.png"))
 		.unwrap();
 }
