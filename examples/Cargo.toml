@@ -12,7 +12,7 @@ dessin-pdf = { path = "../dessin-pdf" }
 dessin-iced = { path = "../dessin-iced" }
 project-root = "0.2.2"
 palette = "0.7.6"
-iced = { git = "https://github.com/OlivierLemoine/iced.git", rev = "3c81aac2e1b48125efdf0c996fbbb9c72c06ae50" }
+iced = { git = "https://github.com/OlivierLemoine/iced.git", rev = "3c81aac" }
 
 [[example]]
 name = "432technologies"
