@@ -2,10 +2,14 @@ use dessin::{
 	nalgebra::{Point2, Rotation2, Translation2},
 	prelude::*,
 };
-use dessin_image::ToImage;
+use dessin_pdf::PdfExporter;
+use dessin_svg::SvgExporter;
 use palette::{named, Srgb, Srgba};
 use project_root::get_project_root;
-use std::f32::consts::{FRAC_PI_4, FRAC_PI_8, PI};
+use std::{
+	f32::consts::{FRAC_PI_4, FRAC_PI_8, PI},
+	fs,
+};
 
 const C: Srgb = Srgb::new(0.231, 0.329, 0.522);
 fn c(a: f32) -> Srgba {
@@ -247,15 +251,25 @@ impl From<Logo432> for Shape {
 }
 
 fn main() {
-	// let dessin = Shape::from(Logo432);
+	let dessin = Shape::from(Logo432);
 
-	// let path = get_project_root().unwrap().join("examples/out/");
+	fs::write(
+		get_project_root()
+			.unwrap()
+			.join("examples/out/logo-432technologies.pdf"),
+		PdfExporter::default()
+			.export(&dessin)
+			.unwrap()
+			.finish()
+			.unwrap(),
+	)
+	.unwrap();
 
-	// // Image
-	// dessin!({ dessin }(scale = [5., 5.]))
-	// 	.rasterize()
-	// 	.unwrap()
-	// 	.into_rgba8()
-	// 	.save(path.join("432technologies.png"))
-	// 	.unwrap();
+	fs::write(
+		get_project_root()
+			.unwrap()
+			.join("examples/out/logo-432technologies.svg"),
+		SvgExporter::default().export(&dessin).unwrap(),
+	)
+	.unwrap();
 }

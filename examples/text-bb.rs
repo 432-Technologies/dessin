@@ -1,4 +1,5 @@
 use dessin::prelude::*;
+use dessin_pdf::PdfExporter;
 use dessin_svg::SvgExporter;
 use palette::Srgb;
 use project_root::get_project_root;
@@ -31,6 +32,16 @@ fn main() {
 	}
 
 	let dessin = make_dessin(TextAlign::Left, TextVerticalAlign::Top);
+
+	fs::write(
+		get_project_root().unwrap().join("examples/out/text-bb.pdf"),
+		PdfExporter::default()
+			.export(&dessin)
+			.unwrap()
+			.finish()
+			.unwrap(),
+	)
+	.unwrap();
 
 	fs::write(
 		get_project_root().unwrap().join("examples/out/text-bb.svg"),

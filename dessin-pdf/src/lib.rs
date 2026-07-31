@@ -114,7 +114,6 @@ fn to_krilla_stroke(stroke: &Stroke) -> Option<KrillaStroke> {
 struct SurfaceExporter<'a> {
 	surface: krilla::surface::Surface<'a>,
 	used_font: &'a mut HashMap<(FontRef, font::fontdb::Weight, font::fontdb::Style), Font>,
-	bb: BoundingBox<Straight>,
 }
 impl Exporter for SurfaceExporter<'_> {
 	type Error = PdfError;
@@ -174,8 +173,7 @@ impl Exporter for SurfaceExporter<'_> {
 		let c = rad.cos();
 		let s = rad.sin();
 
-		let transform =
-			Transform::from_row(c, -s, s, c, bottom_left.x, self.bb.height() - bottom_left.y);
+		let transform = Transform::from_row(c, -s, s, c, bottom_left.x, bottom_left.y);
 
 		self.surface.push_transform(&transform);
 
@@ -201,7 +199,7 @@ impl Exporter for SurfaceExporter<'_> {
 		for keypoint in curve.keypoints {
 			match keypoint {
 				KeypointPosition::Point(p) => {
-					let pt = Point::from_xy(p.x, self.bb.height() - p.y);
+					let pt = Point::from_xy(p.x, p.y);
 					if prev_point.is_none() {
 						path_builder.move_to(pt.x, pt.y);
 					} else {
@@ -215,12 +213,10 @@ impl Exporter for SurfaceExporter<'_> {
 					end_control,
 					end,
 				}) => {
-					let start_opt = start.map(|v| Point::from_xy(v.x, self.bb.height() - v.y));
-					let start_control =
-						Point::from_xy(start_control.x, self.bb.height() - start_control.y);
-					let end_control =
-						Point::from_xy(end_control.x, self.bb.height() - end_control.y);
-					let end = Point::from_xy(end.x, self.bb.height() - end.y);
+					let start_opt = start.map(|v| Point::from_xy(v.x, v.y));
+					let start_control = Point::from_xy(start_control.x, start_control.y);
+					let end_control = Point::from_xy(end_control.x, end_control.y);
+					let end = Point::from_xy(end.x, end.y);
 
 					if let Some(s) = start_opt {
 						if prev_point.is_none() {
@@ -306,7 +302,7 @@ impl Exporter for SurfaceExporter<'_> {
 
 		// Convert mm → pt and compute screen Y for krilla's top-left origin.
 		let target_x = reference_start.x;
-		let target_y = self.bb.height() - reference_start.y;
+		let target_y = reference_start.y;
 
 		// Build combined transform: rotate + translate.
 		// krilla's draw_text handles its own Y-flip for glyph rendering.
@@ -365,18 +361,20 @@ impl PdfExporter {
 
 		let bb = self.viewport.bounding_box(shape);
 
-		let mut page = self.pdf_document.start_page_with(PageSettings::new(
-			Size::from_wh(bb.width() * FACTOR, bb.height() * FACTOR).unwrap(),
-		));
+		eprintln!("BB: {:?}", shape.local_bounding_box());
 
-		let parent_transform = nalgebra::convert::<_, Transform2<f32>>(Scale2::new(FACTOR, FACTOR))
-			* nalgebra::convert::<_, Transform2<f32>>(Translation2::new(-bb.left(), -bb.top()));
+		let mut page = self.pdf_document.start_page_with(
+			PageSettings::from_wh(bb.width() * FACTOR, bb.height() * FACTOR).unwrap(),
+		);
+
+		let parent_transform =
+			nalgebra::convert::<_, Transform2<f32>>(Scale2::new(FACTOR, -FACTOR))
+				* nalgebra::convert::<_, Transform2<f32>>(Translation2::new(-bb.left(), -bb.top()));
 
 		shape.write_into_exporter(
 			&mut SurfaceExporter {
 				surface: page.surface(),
 				used_font: &mut self.used_font,
-				bb,
 			},
 			&parent_transform,
 			Default::default(),
