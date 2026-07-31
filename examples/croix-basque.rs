@@ -1,47 +1,51 @@
 use dessin::{nalgebra::Rotation2, prelude::*};
 use dessin_pdf::PdfExporter;
 use dessin_svg::SvgExporter;
-use palette::Srgba;
+use palette::{IntoColor, Srgb, Srgba};
 use project_root::get_project_root;
-use std::{f32::consts::PI, fs};
+use std::{
+	f32::consts::{FRAC_PI_2, FRAC_PI_3, PI},
+	fs,
+};
 
+fn leaf() -> Curve {
+	dessin!(Curve(
+		then = dessin!(Arc(
+			start_angle = FRAC_PI_2,
+			end_angle = -FRAC_PI_2,
+			radius = 20f32,
+		)),
+		then = dessin!(Arc(
+			start_angle = FRAC_PI_2,
+			end_angle = -FRAC_PI_2,
+			radius = 10f32,
+			translate = [0., -10.],
+		))
+		.as_curve()
+		.reversed(),
+		then = dessin!(Arc(
+			start_angle = -FRAC_PI_2,
+			end_angle = FRAC_PI_2,
+			radius = 10f32,
+			translate = [0., 10.],
+		)),
+		closed
+	))
+}
 fn main() {
-	let croix_basque: Shape = dessin!([
-		*Circle(radius = 0.01, fill = Srgba::new(1.0, 0.0, 0.0, 1.0),),
-		for n in 0..=4 {
-			dessin!([
-				*ThickArc(
-					start_angle = PI / 2_f32,
-					outer_radius = 20f32,
-					inner_radius = 0f32,
-					span_angle = PI,
-					fill = Srgba::new(1.0, 0.0, 0.0, 1.0),
-					translate = [0., 20.],
-					rotate = Rotation2::new(PI * (n as f32) / 2_f32)
-				),
-				*Circle(
-					radius = 10.,
-					fill = Srgba::new(1.0, 0.0, 0.0, 1.0),
-					translate = [0., 30.],
-					rotate = Rotation2::new(PI * (n as f32) / 2_f32)
-				),
-				*ThickArc(
-					start_angle = PI / 2_f32,
-					outer_radius = 10f32,
-					inner_radius = 0f32,
-					span_angle = PI,
-					fill = Srgba::new(1.0, 1.0, 1.0, 1.0),
-					translate = [0., 10.],
-					rotate = Rotation2::new(PI * (n as f32) / 2_f32)
-				)
-			])
-		}
-	]);
+	let color: Srgba = Srgba::<u8>::new(0xE5, 0x0F, 0x0F, 0xFF).into_format();
+
+	let croix_basque: Shape = dessin!(for n in 0..4 {
+		dessin!([{ leaf() }(
+			translate = [0., 20.],
+			rotate = Rotation2::new(n as f32 * FRAC_PI_2)
+		) > *(fill = color)])
+	});
 
 	fs::write(
 		get_project_root()
 			.unwrap()
-			.join("examples/out/croix-basque.svg"),
+			.join("examples/out/croix-basque.pdf"),
 		PdfExporter::default()
 			.export(&croix_basque)
 			.unwrap()

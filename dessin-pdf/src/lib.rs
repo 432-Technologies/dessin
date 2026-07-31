@@ -17,7 +17,7 @@ use krilla::{
 	text::{Font, Tag, TextDirection},
 	Document,
 };
-use nalgebra::Transform2;
+use nalgebra::{Scale2, Transform2, Translation2};
 use std::{collections::HashMap, fmt, fs};
 
 pub mod reexport {
@@ -369,7 +369,8 @@ impl PdfExporter {
 			Size::from_wh(bb.width() * FACTOR, bb.height() * FACTOR).unwrap(),
 		));
 
-		let parent_transform = Transform2::identity();
+		let parent_transform = nalgebra::convert::<_, Transform2<f32>>(Scale2::new(FACTOR, FACTOR))
+			* nalgebra::convert::<_, Transform2<f32>>(Translation2::new(-bb.left(), -bb.top()));
 
 		shape.write_into_exporter(
 			&mut SurfaceExporter {

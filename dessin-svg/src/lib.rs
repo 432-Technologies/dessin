@@ -386,7 +386,7 @@ impl SvgExporter {
 			format!(
 				r#"<svg viewBox="{min_x} {min_y} {span_x} {span_y}" {SCHEME}>{content}</svg>"#,
 				min_x = bb.left(),
-				min_y = bb.top(),
+				min_y = -bb.top(),
 				span_x = bb.width(),
 				span_y = bb.height(),
 			)
