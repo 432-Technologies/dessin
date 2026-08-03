@@ -158,12 +158,9 @@ impl Exporter for SurfaceExporter<'_> {
 	fn export_image(
 		&mut self,
 		ImagePosition {
-			bottom_left,
-			width,
-			height,
+			bounding_box,
 			rotation,
 			image,
-			..
 		}: ImagePosition,
 	) -> Result<(), Self::Error> {
 		let img = Image::from_rgba8(image.to_rgba8().into_raw(), image.width(), image.height());
@@ -173,13 +170,13 @@ impl Exporter for SurfaceExporter<'_> {
 		let c = rad.cos();
 		let s = rad.sin();
 
-		let transform = Transform::from_row(c, -s, s, c, bottom_left.x, bottom_left.y);
+		let transform = Transform::from_row(c, -s, s, c, bounding_box.left(), bounding_box.top());
 
 		self.surface.push_transform(&transform);
 
 		self.surface.draw_image(
 			img,
-			Size::from_wh(width, height).expect("Invalid image size"),
+			Size::from_wh(bounding_box.width(), bounding_box.height()).expect("Invalid image size"),
 		);
 
 		self.surface.pop();
@@ -260,9 +257,10 @@ impl Exporter for SurfaceExporter<'_> {
 			font,
 			weight,
 			style,
-			..
+			align,
+			on_curve,
 		}: TextPosition,
-		StylePosition { .. }: StylePosition,
+		StylePosition { stroke, fill }: StylePosition,
 	) -> Result<(), Self::Error> {
 		// Load or reuse font, keyed by (font, weight, style) so that
 		// different variations of the same variable font are cached separately.

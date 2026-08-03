@@ -124,13 +124,12 @@ mod tests {
 		assert_eq!(
 			img.position(&Transform2::default()),
 			ImagePosition {
-				center: Point2::origin(),
-				top_left: Point2::new(-0.5, 0.5),
-				top_right: Point2::new(0.5, 0.5),
-				bottom_right: Point2::new(0.5, -0.5),
-				bottom_left: Point2::new(-0.5, -0.5),
-				width: 1.,
-				height: 1.,
+				bounding_box: BoundingBox::new(
+					Point2::new(-0.5, 0.5),
+					Point2::new(0.5, 0.5),
+					Point2::new(0.5, -0.5),
+					Point2::new(-0.5, -0.5),
+				),
 				rotation: 0.,
 				image: &empty_image,
 			}
@@ -148,13 +147,12 @@ mod tests {
 		assert_eq!(
 			img.position(&Transform2::default()),
 			ImagePosition {
-				center: Point2::new(-0.5, -0.5),
-				top_left: Point2::new(-1., 0.),
-				top_right: Point2::new(0., 0.),
-				bottom_right: Point2::new(0., -1.),
-				bottom_left: Point2::new(-1., -1.),
-				width: 1.,
-				height: 1.,
+				bounding_box: BoundingBox::new(
+					Point2::new(-0.5, 0.5),
+					Point2::new(0.5, 0.5),
+					Point2::new(0.5, -0.5),
+					Point2::new(-0.5, -0.5),
+				),
 				rotation: 0.,
 				image: &empty_image,
 			}
@@ -173,13 +171,12 @@ mod tests {
 		assert_eq!(
 			img.position(&translation),
 			ImagePosition {
-				center: Point2::new(14.5, 12.5),
-				top_left: Point2::new(14., 13.),
-				top_right: Point2::new(15., 13.),
-				bottom_right: Point2::new(15., 12.),
-				bottom_left: Point2::new(14., 12.),
-				width: 1.,
-				height: 1.,
+				bounding_box: BoundingBox::new(
+					Point2::new(-0.5, 0.5),
+					Point2::new(0.5, 0.5),
+					Point2::new(0.5, -0.5),
+					Point2::new(-0.5, -0.5),
+				),
 				rotation: 0.,
 				image: &empty_image,
 			}

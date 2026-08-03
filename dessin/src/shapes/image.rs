@@ -1,26 +1,13 @@
 use super::{BoundingBox, ShapeBoundingBox, UnParticular};
 use crate::shapes::{Shape, ShapeOp};
 use image::DynamicImage;
-use nalgebra::{Point2, Scale2, Transform2, Vector2};
+use nalgebra::{Point2, Scale2, Transform2};
 
 #[derive(Debug, Clone, PartialEq)]
 ///
 pub struct ImagePosition<'a> {
 	///
-	pub top_left: Point2<f32>,
-	///
-	pub top_right: Point2<f32>,
-	///
-	pub bottom_right: Point2<f32>,
-	///
-	pub bottom_left: Point2<f32>,
-	///
-	pub center: Point2<f32>,
-
-	///
-	pub width: f32,
-	///
-	pub height: f32,
+	pub bounding_box: BoundingBox<UnParticular>,
 
 	///
 	pub rotation: f32,
@@ -79,25 +66,13 @@ impl Image {
 
 	///
 	pub fn position<'a>(&'a self, parent_transform: &Transform2<f32>) -> ImagePosition<'a> {
-		let transform = self.global_transform(parent_transform);
+		let bounding_box = self.global_bounding_box(parent_transform);
 
-		let top_left = transform * Point2::new(-0.5, 0.5);
-		let top_right = transform * Point2::new(0.5, 0.5);
-		let bottom_right = transform * Point2::new(0.5, -0.5);
-		let bottom_left = transform * Point2::new(-0.5, -0.5);
-		let center = transform * Point2::origin();
-
-		let rot_dir = transform * Vector2::x();
+		let rot_dir = bounding_box.top_right() - bounding_box.top_left();
 		let rotation = rot_dir.y.atan2(rot_dir.x);
 
 		ImagePosition {
-			center,
-			top_left,
-			top_right,
-			bottom_right,
-			bottom_left,
-			width: (top_right - top_left).magnitude(),
-			height: (top_right - bottom_right).magnitude(),
+			bounding_box,
 			rotation,
 			image: &self.image,
 		}
@@ -126,17 +101,11 @@ impl ShapeOp for Image {
 
 impl ShapeBoundingBox for Image {
 	fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
-		let ImagePosition {
-			top_left,
-			top_right,
-			bottom_right,
-			bottom_left,
-			center: _,
-			width: _,
-			height: _,
-			rotation: _,
-			image: _,
-		} = self.position(&Transform2::default());
+		let top_left = self.local_transform * Point2::new(-0.5, 0.5);
+		let top_right = self.local_transform * Point2::new(0.5, 0.5);
+		let bottom_right = self.local_transform * Point2::new(0.5, -0.5);
+		let bottom_left = self.local_transform * Point2::new(-0.5, -0.5);
+
 		BoundingBox::new(top_left, top_right, bottom_right, bottom_left)
 	}
 }
@@ -153,21 +122,9 @@ mod tests {
 	fn base() {
 		let img = dessin!(Image());
 
-		let empty_image = DynamicImage::default();
-
 		assert_eq!(
-			img.position(&Transform2::default()),
-			ImagePosition {
-				center: Point2::origin(),
-				top_left: Point2::new(-0.5, 0.5),
-				top_right: Point2::new(0.5, 0.5),
-				bottom_right: Point2::new(0.5, -0.5),
-				bottom_left: Point2::new(-0.5, -0.5),
-				width: 1.,
-				height: 1.,
-				rotation: 0.,
-				image: &empty_image,
-			}
+			img.position(&Transform2::default()).bounding_box,
+			BoundingBox::mins_maxs(-0.5, -0.5, 0.5, 0.5).as_unparticular(),
 		);
 	}
 
@@ -194,10 +151,11 @@ mod tests {
 	fn local_transform() {
 		let img = dessin!(Image(rotate = Rotation2::new(-45_f32.to_radians())));
 		let img_pos = img.position(&Transform2::default());
+
 		assert_f32_near!(img_pos.rotation, -45_f32.to_radians());
-		assert_f32_near!(img_pos.width, 1.);
-		assert_f32_near!(img_pos.top_left.x, Point2::new(0., SQRT_2 / 2.).x);
-		assert_f32_near!(img_pos.top_left.y, Point2::new(0., SQRT_2 / 2.).y);
+		assert_f32_near!(img_pos.bounding_box.width(), 1.);
+		assert_f32_near!(img_pos.bounding_box.left(), Point2::new(0., SQRT_2 / 2.).x);
+		assert_f32_near!(img_pos.bounding_box.top(), Point2::new(0., SQRT_2 / 2.).y);
 	}
 
 	#[test]
@@ -207,9 +165,9 @@ mod tests {
 		let img_pos = img.position(&parent_transform);
 
 		assert_f32_near!(img_pos.rotation, -45_f32.to_radians());
-		assert_f32_near!(img_pos.width, 1.);
-		assert_f32_near!(img_pos.top_left.x, Point2::new(0., SQRT_2 / 2.).x);
-		assert_f32_near!(img_pos.top_left.y, Point2::new(0., SQRT_2 / 2.).y);
+		assert_f32_near!(img_pos.bounding_box.width(), 1.);
+		assert_f32_near!(img_pos.bounding_box.left(), Point2::new(0., SQRT_2 / 2.).x);
+		assert_f32_near!(img_pos.bounding_box.top(), Point2::new(0., SQRT_2 / 2.).y);
 	}
 
 	#[test]
@@ -218,16 +176,16 @@ mod tests {
 		let img_pos = img.position(&Transform2::default());
 		let empty_image = DynamicImage::default();
 		println!("Base = {img_pos:?}\n");
+
 		assert_eq!(
 			img_pos,
 			ImagePosition {
-				center: Point2::origin(),
-				top_left: Point2::new(-0.5, 0.5),
-				top_right: Point2::new(0.5, 0.5),
-				bottom_right: Point2::new(0.5, -0.5),
-				bottom_left: Point2::new(-0.5, -0.5),
-				width: 1.,
-				height: 1.,
+				bounding_box: BoundingBox::new(
+					Point2::new(-0.5, 0.5),
+					Point2::new(0.5, 0.5),
+					Point2::new(0.5, -0.5),
+					Point2::new(-0.5, -0.5),
+				),
 				rotation: 0.,
 				image: &empty_image,
 			}
@@ -237,31 +195,43 @@ mod tests {
 		let img_pos = img.position(&Transform2::default());
 		println!("Rot(-45deg) = {img_pos:?}\n");
 		assert_f32_near!(img_pos.rotation, -45_f32.to_radians());
-		assert_f32_near!(img_pos.width, 1.);
-		assert_f32_near!(img_pos.top_left.x, Point2::new(0., SQRT_2 / 2.).x);
-		assert_f32_near!(img_pos.top_left.y, Point2::new(0., SQRT_2 / 2.).y);
+		assert_f32_near!(img_pos.bounding_box.width(), 1.);
+		assert_f32_near!(img_pos.bounding_box.left(), Point2::new(0., SQRT_2 / 2.).x);
+		assert_f32_near!(img_pos.bounding_box.top(), Point2::new(0., SQRT_2 / 2.).y);
 
 		let img = dessin!({ img }(translate = Translation2::new(1., 0.)));
 		let img_pos = img.position(&Transform2::default());
 		println!("Translate_x(1) = {img_pos:?}\n");
 		assert_f32_near!(img_pos.rotation, -45_f32.to_radians());
-		assert_f32_near!(img_pos.width, 1.);
-		assert_f32_near!(img_pos.top_left.x, Point2::new(1., SQRT_2 / 2.).x);
-		assert_f32_near!(img_pos.top_left.y, Point2::new(1., SQRT_2 / 2.).y);
-		assert_f32_near!(img_pos.top_right.x, Point2::new(SQRT_2 / 2. + 1., 0.).x);
-		assert_f32_near!(img_pos.top_right.y, Point2::new(SQRT_2 / 2. + 1., 0.).y);
+		assert_f32_near!(img_pos.bounding_box.width(), 1.);
+		assert_f32_near!(img_pos.bounding_box.left(), Point2::new(1., SQRT_2 / 2.).x);
+		assert_f32_near!(img_pos.bounding_box.top(), Point2::new(1., SQRT_2 / 2.).y);
+		assert_f32_near!(
+			img_pos.bounding_box.right(),
+			Point2::new(SQRT_2 / 2. + 1., 0.).x
+		);
+		assert_f32_near!(
+			img_pos.bounding_box.top(),
+			Point2::new(SQRT_2 / 2. + 1., 0.).y
+		);
 
 		let img = dessin!({ img }(scale = Scale2::new(3., 2.)));
 		let img_pos = img.position(&Transform2::default());
 		println!("Scale(3, 2) =img_pos:?\n");
-		assert_f32_near!(img_pos.top_left.x, Point2::new(3. * 1., 2. * SQRT_2 / 2.).x);
-		assert_f32_near!(img_pos.top_left.y, Point2::new(3. * 1., 2. * SQRT_2 / 2.).y);
 		assert_f32_near!(
-			img_pos.top_right.x,
+			img_pos.bounding_box.left(),
+			Point2::new(3. * 1., 2. * SQRT_2 / 2.).x
+		);
+		assert_f32_near!(
+			img_pos.bounding_box.top(),
+			Point2::new(3. * 1., 2. * SQRT_2 / 2.).y
+		);
+		assert_f32_near!(
+			img_pos.bounding_box.right(),
 			Point2::new(3. * (SQRT_2 / 2. + 1.), 2. * 0.).x
 		);
 		assert_f32_near!(
-			img_pos.top_right.y,
+			img_pos.bounding_box.top(),
 			Point2::new(3. * (SQRT_2 / 2. + 1.), 2. * 0.).y
 		);
 	}

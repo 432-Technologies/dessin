@@ -154,13 +154,7 @@ impl Exporter for SvgExporter {
 	fn export_image(
 		&mut self,
 		ImagePosition {
-			top_left: _,
-			top_right: _,
-			bottom_right: _,
-			bottom_left: _,
-			center,
-			width,
-			height,
+			bounding_box,
 			rotation,
 			image,
 		}: ImagePosition,
@@ -169,6 +163,10 @@ impl Exporter for SvgExporter {
 		image.write_to(&mut raw_image, ImageFormat::Png).unwrap();
 
 		let data = data_encoding::BASE64.encode(&raw_image.into_inner());
+
+		let width = bounding_box.width();
+		let height = bounding_box.height();
+		let center = bounding_box.center();
 
 		write!(
 			self.acc,

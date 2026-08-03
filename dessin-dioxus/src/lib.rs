@@ -312,10 +312,10 @@ fn Shaper(
 
 			rsx! {
 				image {
-					width: image.width,
-					height: image.height,
-					x: image.center.x - image.width / 2.,
-					y: image.center.y - image.width / 2.,
+					width: image.bounding_box.width(),
+					height: image.bounding_box.height(),
+					x: image.bounding_box.center().x - image.bounding_box.width() / 2.,
+					y: image.bounding_box.center().y - image.bounding_box.width() / 2.,
 					transform: "rotate({r})",
 					href: "data:image/png;base64,{data}",
 				}

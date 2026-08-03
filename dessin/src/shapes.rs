@@ -165,7 +165,7 @@ pub struct Straight;
 
 /// Bounding box used to describe max bound of an shape.
 /// Usefull to find the max size of shapes as multiple [`BoundingBox`] can be join together.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy)]
 pub struct BoundingBox<Type> {
 	_ty: PhantomData<Type>,
 	top_left: Point2<f32>,
@@ -500,6 +500,15 @@ impl<T> Neg for BoundingBox<T> {
 	}
 }
 
+impl<A, B> PartialEq<BoundingBox<A>> for BoundingBox<B> {
+	fn eq(&self, other: &BoundingBox<A>) -> bool {
+		self.top_left == other.top_left
+			&& self.top_right == other.top_right
+			&& self.bottom_right == other.bottom_right
+			&& self.bottom_left == other.bottom_left
+	}
+}
+
 /// Traits that defined whether a [`Shape`] can be bound by a [`BoundingBox`]
 pub trait ShapeBoundingBox {
 	/// [`BoundingBox`] of a [`Shape`]
@@ -783,7 +792,7 @@ mod tests {
 	fn parent_rotate_child_scale() {
 		let base = dessin!(Image(scale = [2., 4.], translate = [1., 2.]));
 
-		let base_position = base.position(&Transform2::default());
+		let base_position = base.position(&Transform2::default()).bounding_box;
 		assert!(
 			(base_position.bottom_left - Point2::new(0., 0.)).magnitude() < EPS,
 			"left = {}, right = [0., 0.]",
@@ -801,7 +810,7 @@ mod tests {
 		);
 
 		let transform = nalgebra::convert(Rotation2::new(FRAC_PI_2));
-		let transform_position = base.position(&transform);
+		let transform_position = base.position(&transform).bounding_box;
 		assert!(
 			(transform_position.bottom_left - Point2::new(0., 0.)).magnitude() < EPS,
 			"left = {}, right = [0., 0.]",

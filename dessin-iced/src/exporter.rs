@@ -33,10 +33,10 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 
 		self.frame.draw_image(
 			Rectangle::new(
-				Point::new(image.top_left.x, image.top_left.y),
+				Point::new(image.bounding_box.left(), image.bounding_box.top()),
 				Size {
-					width: image.width,
-					height: image.height,
+					width: image.bounding_box.width(),
+					height: image.bounding_box.height(),
 				},
 			),
 			img_bytes,

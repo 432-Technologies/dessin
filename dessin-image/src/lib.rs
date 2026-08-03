@@ -96,13 +96,7 @@ impl Exporter for ImageExporter {
 	fn export_image(
 		&mut self,
 		ImagePosition {
-			top_left: _,
-			top_right: _,
-			bottom_right: _,
-			bottom_left: _,
-			center: _,
-			width: _,
-			height: _,
+			bounding_box: _,
 			rotation: _,
 			image: _,
 		}: ImagePosition,
@@ -240,15 +234,15 @@ impl Exporter for ImageExporter {
 	fn export_text(
 		&mut self,
 		TextPosition {
-			text,
+			text: _,
 			align: _,
-			weight,
-			style,
+			weight: _,
+			style: _,
 			on_curve: _,
-			font_size,
-			reference_start,
+			font_size: _,
+			reference_start: _,
 			direction: _,
-			font,
+			font: _,
 		}: TextPosition,
 		_: StylePosition,
 	) -> Result<(), Self::Error> {
