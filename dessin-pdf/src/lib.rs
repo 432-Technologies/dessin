@@ -1,6 +1,5 @@
 use dessin::export::ViewPort;
 use dessin::palette::Srgba;
-use dessin::reexport::cosmic_text;
 use dessin::{
 	export::{Export, Exporter},
 	font::FontRef,
@@ -60,6 +59,14 @@ fn to_krilla_color(color: Srgba) -> rgb::Color {
 	rgb::Color::new(to_u8(color.red), to_u8(color.green), to_u8(color.blue))
 }
 
+/// Convert an alpha component (0.0–1.0) to a krilla normalized opacity.
+///
+/// The value is clamped into the valid `0..=1` range so that an out-of-range
+/// alpha (e.g. from `Srgba::new_implemented` misuse) can never panic.
+fn to_opacity(alpha: f32) -> NormalizedF32 {
+	NormalizedF32::new(alpha.clamp(0.0, 1.0)).unwrap_or(NormalizedF32::ONE)
+}
+
 /// Build a krilla Fill from a dessin Fill.
 fn to_krilla_fill(fill: &Fill) -> Option<KrillaFill> {
 	match fill {
@@ -67,7 +74,7 @@ fn to_krilla_fill(fill: &Fill) -> Option<KrillaFill> {
 			let paint: Paint = to_krilla_color(*color).into();
 			Some(KrillaFill {
 				paint,
-				opacity: NormalizedF32::ONE,
+				opacity: to_opacity(color.alpha),
 				rule: FillRule::NonZero,
 			})
 		}
@@ -85,7 +92,7 @@ fn to_krilla_stroke(stroke: &Stroke) -> Option<KrillaStroke> {
 				miter_limit: 10.0,
 				line_cap: LineCap::Butt,
 				line_join: LineJoin::Miter,
-				opacity: NormalizedF32::ONE,
+				opacity: to_opacity(color.alpha),
 				dash: None,
 			})
 		}
@@ -102,7 +109,7 @@ fn to_krilla_stroke(stroke: &Stroke) -> Option<KrillaStroke> {
 				miter_limit: 10.0,
 				line_cap: LineCap::Butt,
 				line_join: LineJoin::Miter,
-				opacity: NormalizedF32::ONE,
+				opacity: to_opacity(color.alpha),
 				dash: Some(StrokeDash {
 					array: vec![*on, *off],
 					offset: 0.0,
