@@ -9,7 +9,7 @@ authors.workspace = true
 
 [dependencies]
 dessin = { version = "^0.8.23", path = "../dessin" }
-iced_core = { git = "https://github.com/OlivierLemoine/iced.git", rev = "3c81aac", default-features = false }
-iced_widget = { git = "https://github.com/OlivierLemoine/iced.git", rev = "3c81aac", default-features = false, features = ["canvas", "image"] }
-iced_graphics = { git = "https://github.com/OlivierLemoine/iced.git", rev = "3c81aac", default-features = false, features = ["image"] }
+iced_core = { git = "https://github.com/OlivierLemoine/iced.git", rev = "05f161b", default-features = false }
+iced_widget = { git = "https://github.com/OlivierLemoine/iced.git", rev = "05f161b", default-features = false, features = ["canvas", "image"] }
+iced_graphics = { git = "https://github.com/OlivierLemoine/iced.git", rev = "05f161b", default-features = false, features = ["image"] }
 tracing = "0.1"
