@@ -237,6 +237,7 @@ impl Exporter for SvgExporter {
 			on_curve,
 			font_size,
 			reference_start,
+			bounding_box: _,
 			direction,
 			font,
 		}: TextPosition,

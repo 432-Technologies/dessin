@@ -1,5 +1,6 @@
 use dessin::export::ViewPort;
 use dessin::palette::Srgba;
+use dessin::reexport::cosmic_text;
 use dessin::{
 	export::{Export, Exporter},
 	font::FontRef,
@@ -258,7 +259,8 @@ impl Exporter for SurfaceExporter<'_> {
 			weight,
 			style,
 			align,
-			on_curve,
+			on_curve: _,
+			bounding_box,
 		}: TextPosition,
 		StylePosition { stroke, fill }: StylePosition,
 	) -> Result<(), Self::Error> {
@@ -298,6 +300,41 @@ impl Exporter for SurfaceExporter<'_> {
 
 		let rotation = direction.y.atan2(direction.x).to_degrees();
 
+		// Apply the effective fill/stroke style from the current style scope.
+		// krilla's draw_text renders the glyphs using the surface's active style.
+		if let Some(ref f) = fill {
+			if let Some(krilla_fill) = to_krilla_fill(f) {
+				self.surface.set_fill(Some(krilla_fill));
+			} else {
+				self.surface.set_fill(None);
+			}
+		} else {
+			self.surface.set_fill(None);
+		}
+
+		if let Some(ref s) = stroke {
+			if let Some(krilla_stroke) = to_krilla_stroke(s) {
+				self.surface.set_stroke(Some(krilla_stroke));
+			} else {
+				self.surface.set_stroke(None);
+			}
+		} else {
+			self.surface.set_stroke(None);
+		}
+
+		// Horizontal alignment: shift the text start point along its baseline so
+		// that the reference point matches the requested alignment.
+		let text_width = if matches!(align, TextAlign::Left) {
+			0.0
+		} else {
+			bounding_box.width()
+		};
+		let start_offset = match align {
+			TextAlign::Left => 0.0,
+			TextAlign::Center => -text_width / 2.0,
+			TextAlign::Right => -text_width,
+		};
+
 		// Convert mm → pt and compute screen Y for krilla's top-left origin.
 		let target_x = reference_start.x;
 		let target_y = reference_start.y;
@@ -312,7 +349,7 @@ impl Exporter for SurfaceExporter<'_> {
 		self.surface.push_transform(&transform);
 
 		self.surface.draw_text(
-			Point::from_xy(0.0, 0.0),
+			Point::from_xy(start_offset, 0.0),
 			krilla_font,
 			font_size,
 			&text,

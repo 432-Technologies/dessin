@@ -241,6 +241,7 @@ impl Exporter for ImageExporter {
 			on_curve: _,
 			font_size: _,
 			reference_start: _,
+			bounding_box: _,
 			direction: _,
 			font: _,
 		}: TextPosition,

@@ -199,7 +199,7 @@ pub struct TextShape {
 }
 impl TextShape {
 	pub fn position<'a>(&'a self, parent_transform: &Transform2<f32>) -> TextPosition<'a> {
-		let bb = self.global_bounding_box(parent_transform);
+		let bounding_box = self.global_bounding_box(parent_transform);
 
 		let transform = parent_transform * self.local_transform;
 
@@ -213,10 +213,11 @@ impl TextShape {
 			on_curve: self.on_curve.as_ref().map(|v| v.position(&transform)),
 			font_size,
 			reference_start: match self.align {
-				TextAlign::Left => bb.bottom_left,
-				TextAlign::Center => [bb.center().x, bb.bottom()].into(),
-				TextAlign::Right => bb.bottom_right,
+				TextAlign::Left => bounding_box.bottom_left,
+				TextAlign::Center => [bounding_box.center().x, bounding_box.bottom()].into(),
+				TextAlign::Right => bounding_box.bottom_right,
 			},
+			bounding_box,
 			direction: Unit::new_normalize(transform * Vector2::new(1., 0.)),
 			font: &self.font,
 		}
@@ -250,25 +251,16 @@ impl ShapeBoundingBox for TextShape {
 	}
 }
 
-///
 pub struct TextPosition<'a> {
-	///
 	pub text: &'a str,
-	///
 	pub align: TextAlign,
-	///
 	pub weight: FontWeight,
-	///
 	pub style: FontStyle,
-	///
 	pub on_curve: Option<CurvePosition>,
-	///
 	pub font_size: f32,
-	///
 	pub reference_start: Point2<f32>,
-	///
+	pub bounding_box: BoundingBox<UnParticular>,
 	pub direction: Unit<Vector2<f32>>,
-	///
 	pub font: &'a FontRef,
 }
 
