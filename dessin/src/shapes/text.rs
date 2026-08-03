@@ -4,7 +4,7 @@ pub mod font;
 use crate::prelude::*;
 use font::FontRef;
 pub use fontdb::{Style as FontStyle, Weight as FontWeight};
-use na::{Point2, Unit, Vector2};
+use na::{Point2, Vector2};
 use nalgebra::{self as na, Transform2};
 
 /// TextAlign
@@ -202,23 +202,20 @@ impl TextShape {
 		let bounding_box = self.global_bounding_box(parent_transform);
 
 		let transform = parent_transform * self.local_transform;
-
 		let font_size = self.font_size * (transform * Vector2::new(0., 1.)).magnitude();
+
+		let rot_dir = bounding_box.top_right() - bounding_box.top_left();
+		let rotation = rot_dir.y.atan2(rot_dir.x);
 
 		TextPosition {
 			text: &self.text,
-			align: self.align,
 			weight: self.weight,
 			style: self.style,
 			on_curve: self.on_curve.as_ref().map(|v| v.position(&transform)),
 			font_size,
-			reference_start: match self.align {
-				TextAlign::Left => bounding_box.bottom_left,
-				TextAlign::Center => [bounding_box.center().x, bounding_box.bottom()].into(),
-				TextAlign::Right => bounding_box.bottom_right,
-			},
+			reference_start: bounding_box.bottom_left,
 			bounding_box,
-			direction: Unit::new_normalize(transform * Vector2::new(1., 0.)),
+			rotation,
 			font: &self.font,
 		}
 	}
@@ -253,14 +250,13 @@ impl ShapeBoundingBox for TextShape {
 
 pub struct TextPosition<'a> {
 	pub text: &'a str,
-	pub align: TextAlign,
 	pub weight: FontWeight,
 	pub style: FontStyle,
 	pub on_curve: Option<CurvePosition>,
 	pub font_size: f32,
 	pub reference_start: Point2<f32>,
+	pub rotation: f32,
 	pub bounding_box: BoundingBox<UnParticular>,
-	pub direction: Unit<Vector2<f32>>,
 	pub font: &'a FontRef,
 }
 

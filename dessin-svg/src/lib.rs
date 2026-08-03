@@ -231,14 +231,13 @@ impl Exporter for SvgExporter {
 		&mut self,
 		TextPosition {
 			text,
-			align,
 			weight: font_weight,
 			style: font_style,
 			on_curve,
 			font_size,
 			reference_start,
+			rotation,
 			bounding_box: _,
-			direction,
 			font,
 		}: TextPosition,
 		_: StylePosition,
@@ -260,17 +259,12 @@ impl Exporter for SvgExporter {
 			FontStyle::Italic => "italic",
 			FontStyle::Oblique => "oblique",
 		};
-		let align = match align {
-			TextAlign::Center => "middle",
-			TextAlign::Left => "start",
-			TextAlign::Right => "end",
-		};
 
 		let text = text.replace('<', "&lt;").replace('>', "&gt;");
 
 		write!(
 			self.acc,
-			r#"<text font-family="{font_name}" text-anchor="{align}" font-size="{font_size}px" font-weight="{font_weight}" font-style="{font_style}" transform=""#,
+			r#"<text font-family="{font_name}" font-size="{font_size}px" font-weight="{font_weight}" font-style="{font_style}" transform=""#,
 		)?;
 
 		write!(
@@ -280,7 +274,6 @@ impl Exporter for SvgExporter {
 			cy = reference_start.y
 		)?;
 
-		let rotation = direction.y.atan2(direction.x);
 		if rotation.abs() > 10e-6 {
 			write!(self.acc, r"rotate({rot}) ", rot = rotation.to_degrees())?;
 		}

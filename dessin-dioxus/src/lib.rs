@@ -338,24 +338,19 @@ fn Shaper(
 				FontStyle::Italic => "italic",
 				FontStyle::Oblique => "oblique",
 			};
-			let align = match text.align {
-				TextAlign::Center => "middle",
-				TextAlign::Left => "start",
-				TextAlign::Right => "end",
-			};
 
 			let font_ref = text.font.clone();
 			let font_family = &text.font.family;
 
 			let x = text.reference_start.x;
 			let y = text.reference_start.y;
-			let r = text.direction.y.atan2(text.direction.x).to_degrees();
+			let r = text.rotation.to_degrees();
 
 			rsx! {
 				text {
 					onmounted: move |_| add_font(font_ref.clone()),
 					font_family: "{font_family}",
-					text_anchor: "{align}",
+					text_anchor: "start",
 					font_size: "{text.font_size}px",
 					font_weight: "{font_weight}",
 					font_style: "{font_style}",

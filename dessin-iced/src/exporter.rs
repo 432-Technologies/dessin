@@ -190,11 +190,7 @@ impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
 					FontStyle::Oblique => iced_core::font::Style::Oblique,
 				},
 			},
-			align_x: match text.align {
-				TextAlign::Left => iced_core::text::Alignment::Left,
-				TextAlign::Center => iced_core::text::Alignment::Center,
-				TextAlign::Right => iced_core::text::Alignment::Right,
-			},
+			align_x: iced_core::text::Alignment::Left,
 			align_y: iced_core::alignment::Vertical::Center,
 			shaping: iced_core::text::Shaping::Basic,
 		});

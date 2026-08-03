@@ -261,13 +261,12 @@ impl Exporter for SurfaceExporter<'_> {
 			text,
 			font_size,
 			reference_start,
-			direction,
+			rotation,
 			font,
 			weight,
 			style,
-			align,
 			on_curve: _,
-			bounding_box,
+			bounding_box: _,
 		}: TextPosition,
 		StylePosition { stroke, fill }: StylePosition,
 	) -> Result<(), Self::Error> {
@@ -305,8 +304,6 @@ impl Exporter for SurfaceExporter<'_> {
 			k_font
 		};
 
-		let rotation = direction.y.atan2(direction.x).to_degrees();
-
 		// Apply the effective fill/stroke style from the current style scope.
 		// krilla's draw_text renders the glyphs using the surface's active style.
 		if let Some(ref f) = fill {
@@ -329,34 +326,19 @@ impl Exporter for SurfaceExporter<'_> {
 			self.surface.set_stroke(None);
 		}
 
-		// Horizontal alignment: shift the text start point along its baseline so
-		// that the reference point matches the requested alignment.
-		let text_width = if matches!(align, TextAlign::Left) {
-			0.0
-		} else {
-			bounding_box.width()
-		};
-		let start_offset = match align {
-			TextAlign::Left => 0.0,
-			TextAlign::Center => -text_width / 2.0,
-			TextAlign::Right => -text_width,
-		};
-
-		// Convert mm → pt and compute screen Y for krilla's top-left origin.
-		let target_x = reference_start.x;
-		let target_y = reference_start.y;
-
 		// Build combined transform: rotate + translate.
 		// krilla's draw_text handles its own Y-flip for glyph rendering.
-		let angle_rad = rotation.to_radians();
-		let c = angle_rad.cos();
-		let s = angle_rad.sin();
-		let transform = Transform::from_row(c, -s, s, c, target_x, target_y);
+		let c = rotation.cos();
+		let s = rotation.sin();
+		// `from_row(sx, ky, kx, sy, ...)` maps the local +x axis to `(sx, ky)`,
+		// which is `(c, s)` — exactly the baseline `direction` — so the text is
+		// rotated the same way as in the SVG exporter.
+		let transform = Transform::from_row(c, s, -s, c, reference_start.x, reference_start.y);
 
 		self.surface.push_transform(&transform);
 
 		self.surface.draw_text(
-			Point::from_xy(start_offset, 0.0),
+			Point::from_xy(0.0, 0.0),
 			krilla_font,
 			font_size,
 			&text,
