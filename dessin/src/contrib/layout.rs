@@ -24,23 +24,7 @@ impl VerticalLayout {
 	/// In the case of a Group, local_transform is discarded as the shapes will be rearranged in a vertical layout
 	#[inline]
 	pub fn of<T: Into<Shape>>(&mut self, shape: T) -> &mut Self {
-		match shape.into() {
-			Shape::Group(Group {
-				local_transform,
-				shapes,
-				metadata,
-			}) => {
-				self.metadata.extend(metadata);
-				self.shapes.extend(shapes.into_iter().map(|mut v| {
-					v.transform(local_transform);
-					v
-				}));
-			}
-			x => {
-				self.shapes.push(x);
-			}
-		}
-
+		self.shapes.push(shape.into());
 		self
 	}
 
@@ -137,7 +121,7 @@ mod tests {
 		init_font();
 		let layout = dessin!(VerticalLayout(of = Text::default().with_font_size(10.)) > ());
 
-		let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
+		let bb: BoundingBox<NonAxisAligned> = layout.local_bounding_box();
 
 		assert_float_absolute_eq!(bb.height(), 10., 0.0001);
 	}
@@ -152,7 +136,7 @@ mod tests {
 			) > ()
 		);
 
-		let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
+		let bb: BoundingBox<NonAxisAligned> = layout.local_bounding_box();
 
 		assert_float_absolute_eq!(bb.height(), 20., 0.0001);
 	}
@@ -167,7 +151,7 @@ mod tests {
 			) > ()
 		);
 
-		let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
+		let bb: BoundingBox<NonAxisAligned> = layout.local_bounding_box();
 
 		assert_float_absolute_eq!(bb.height(), 24., 0.0001);
 	}
@@ -183,7 +167,7 @@ mod tests {
 			) > ()
 		);
 
-		let bb: BoundingBox<UnParticular> = layout.local_bounding_box();
+		let bb: BoundingBox<NonAxisAligned> = layout.local_bounding_box();
 
 		assert_float_absolute_eq!(bb.height(), 24., 0.0001);
 	}
@@ -194,7 +178,7 @@ mod tests {
 			of = dessin!([Circle(radius = 10.), Circle(radius = 10.),]),
 		));
 
-		let Shape::Group(Group {
+		let Shape::Group(GroupShape {
 			local_transform: _,
 			shapes,
 			..
@@ -224,7 +208,7 @@ mod tests {
 			}
 		));
 
-		let Shape::Group(Group {
+		let Shape::Group(GroupShape {
 			local_transform: _,
 			shapes,
 			..

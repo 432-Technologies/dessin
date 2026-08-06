@@ -1,6 +1,6 @@
 use super::Curve;
 use crate::{
-	prelude::{BoundingBox, ShapeBoundingBox, UnParticular},
+	prelude::{BoundingBox, NonAxisAligned, ShapeBoundingBox},
 	shapes::ShapeOpWith,
 };
 use nalgebra::{Point2, Transform2, Vector2};
@@ -35,7 +35,7 @@ impl Keypoint {
 	}
 
 	/// bounding_box
-	pub fn bounding_box(&self) -> BoundingBox<UnParticular> {
+	pub fn bounding_box(&self) -> BoundingBox<NonAxisAligned> {
 		match self {
 			Keypoint::Curve(c) => c.local_bounding_box(),
 			Keypoint::Point(p) => BoundingBox::at(*p).as_unparticular(),

@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
+use palette::Srgba;
 use std::ops::{Deref, DerefMut};
 
 #[derive(Debug, Clone, PartialEq, Shape)]
@@ -120,10 +121,9 @@ where
 
 		let bb = shape.local_bounding_box().straigthen();
 
-		//------------------------------------------------------------------------------------------------------------------
-
 		dessin!([
-			Rectangle(
+			*Rectangle(
+				fill = Srgba::new(0., 0., 0., 0.),
 				scale = [
 					bb.width() + padding_left + padding_right,
 					bb.height() + padding_top + padding_bottom,
@@ -136,8 +136,6 @@ where
 			),
 			{ shape },
 		])
-
-		//-----------------------------------------------------------------------------------------------------------------
 	}
 }
 

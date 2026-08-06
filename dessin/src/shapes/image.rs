@@ -1,4 +1,4 @@
-use super::{BoundingBox, ShapeBoundingBox, UnParticular};
+use super::{BoundingBox, ShapeBoundingBox, NonAxisAligned};
 use crate::shapes::{Shape, ShapeOp};
 use image::DynamicImage;
 use nalgebra::{Point2, Scale2, Transform2};
@@ -7,7 +7,7 @@ use nalgebra::{Point2, Scale2, Transform2};
 ///
 pub struct ImagePosition<'a> {
 	///
-	pub bounding_box: BoundingBox<UnParticular>,
+	pub bounding_box: BoundingBox<NonAxisAligned>,
 
 	///
 	pub rotation: f32,
@@ -100,7 +100,7 @@ impl ShapeOp for Image {
 }
 
 impl ShapeBoundingBox for Image {
-	fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
+	fn local_bounding_box(&self) -> BoundingBox<NonAxisAligned> {
 		let top_left = self.local_transform * Point2::new(-0.5, 0.5);
 		let top_right = self.local_transform * Point2::new(0.5, 0.5);
 		let bottom_right = self.local_transform * Point2::new(0.5, -0.5);

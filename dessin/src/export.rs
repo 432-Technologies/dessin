@@ -11,7 +11,7 @@ use nalgebra::Transform2;
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub enum ViewPort {
 	/// Create a viewport centered around (x, y), with size (width, height)
-	Manual(BoundingBox<Straight>),
+	Manual(BoundingBox<AxisAligned>),
 	/// Create a Viewport centered around (0, 0), with auto size that include all [Shapes][`dessin::prelude::Shape`]
 	AutoCentered,
 	#[default]
@@ -27,7 +27,7 @@ impl ViewPort {
 		ViewPort::AutoCentered
 	}
 
-	pub fn manual(bb: BoundingBox<Straight>) -> Self {
+	pub fn manual(bb: BoundingBox<AxisAligned>) -> Self {
 		ViewPort::Manual(bb)
 	}
 
@@ -40,7 +40,7 @@ impl ViewPort {
 		))
 	}
 
-	pub fn bounding_box(&self, shape: &Shape) -> BoundingBox<Straight> {
+	pub fn bounding_box(&self, shape: &Shape) -> BoundingBox<AxisAligned> {
 		match self {
 			ViewPort::Manual(v) => *v,
 			ViewPort::AutoCentered => {
@@ -109,10 +109,11 @@ where
 		StylePosition { fill, stroke }: StylePosition,
 	) -> Result<(), <E as Exporter>::Error> {
 		match self {
-			Shape::Group(Group {
+			Shape::Group(GroupShape {
 				local_transform,
 				shapes,
 				metadata,
+				bounding_box_cache: _,
 			}) => {
 				exporter.start_block(metadata.as_slice())?;
 

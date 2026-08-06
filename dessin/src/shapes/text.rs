@@ -231,7 +231,7 @@ impl ShapeOp for TextShape {
 	}
 }
 impl ShapeBoundingBox for TextShape {
-	fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
+	fn local_bounding_box(&self) -> BoundingBox<NonAxisAligned> {
 		let (min_x, max_x) = match self.align {
 			TextAlign::Left => (0., self.width),
 			TextAlign::Center => (-self.width / 2., self.width / 2.),
@@ -256,7 +256,7 @@ pub struct TextPosition<'a> {
 	pub font_size: f32,
 	pub reference_start: Point2<f32>,
 	pub rotation: f32,
-	pub bounding_box: BoundingBox<UnParticular>,
+	pub bounding_box: BoundingBox<NonAxisAligned>,
 	pub font: &'a FontRef,
 }
 

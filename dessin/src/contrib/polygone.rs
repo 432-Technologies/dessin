@@ -118,7 +118,7 @@ fn triangle_in_group() {
 
 	let sqrt3_over_2 = 3f32.sqrt() / 2.;
 
-	let Shape::Group(Group {
+	let Shape::Group(GroupShape {
 		local_transform,
 		shapes,
 		..
@@ -126,6 +126,7 @@ fn triangle_in_group() {
 	else {
 		panic!("Not a group");
 	};
+
 	assert_eq!(shapes.len(), 1);
 	assert_eq!(local_transform, Transform2::<f32>::default());
 

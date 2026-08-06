@@ -1,4 +1,4 @@
-use super::{BoundingBox, Curve, ShapeBoundingBox, UnParticular};
+use super::{BoundingBox, Curve, ShapeBoundingBox, NonAxisAligned};
 use crate::{
 	prelude::Circle,
 	shapes::{Shape, ShapeOp},
@@ -118,7 +118,7 @@ impl ShapeOp for Ellipse {
 }
 
 impl ShapeBoundingBox for Ellipse {
-	fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
+	fn local_bounding_box(&self) -> BoundingBox<NonAxisAligned> {
 		BoundingBox::new(
 			self.local_transform() * Point2::new(-0.5, 0.5),
 			self.local_transform() * Point2::new(0.5, 0.5),

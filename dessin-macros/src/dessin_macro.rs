@@ -176,7 +176,7 @@ impl From<DessinFor> for TokenStream {
 				},
 		}: DessinFor,
 	) -> Self {
-		quote!(::dessin::prelude::Shape::Group(::dessin::prelude::Group {
+		quote!(::dessin::prelude::Shape::from(::dessin::prelude::Group {
 			metadata: ::std::vec::Vec::new(),
 			local_transform: ::dessin::nalgebra::Transform2::default(),
 			shapes: {
@@ -295,7 +295,7 @@ impl From<DessinGroup> for TokenStream {
 			.map(TokenStream::from)
 			.collect::<Vec<_>>();
 
-		quote!(::dessin::prelude::Shape::Group(::dessin::prelude::Group {
+		quote!(::dessin::prelude::Shape::from(::dessin::prelude::Group {
 			local_transform: ::dessin::nalgebra::Transform2::default(),
 			metadata: ::std::vec::Vec::new(),
 			shapes: ::std::vec![

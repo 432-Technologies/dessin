@@ -229,7 +229,7 @@ impl<T: ShapeOp> ShapeOp for Style<T> {
 
 impl<T: ShapeBoundingBox> ShapeBoundingBox for Style<T> {
 	#[inline]
-	fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
+	fn local_bounding_box(&self) -> BoundingBox<NonAxisAligned> {
 		self.shape.local_bounding_box()
 	}
 }

@@ -157,11 +157,11 @@ impl<T: ShapeOp> ShapeOpWith for T {}
 /// Marker discribing the state of a bounding box.
 /// With this marker, the bounding box may be skew or rotated.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct UnParticular;
+pub struct NonAxisAligned;
 /// Marker discribing the state of a bounding box.
 /// With this marker, the sides of the bounding box are guaranteed to be aligned with the X and Y axis.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Straight;
+pub struct AxisAligned;
 
 /// Bounding box used to describe max bound of an shape.
 /// Usefull to find the max size of shapes as multiple [`BoundingBox`] can be join together.
@@ -247,7 +247,7 @@ impl<T> BoundingBox<T> {
 	}
 
 	/// Apply a transform to a [`BoundingBox`]
-	pub fn transform(self, transform: &Transform2<f32>) -> BoundingBox<UnParticular> {
+	pub fn transform(self, transform: &Transform2<f32>) -> BoundingBox<NonAxisAligned> {
 		BoundingBox {
 			_ty: PhantomData,
 			top_left: transform * self.top_left,
@@ -268,7 +268,7 @@ impl<T> BoundingBox<T> {
 	}
 }
 
-impl BoundingBox<UnParticular> {
+impl BoundingBox<NonAxisAligned> {
 	/// Create a [`BoundingBox`] from each corner
 	pub fn new(
 		top_left: Point2<f32>,
@@ -297,7 +297,7 @@ impl BoundingBox<UnParticular> {
 	}
 
 	/// Straighen a [`BoundingBox`] and guarantee that the sides of the bounding box are aligns with the X and Y axis.
-	pub fn straigthen(&self) -> BoundingBox<Straight> {
+	pub fn straigthen(&self) -> BoundingBox<AxisAligned> {
 		let top = self
 			.top_left
 			.y
@@ -335,12 +335,12 @@ impl BoundingBox<UnParticular> {
 
 	/// Same as [`straighten`] but for chaining
 	#[inline]
-	pub fn into_straight(self) -> BoundingBox<Straight> {
+	pub fn into_straight(self) -> BoundingBox<AxisAligned> {
 		self.straigthen()
 	}
 }
 
-impl BoundingBox<Straight> {
+impl BoundingBox<AxisAligned> {
 	/// [`BoundingBox`] center at the origin
 	pub fn zero() -> Self {
 		BoundingBox {
@@ -389,7 +389,7 @@ impl BoundingBox<Straight> {
 
 	/// Convert the [`BoundingBox`] to [`UnParticular`].
 	#[inline]
-	pub fn as_unparticular(self) -> BoundingBox<UnParticular> {
+	pub fn as_unparticular(self) -> BoundingBox<NonAxisAligned> {
 		BoundingBox {
 			_ty: PhantomData,
 			top_left: self.top_left,
@@ -400,26 +400,26 @@ impl BoundingBox<Straight> {
 	}
 
 	/// Straighen a [`BoundingBox`] and guarantee that the sides of the bounding box are aligns with the X and Y axis.
-	pub fn straigthen(&self) -> BoundingBox<Straight> {
+	pub fn straigthen(&self) -> BoundingBox<AxisAligned> {
 		*self
 	}
 
 	/// Same as [`straighten`] but for chaining
 	#[inline]
-	pub fn into_straight(self) -> BoundingBox<Straight> {
+	pub fn into_straight(self) -> BoundingBox<AxisAligned> {
 		self
 	}
 
 	/// Scale difference from self to other
 	#[inline]
-	pub fn scale_difference(&self, other: &BoundingBox<Straight>) -> Vector2<f32> {
+	pub fn scale_difference(&self, other: &BoundingBox<AxisAligned>) -> Vector2<f32> {
 		Vector2::new(other.width() / self.width(), other.height() / self.height())
 	}
 
 	/// A u B
 	///
 	/// Creates a bigger [`BoundingBox`] from the union of the two.
-	pub fn join(mut self, other: BoundingBox<Straight>) -> BoundingBox<Straight> {
+	pub fn join(mut self, other: BoundingBox<AxisAligned>) -> BoundingBox<AxisAligned> {
 		let min_x = self.bottom_left.x.min(other.bottom_left.x);
 		let min_y = self.bottom_left.y.min(other.bottom_left.y);
 		let max_x = self.top_right.x.max(other.top_right.x);
@@ -443,7 +443,7 @@ impl BoundingBox<Straight> {
 	/// A n B
 	///
 	/// Creates a smaller [`BoundingBox`] from the intersection of the two.
-	pub fn intersect(mut self, other: BoundingBox<Straight>) -> BoundingBox<Straight> {
+	pub fn intersect(mut self, other: BoundingBox<AxisAligned>) -> BoundingBox<AxisAligned> {
 		let (min_x, max_x) = if self.bottom_right.x <= other.bottom_left.x
 			|| self.bottom_left.x >= other.bottom_right.x
 		{
@@ -512,9 +512,12 @@ impl<A, B> PartialEq<BoundingBox<A>> for BoundingBox<B> {
 /// Traits that defined whether a [`Shape`] can be bound by a [`BoundingBox`]
 pub trait ShapeBoundingBox {
 	/// [`BoundingBox`] of a [`Shape`]
-	fn local_bounding_box(&self) -> BoundingBox<UnParticular>;
+	fn local_bounding_box(&self) -> BoundingBox<NonAxisAligned>;
 	/// Absolute [`BoundingBox`] from a transform
-	fn global_bounding_box(&self, parent_transform: &Transform2<f32>) -> BoundingBox<UnParticular> {
+	fn global_bounding_box(
+		&self,
+		parent_transform: &Transform2<f32>,
+	) -> BoundingBox<NonAxisAligned> {
 		self.local_bounding_box().transform(parent_transform)
 	}
 }
@@ -531,8 +534,55 @@ pub struct Group {
 	pub metadata: Vec<(String, String)>,
 }
 impl From<Group> for Shape {
-	fn from(value: Group) -> Self {
-		Shape::Group(value)
+	fn from(
+		Group {
+			local_transform,
+			shapes,
+			metadata,
+		}: Group,
+	) -> Self {
+		let bounding_box_cache = shapes
+			.iter()
+			.map(|v| v.local_bounding_box().straigthen())
+			.fold(BoundingBox::zero(), BoundingBox::join);
+
+		Shape::Group(GroupShape {
+			local_transform,
+			shapes,
+			metadata,
+			bounding_box_cache,
+		})
+	}
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct GroupShape {
+	/// Transform of the whole group
+	pub local_transform: Transform2<f32>,
+	/// List of shapes
+	pub(crate) shapes: Vec<Shape>,
+	/// Metadata
+	pub metadata: Vec<(String, String)>,
+	pub(crate) bounding_box_cache: BoundingBox<AxisAligned>,
+}
+impl GroupShape {
+	pub fn shapes(&self) -> &Vec<Shape> {
+		&self.shapes
+	}
+}
+impl ShapeOp for GroupShape {
+	fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
+		self.local_transform = transform_matrix * self.local_transform;
+		self
+	}
+
+	fn local_transform(&self) -> &Transform2<f32> {
+		&self.local_transform
+	}
+}
+impl ShapeBoundingBox for GroupShape {
+	fn local_bounding_box(&self) -> BoundingBox<NonAxisAligned> {
+		self.bounding_box_cache.transform(&self.local_transform)
 	}
 }
 
@@ -542,7 +592,7 @@ impl From<Group> for Shape {
 #[derive(Clone)]
 pub enum Shape {
 	/// A group of [`Shape`], locally positionned by a transform
-	Group(Group),
+	Group(GroupShape),
 	/// Block of style
 	Style {
 		/// Fill
@@ -610,11 +660,11 @@ impl PartialEq for Shape {
 impl Shape {
 	/// Get current shape as group
 	/// If current shape isn't a group, morph it into a group
-	pub fn get_or_mutate_as_group(&mut self) -> &mut Group {
+	pub fn get_or_mutate_as_group(&mut self) -> &mut GroupShape {
 		if let Shape::Group(g) = self {
 			g
 		} else {
-			let mut dummy = Shape::Group(Group {
+			let mut dummy = Shape::from(Group {
 				local_transform: Default::default(),
 				shapes: Default::default(),
 				metadata: Default::default(),
@@ -622,7 +672,7 @@ impl Shape {
 
 			std::mem::swap(self, &mut dummy);
 
-			let mut group = Shape::Group(Group {
+			let mut group = Shape::from(Group {
 				local_transform: Default::default(),
 				shapes: vec![dummy],
 				metadata: vec![],
@@ -657,10 +707,11 @@ impl Shape {
 impl fmt::Debug for Shape {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
-			Self::Group(Group {
+			Self::Group(GroupShape {
 				local_transform,
 				shapes,
 				metadata,
+				bounding_box_cache: _,
 			}) => f
 				.debug_struct("Group")
 				.field("local_transform", local_transform)
@@ -695,10 +746,11 @@ impl fmt::Debug for Shape {
 
 impl Default for Shape {
 	fn default() -> Self {
-		Shape::Group(Group {
+		Shape::Group(GroupShape {
 			local_transform: Transform2::default(),
 			shapes: vec![],
 			metadata: vec![],
+			bounding_box_cache: BoundingBox::zero(),
 		})
 	}
 }
@@ -706,7 +758,7 @@ impl Default for Shape {
 impl ShapeOp for Shape {
 	fn transform(&mut self, transform_matrix: Transform2<f32>) -> &mut Self {
 		match self {
-			Shape::Group(Group {
+			Shape::Group(GroupShape {
 				local_transform, ..
 			}) => {
 				*local_transform = transform_matrix * *local_transform;
@@ -739,7 +791,7 @@ impl ShapeOp for Shape {
 	#[inline]
 	fn local_transform(&self) -> &Transform2<f32> {
 		match self {
-			Shape::Group(Group {
+			Shape::Group(GroupShape {
 				local_transform, ..
 			}) => local_transform,
 			Shape::Style { shape, .. } => shape.local_transform(),
@@ -755,18 +807,9 @@ impl ShapeOp for Shape {
 }
 
 impl ShapeBoundingBox for Shape {
-	fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
+	fn local_bounding_box(&self) -> BoundingBox<NonAxisAligned> {
 		match self {
-			Shape::Group(Group {
-				local_transform,
-				shapes,
-				..
-			}) => shapes
-				.iter()
-				.map(|v| v.global_bounding_box(local_transform).straigthen())
-				.reduce(BoundingBox::join)
-				.unwrap_or_else(|| BoundingBox::zero())
-				.as_unparticular(),
+			Shape::Group(g) => g.local_bounding_box(),
 			Shape::Style { shape, .. } => shape.local_bounding_box(),
 			Shape::Ellipse(e) => e.local_bounding_box(),
 			Shape::Image(i) => i.local_bounding_box(),

@@ -210,16 +210,12 @@ fn Shaper(
 	add_font: EventHandler<FontRef>,
 ) -> Element {
 	match shape() {
-		Shape::Group(dessin::shapes::Group {
-			local_transform,
-			shapes,
-			metadata: _,
-		}) => {
-			let parent_transform = parent_transform * local_transform;
+		Shape::Group(group) => {
+			let parent_transform = parent_transform * group.local_transform;
 
 			rsx! {
 				g {
-					for shape in shapes {
+					for shape in group.shapes().clone() {
 						Shaper { shape, parent_transform, add_font }
 					}
 				}

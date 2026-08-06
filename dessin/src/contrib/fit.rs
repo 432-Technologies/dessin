@@ -17,20 +17,20 @@ pub struct Fit<T> {
 
 	/// Container
 	#[shape(skip)]
-	pub bounding_box: Option<BoundingBox<Straight>>,
+	pub bounding_box: Option<BoundingBox<AxisAligned>>,
 }
 
 impl<T> Fit<T> {
 	/// Container
 	#[inline]
-	pub fn bounding_box(&mut self, bb: BoundingBox<Straight>) -> &mut Self {
+	pub fn bounding_box(&mut self, bb: BoundingBox<AxisAligned>) -> &mut Self {
 		self.bounding_box = Some(bb);
 		self
 	}
 
 	/// Container
 	#[inline]
-	pub fn with_bounding_box(mut self, bb: BoundingBox<Straight>) -> Self {
+	pub fn with_bounding_box(mut self, bb: BoundingBox<AxisAligned>) -> Self {
 		self.bounding_box(bb);
 		self
 	}

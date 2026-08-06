@@ -1,6 +1,6 @@
 mod keypoint;
 
-use super::{BoundingBox, ShapeBoundingBox, UnParticular};
+use super::{BoundingBox, NonAxisAligned, ShapeBoundingBox};
 use crate::shapes::{Shape, ShapeOp};
 pub use keypoint::*;
 use nalgebra::{Point2, Transform2};
@@ -232,7 +232,7 @@ impl From<Curve> for Shape {
 }
 
 impl ShapeBoundingBox for Curve {
-	fn local_bounding_box(&self) -> BoundingBox<UnParticular> {
+	fn local_bounding_box(&self) -> BoundingBox<NonAxisAligned> {
 		let bb = self
 			.keypoints
 			.iter()
