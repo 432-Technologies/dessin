@@ -13,3 +13,6 @@ iced_core = { git = "https://github.com/OlivierLemoine/iced.git", rev = "05f161b
 iced_widget = { git = "https://github.com/OlivierLemoine/iced.git", rev = "05f161b", default-features = false, features = ["canvas", "image"] }
 iced_graphics = { git = "https://github.com/OlivierLemoine/iced.git", rev = "05f161b", default-features = false, features = ["image"] }
 tracing = "0.1"
+
+[dev-dependencies]
+iced = { git = "https://github.com/OlivierLemoine/iced.git", rev = "05f161b", features = ["lazy"] }

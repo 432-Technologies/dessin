@@ -533,6 +533,20 @@ pub struct Group {
 	/// Metadata
 	pub metadata: Vec<(String, String)>,
 }
+impl From<Shape> for Group {
+	fn from(value: Shape) -> Self {
+		Group::from([value])
+	}
+}
+impl<I: IntoIterator<Item = Shape>> From<I> for Group {
+	fn from(iter: I) -> Self {
+		Group {
+			local_transform: Default::default(),
+			shapes: iter.into_iter().collect(),
+			metadata: Default::default(),
+		}
+	}
+}
 impl From<Group> for Shape {
 	fn from(
 		Group {

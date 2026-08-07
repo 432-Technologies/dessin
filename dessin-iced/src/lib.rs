@@ -1,120 +1,118 @@
-mod canvas;
+// mod canvas;
 mod exporter;
 
-use crate::canvas::{IcedShape, IcedShapeCached, IcedShapeRef};
-use dessin::prelude::*;
-use iced_widget::renderer::geometry;
-use std::ops::{Deref, DerefMut};
+// use crate::canvas::{IcedShape, IcedShapeCached, IcedShapeRef};
+use dessin::{
+	export::{Export, ViewPort},
+	nalgebra::{self, Scale2, Transform2, Translation2},
+	prelude::*,
+};
+use iced_core::{Element, Length, Size, Widget};
+use iced_widget::{canvas, renderer::geometry};
 
-#[derive(Default, Clone, Copy, PartialEq)]
-pub enum ViewPort {
-	/// Create a viewport centered around (0, 0), with size (width, height)
-	ManualCentered { width: f32, height: f32 },
-	/// Create a viewport centered around (x, y), with size (width, height)
-	ManualViewport {
-		x: f32,
-		y: f32,
-		width: f32,
-		height: f32,
-	},
-	/// Create a Viewport centered around (0, 0), with auto size that include all [Shapes][`dessin::prelude::Shape`]
-	AutoCentered,
-	#[default]
-	/// Create a Viewport centered around the centered of the shapes, with auto size that include all [Shapes][`dessin::prelude::Shape`]
-	AutoBoundingBox,
+pub fn dessin(dessin: Shape) -> Dessin {
+	Dessin {
+		// wrap dessin in a group to have a free bounding box cache
+		dessin: Group::from(dessin).into(),
+		viewport: Default::default(),
+		width: Length::Fit,
+		height: Length::Fit,
+	}
 }
-
-#[derive(Default, Clone)]
-pub struct Options {
-	pub viewport: ViewPort,
+pub struct Dessin {
+	dessin: Shape,
+	viewport: ViewPort,
+	width: Length,
+	height: Length,
 }
-
-pub trait DessinIced<Message, Theme, Renderer: geometry::Renderer> {
-	type Out: iced_widget::canvas::Program<Message, Theme, Renderer>;
-
-	fn view(self) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer>
-	where
-		Self: Sized,
-	{
-		self.view_with(Options::default())
+impl Dessin {
+	#[must_use]
+	pub fn viewport(mut self, viewport: ViewPort) -> Self {
+		self.viewport = viewport;
+		self
 	}
 
-	fn view_with(
-		self,
-		options: Options,
-	) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer>;
-}
+	#[must_use]
+	pub fn width(mut self, width: Length) -> Self {
+		self.width = width;
+		self
+	}
 
-impl<'a, Message, Theme, Renderer: geometry::Renderer> DessinIced<Message, Theme, Renderer>
-	for &'a Shape
+	#[must_use]
+	pub fn height(mut self, height: Length) -> Self {
+		self.height = height;
+		self
+	}
+}
+impl<Message, Theme, Renderer: iced_core::Renderer + geometry::Renderer>
+	Widget<Message, Theme, Renderer> for Dessin
 {
-	type Out = IcedShapeRef<'a>;
-
-	fn view_with(
-		self,
-		options: Options,
-	) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer> {
-		iced_widget::canvas(IcedShapeRef(self, options))
-	}
-}
-
-impl<Message, Theme, Renderer: geometry::Renderer> DessinIced<Message, Theme, Renderer> for Shape {
-	type Out = IcedShape;
-
-	fn view_with(
-		self,
-		options: Options,
-	) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer> {
-		iced_widget::canvas(IcedShape(self, options))
-	}
-}
-
-pub struct CachedDessin<Renderer: geometry::Renderer> {
-	shape: Shape,
-	cache: iced_widget::canvas::Cache<Renderer>,
-}
-impl<Renderer: geometry::Renderer> Default for CachedDessin<Renderer> {
-	fn default() -> Self {
-		Self {
-			shape: Default::default(),
-			cache: iced_widget::canvas::Cache::new(),
-		}
-	}
-}
-impl<Renderer: geometry::Renderer> Deref for CachedDessin<Renderer> {
-	type Target = Shape;
-
-	fn deref(&self) -> &Self::Target {
-		&self.shape
-	}
-}
-impl<Renderer: geometry::Renderer> DerefMut for CachedDessin<Renderer> {
-	fn deref_mut(&mut self) -> &mut Self::Target {
-		self.request_redraw();
-		&mut self.shape
-	}
-}
-impl<Renderer: geometry::Renderer> CachedDessin<Renderer> {
-	pub fn new(shape: Shape) -> Self {
-		CachedDessin {
-			shape,
-			cache: iced_widget::canvas::Cache::new(),
+	fn size(&self) -> iced_core::Size<iced_core::Length> {
+		Size {
+			width: self.width,
+			height: self.height,
 		}
 	}
 
-	pub fn request_redraw(&mut self) {
-		self.cache.clear();
+	fn layout(
+		&mut self,
+		_tree: &mut iced_core::widget::Tree,
+		_renderer: &Renderer,
+		limits: &iced_core::layout::Limits,
+	) -> iced_core::layout::Node {
+		let size = limits.resolve(self.width, self.height, Size::ZERO);
+		iced_core::layout::Node::new(size)
+	}
+
+	fn draw(
+		&self,
+		_tree: &iced_core::widget::Tree,
+		renderer: &mut Renderer,
+		_theme: &Theme,
+		_style: &iced_core::renderer::Style,
+		layout: iced_core::Layout<'_>,
+		_cursor: iced_core::mouse::Cursor,
+		_viewport: &iced_core::Rectangle,
+	) {
+		let bounds = layout.bounds();
+		if bounds.width < 1.0 || bounds.height < 1.0 {
+			return;
+		}
+
+		let bb = self.viewport.bounding_box(&self.dessin);
+
+		let width_margin = bounds.width - bb.width();
+		let height_margin = bounds.height - bb.height();
+
+		let scale_factor = if width_margin <= height_margin {
+			bounds.width / bb.width()
+		} else {
+			bounds.height / bb.height()
+		};
+
+		renderer.with_translation(iced_core::Vector::new(bounds.x, bounds.y), |renderer| {
+			let mut exporter = exporter::FrameWriter {
+				frame: iced_widget::canvas::Frame::new(renderer, bounds.size()),
+			};
+
+			let scale: Transform2<f32> = nalgebra::convert(Scale2::new(scale_factor, scale_factor));
+			let translation: Transform2<f32> =
+				nalgebra::convert(Translation2::new(-bb.left(), -bb.top()));
+
+			let parent_transform = scale * translation;
+
+			self.dessin
+				.write_into_exporter(&mut exporter, &parent_transform, Default::default())
+				.unwrap();
+
+			renderer.draw_geometry(exporter.frame.into_geometry());
+		});
 	}
 }
-impl<'a, Message, Theme, Renderer: geometry::Renderer + 'a> DessinIced<Message, Theme, Renderer>
-	for &'a CachedDessin<Renderer>
+impl<'a, Message, Theme, Renderer: iced_core::Renderer + geometry::Renderer> From<Dessin>
+	for Element<'a, Message, Theme, Renderer>
 {
-	type Out = IcedShapeCached<'a, Renderer>;
-
-	fn view_with(
-		self,
-		_options: Options,
-	) -> iced_widget::Canvas<Self::Out, Message, Theme, Renderer> {
-		iced_widget::canvas(IcedShapeCached(self))
+	fn from(value: Dessin) -> Self {
+		Element::new(value)
 	}
 }

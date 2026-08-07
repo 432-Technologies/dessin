@@ -3,10 +3,10 @@ use iced_core::{Point, Rectangle, Size};
 use iced_widget::renderer::geometry::{self, Frame};
 use std::convert::Infallible;
 
-pub struct IcedExporter<'a, Renderer: geometry::Renderer> {
-	pub frame: &'a mut Frame<Renderer>,
+pub struct FrameWriter<Renderer: geometry::Renderer> {
+	pub frame: Frame<Renderer>,
 }
-impl<'a, Renderer: geometry::Renderer> Exporter for IcedExporter<'a, Renderer> {
+impl<Renderer: geometry::Renderer> Exporter for FrameWriter<Renderer> {
 	type Error = Infallible;
 
 	const CAN_EXPORT_ELLIPSE: bool = false;
