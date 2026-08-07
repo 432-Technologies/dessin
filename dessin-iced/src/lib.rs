@@ -15,8 +15,8 @@ pub fn dessin(dessin: Shape) -> Dessin {
 		// wrap dessin in a group to have a free bounding box cache
 		dessin: Group::from(dessin).into(),
 		viewport: Default::default(),
-		width: Length::Fit,
-		height: Length::Fit,
+		width: Length::Fill,
+		height: Length::Fill,
 	}
 }
 pub struct Dessin {
@@ -33,14 +33,14 @@ impl Dessin {
 	}
 
 	#[must_use]
-	pub fn width(mut self, width: Length) -> Self {
-		self.width = width;
+	pub fn width(mut self, width: impl Into<Length>) -> Self {
+		self.width = width.into();
 		self
 	}
 
 	#[must_use]
-	pub fn height(mut self, height: Length) -> Self {
-		self.height = height;
+	pub fn height(mut self, height: impl Into<Length>) -> Self {
+		self.height = height.into();
 		self
 	}
 }
