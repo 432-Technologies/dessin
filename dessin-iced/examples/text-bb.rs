@@ -46,8 +46,8 @@ fn main() {
 	}
 
 	iced::application::<State, Message, iced::Theme, iced::Renderer>(boot, update, view)
-		.font(font_bytes)
-		.default_font(Font {
+		.fonts([font_bytes])
+		.font(Font {
 			family: iced::font::Family::Name("Atkinson Hyperlegible Mono VF"),
 			..iced::Font::DEFAULT
 		})

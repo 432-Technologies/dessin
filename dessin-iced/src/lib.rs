@@ -1,14 +1,12 @@
-// mod canvas;
 mod exporter;
 
-// use crate::canvas::{IcedShape, IcedShapeCached, IcedShapeRef};
 use dessin::{
 	export::{Export, ViewPort},
 	nalgebra::{self, Scale2, Transform2, Translation2},
 	prelude::*,
 };
 use iced_core::{Element, Length, Size, Widget};
-use iced_widget::{canvas, renderer::geometry};
+use iced_widget::renderer::geometry;
 
 pub fn dessin(dessin: Shape) -> Dessin {
 	Dessin {
