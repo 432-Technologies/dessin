@@ -54,12 +54,11 @@ impl<Message, Theme, Renderer: iced_core::Renderer + geometry::Renderer>
 
 	fn layout(
 		&mut self,
-		_tree: &mut iced_core::widget::Tree,
+		tree: &mut iced_core::widget::Tree,
 		_renderer: &Renderer,
 		limits: &iced_core::layout::Limits,
-	) -> iced_core::layout::Node {
-		let size = limits.resolve(self.width, self.height, Size::ZERO);
-		iced_core::layout::Node::new(size)
+	) {
+		tree.size = limits.resolve(self.width, self.height, Size::ZERO);
 	}
 
 	fn draw(
@@ -68,7 +67,7 @@ impl<Message, Theme, Renderer: iced_core::Renderer + geometry::Renderer>
 		renderer: &mut Renderer,
 		_theme: &Theme,
 		_style: &iced_core::renderer::Style,
-		layout: iced_core::Layout<'_>,
+		layout: iced_core::Layout,
 		_cursor: iced_core::mouse::Cursor,
 		_viewport: &iced_core::Rectangle,
 	) {
