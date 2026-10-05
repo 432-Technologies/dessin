@@ -5,25 +5,38 @@ use dessin::{
 	nalgebra::{self, Scale2, Transform2, Translation2},
 	prelude::*,
 };
-use iced_core::{Element, Length, Size, Widget};
+use iced_core::{Element, Length, Size, Theme, Widget};
 use iced_widget::renderer::geometry;
 
-pub fn dessin(dessin: Shape) -> Dessin {
+trait Shapable {
+	fn map<'a, T>(&self, theme: &Theme, f: impl FnOnce(&Shape) -> T) -> T;
+}
+impl Shapable for Shape {
+	fn map<'a, T>(&self, _theme: &Theme, f: impl FnOnce(&Shape) -> T) -> T {
+		f(self)
+	}
+}
+impl<F: Fn(&Theme) -> Shape> Shapable for F {
+	fn map<'a, T>(&self, theme: &Theme, f: impl FnOnce(&Shape) -> T) -> T {
+		f(&self(theme))
+	}
+}
+
+pub fn dessin<S>(dessin: S) -> Dessin<S> {
 	Dessin {
-		// wrap dessin in a group to have a free bounding box cache
-		dessin: Group::from(dessin).into(),
+		dessin,
 		viewport: Default::default(),
 		width: Length::Fill,
 		height: Length::Fill,
 	}
 }
-pub struct Dessin {
-	dessin: Shape,
+pub struct Dessin<S> {
+	dessin: S,
 	viewport: ViewPort,
 	width: Length,
 	height: Length,
 }
-impl Dessin {
+impl<S> Dessin<S> {
 	#[must_use]
 	pub fn viewport(mut self, viewport: ViewPort) -> Self {
 		self.viewport = viewport;
@@ -42,8 +55,8 @@ impl Dessin {
 		self
 	}
 }
-impl<Message, Theme, Renderer: iced_core::Renderer + geometry::Renderer>
-	Widget<Message, Theme, Renderer> for Dessin
+impl<S: Shapable, Message, Renderer: iced_core::Renderer + geometry::Renderer>
+	Widget<Message, Theme, Renderer> for Dessin<S>
 {
 	fn size(&self) -> iced_core::Size<iced_core::Length> {
 		Size {
@@ -65,51 +78,56 @@ impl<Message, Theme, Renderer: iced_core::Renderer + geometry::Renderer>
 		&self,
 		_tree: &iced_core::widget::Tree,
 		renderer: &mut Renderer,
-		_theme: &Theme,
+		theme: &Theme,
 		_style: &iced_core::renderer::Style,
 		layout: iced_core::Layout,
 		_cursor: iced_core::mouse::Cursor,
 		_viewport: &iced_core::Rectangle,
 	) {
-		let bounds = layout.bounds();
-		if bounds.width < 1.0 || bounds.height < 1.0 {
-			return;
-		}
+		self.dessin.map(theme, |shape| {
+			let bounds = layout.bounds();
+			if bounds.width < 1.0 || bounds.height < 1.0 {
+				return;
+			}
 
-		let bb = self.viewport.bounding_box(&self.dessin);
+			let bb = self.viewport.bounding_box(shape);
 
-		let width_margin = bounds.width - bb.width();
-		let height_margin = bounds.height - bb.height();
+			let width_margin = bounds.width - bb.width();
+			let height_margin = bounds.height - bb.height();
 
-		let scale_factor = if width_margin <= height_margin {
-			bounds.width / bb.width()
-		} else {
-			bounds.height / bb.height()
-		};
-
-		renderer.with_translation(iced_core::Vector::new(bounds.x, bounds.y), |renderer| {
-			let mut exporter = exporter::FrameWriter {
-				frame: iced_widget::canvas::Frame::new(renderer, bounds.size()),
+			let scale_factor = if width_margin <= height_margin {
+				bounds.width / bb.width()
+			} else {
+				bounds.height / bb.height()
 			};
 
-			let scale: Transform2<f32> = nalgebra::convert(Scale2::new(scale_factor, scale_factor));
-			let translation: Transform2<f32> =
-				nalgebra::convert(Translation2::new(-bb.left(), -bb.top()));
+			renderer.with_layer(bounds, |renderer| {
+				renderer.with_translation(iced_core::Vector::new(bounds.x, bounds.y), |renderer| {
+					let mut exporter = exporter::FrameWriter {
+						frame: iced_widget::canvas::Frame::new(renderer, bounds.size()),
+					};
 
-			let parent_transform = scale * translation;
+					let scale: Transform2<f32> =
+						nalgebra::convert(Scale2::new(scale_factor, scale_factor));
+					let translation: Transform2<f32> =
+						nalgebra::convert(Translation2::new(-bb.left(), -bb.top()));
 
-			self.dessin
-				.write_into_exporter(&mut exporter, &parent_transform, Default::default())
-				.unwrap();
+					let parent_transform = scale * translation;
 
-			renderer.draw_geometry(exporter.frame.into_geometry());
+					shape
+						.write_into_exporter(&mut exporter, &parent_transform, Default::default())
+						.unwrap();
+
+					renderer.draw_geometry(exporter.frame.into_geometry());
+				});
+			});
 		});
 	}
 }
-impl<'a, Message, Theme, Renderer: iced_core::Renderer + geometry::Renderer> From<Dessin>
-	for Element<'a, Message, Theme, Renderer>
+impl<'a, S: Shapable + 'a, Message, Renderer: iced_core::Renderer + geometry::Renderer>
+	From<Dessin<S>> for Element<'a, Message, Theme, Renderer>
 {
-	fn from(value: Dessin) -> Self {
+	fn from(value: Dessin<S>) -> Self {
 		Element::new(value)
 	}
 }
