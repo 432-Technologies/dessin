@@ -46,7 +46,7 @@ fn main() {
 			text("Dessin"),
 			dessin_iced::dessin(state.0.clone()).width(300).height(300),
 			button("Toggle theme").on_press(()),
-			lazy(state.1, |_| {
+			lazy((), |_| {
 				dessin_iced::dessin(|theme: &Theme| {
 					let palette = theme.palette();
 
