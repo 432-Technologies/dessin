@@ -5,7 +5,8 @@ use dessin::{
 	nalgebra::{self, Scale2, Transform2, Translation2},
 	prelude::*,
 };
-use iced_core::{Element, Length, Size, Theme, Widget};
+use iced_core::widget::Meta;
+use iced_core::{Length, Size, Theme, Widget};
 use iced_widget::renderer::geometry;
 
 pub trait Shapable {
@@ -21,11 +22,6 @@ impl<F: Fn(&Theme) -> Shape> Shapable for F {
 		f(&self(theme))
 	}
 }
-// impl Shapable for Box<dyn Fn(&Theme) -> Shape> {
-// 	fn map<T>(&self, theme: &Theme, f: impl FnOnce(&Shape) -> T) -> T {
-// 		todo!()
-// 	}
-// }
 
 pub fn dessin<S: Shapable>(dessin: S) -> Dessin<S> {
 	Dessin {
@@ -129,10 +125,9 @@ impl<S: Shapable, Message, Renderer: iced_core::Renderer + geometry::Renderer>
 		});
 	}
 }
-impl<'a, S: Shapable + 'a, Message, Renderer: iced_core::Renderer + geometry::Renderer>
-	From<Dessin<S>> for Element<'a, Message, Theme, Renderer>
-{
-	fn from(value: Dessin<S>) -> Self {
-		Element::new(value)
+
+impl<S: Shapable> Meta for Dessin<S> {
+	fn is_void(&self) -> bool {
+		false
 	}
 }

@@ -9,10 +9,10 @@ authors.workspace = true
 
 [dependencies]
 dessin = { version = "^0.8.23", path = "../dessin" }
-iced_core = { git = "https://github.com/OlivierLemoine/iced.git", rev = "a06d35d0f797c5b031ad19372320b1dc046a9f13", default-features = false }
-iced_widget = { git = "https://github.com/OlivierLemoine/iced.git", rev = "a06d35d0f797c5b031ad19372320b1dc046a9f13", default-features = false, features = ["canvas", "image"] }
-iced_graphics = { git = "https://github.com/OlivierLemoine/iced.git", rev = "a06d35d0f797c5b031ad19372320b1dc046a9f13", default-features = false, features = ["image"] }
+iced_core = { git = "https://github.com/OlivierLemoine/iced.git", rev = "a02d62ae8c63d03e5411704b44c26d0d328d1620", default-features = false }
+iced_widget = { git = "https://github.com/OlivierLemoine/iced.git", rev = "a02d62ae8c63d03e5411704b44c26d0d328d1620", default-features = false, features = ["canvas", "image"] }
+iced_graphics = { git = "https://github.com/OlivierLemoine/iced.git", rev = "a02d62ae8c63d03e5411704b44c26d0d328d1620", default-features = false, features = ["image"] }
 tracing = "0.1"
 
 [dev-dependencies]
-iced = { git = "https://github.com/OlivierLemoine/iced.git", rev = "a06d35d0f797c5b031ad19372320b1dc046a9f13", features = [] }
+iced = { git = "https://github.com/OlivierLemoine/iced.git", rev = "a02d62ae8c63d03e5411704b44c26d0d328d1620", features = [] }

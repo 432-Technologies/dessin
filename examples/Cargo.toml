@@ -12,7 +12,7 @@ dessin-pdf = { path = "../dessin-pdf" }
 dessin-iced = { path = "../dessin-iced" }
 project-root = "0.2.2"
 palette = "0.7.6"
-iced = { git = "https://github.com/OlivierLemoine/iced.git", rev = "05f161b" }
+iced = { git = "https://github.com/OlivierLemoine/iced.git", rev = "a02d62ae8c63d03e5411704b44c26d0d328d1620" }
 
 [[example]]
 name = "any-triangle"
