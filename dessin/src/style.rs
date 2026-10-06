@@ -1,6 +1,6 @@
 use crate::prelude::*;
 use nalgebra::{Rotation2, Scale2, Transform2, Translation2, Vector2};
-use palette::{IntoColor, Srgba};
+use palette::{IntoColor, Srgba, WithAlpha};
 use std::{
 	f32::consts::FRAC_1_SQRT_2,
 	ops::{Deref, DerefMut, Mul},
@@ -37,6 +37,14 @@ pub enum Stroke {
 		///
 		off: f32,
 	},
+}
+impl Default for Stroke {
+	fn default() -> Self {
+		Stroke::Solid {
+			width: 0.,
+			color: Srgba::new(0., 0., 0., 0.),
+		}
+	}
 }
 impl Stroke {
 	/// Solid line
@@ -100,7 +108,13 @@ pub enum Fill {
 		color: Srgba,
 	},
 }
-impl Stroke {}
+impl Default for Fill {
+	fn default() -> Self {
+		Fill::Solid {
+			color: Srgba::new(0., 0., 0., 0.),
+		}
+	}
+}
 
 impl<C: IntoColor<Srgba>> From<C> for Fill {
 	fn from(color: C) -> Self {

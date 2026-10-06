@@ -8,21 +8,26 @@ use dessin::{
 use iced_core::{Element, Length, Size, Theme, Widget};
 use iced_widget::renderer::geometry;
 
-trait Shapable {
-	fn map<'a, T>(&self, theme: &Theme, f: impl FnOnce(&Shape) -> T) -> T;
+pub trait Shapable {
+	fn map<T>(&self, theme: &Theme, f: impl FnOnce(&Shape) -> T) -> T;
 }
 impl Shapable for Shape {
-	fn map<'a, T>(&self, _theme: &Theme, f: impl FnOnce(&Shape) -> T) -> T {
+	fn map<T>(&self, _theme: &Theme, f: impl FnOnce(&Shape) -> T) -> T {
 		f(self)
 	}
 }
 impl<F: Fn(&Theme) -> Shape> Shapable for F {
-	fn map<'a, T>(&self, theme: &Theme, f: impl FnOnce(&Shape) -> T) -> T {
+	fn map<T>(&self, theme: &Theme, f: impl FnOnce(&Shape) -> T) -> T {
 		f(&self(theme))
 	}
 }
+// impl Shapable for Box<dyn Fn(&Theme) -> Shape> {
+// 	fn map<T>(&self, theme: &Theme, f: impl FnOnce(&Shape) -> T) -> T {
+// 		todo!()
+// 	}
+// }
 
-pub fn dessin<S>(dessin: S) -> Dessin<S> {
+pub fn dessin<S: Shapable>(dessin: S) -> Dessin<S> {
 	Dessin {
 		dessin,
 		viewport: Default::default(),
@@ -30,13 +35,13 @@ pub fn dessin<S>(dessin: S) -> Dessin<S> {
 		height: Length::Fill,
 	}
 }
-pub struct Dessin<S> {
+pub struct Dessin<S: Shapable> {
 	dessin: S,
 	viewport: ViewPort,
 	width: Length,
 	height: Length,
 }
-impl<S> Dessin<S> {
+impl<S: Shapable> Dessin<S> {
 	#[must_use]
 	pub fn viewport(mut self, viewport: ViewPort) -> Self {
 		self.viewport = viewport;
